@@ -337,7 +337,6 @@ module service-call {
     }
 
 	container calls{
-		config false;
 		list call {
 			key "call_id";
 			uses call;
