@@ -17,7 +17,7 @@ module service-path-computation {
         description "";
         
         leaf request-id{
-            type inet:uri;
+            type string;
         }
         leaf aEnd{
             type inet:uri;
@@ -33,7 +33,7 @@ module service-path-computation {
     
     grouping path_reply{
         description "";
-        leaf id{
+        leaf reply-id{
             type string;
         }
         leaf-list topo-components{
