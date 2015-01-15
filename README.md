@@ -5,7 +5,9 @@ COP description
 
 ## YANG models for COP
 
-[service-call.yang](https://)
+- [service-call.yang](https://github.com/ict-strauss/COP/blob/master/yang-cop/service-call.yang)
+- [service-topology.yang](https://github.com/ict-strauss/COP/blob/master/yang-cop/service-topology.yang)
+- [service-path-computation.yang](https://github.com/ict-strauss/COP/blob/master/yang-cop/service-path-computation.yang)
 
 ## Using pyang swagger plugin
 
