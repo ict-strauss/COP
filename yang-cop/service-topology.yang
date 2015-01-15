@@ -2,7 +2,7 @@ module service-topology {
 
     yang-version 1;
 
-    namespace "http://cttc.com/cop/service-topology";
+    namespace "http://cttc.es/cop/service-topology";
 
     prefix s-topology;
 
