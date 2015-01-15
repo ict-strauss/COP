@@ -1,0 +1,71 @@
+module service-topology {
+
+    yang-version 1;
+
+    namespace "http://cttc.com/cop/service-topology";
+
+    prefix s-topology;
+
+    /*import ietf-inet-types {
+            prefix inet;
+            revision-date 2013-07-15;
+      }*/
+
+      organization "CTTC";
+
+    description "YANG version of the Common Orchestration Protocol (COP).";
+
+    revision "2014-11-12" {
+      description "Service topology module in progress.";
+    }
+
+    grouping vertex{
+        leaf vertex_id{
+            type string;
+        }
+        leaf name{
+            type string;
+        }
+        list edge_end{
+            key "edge_end_id";
+            uses edge_end;
+        }
+    }
+
+    list vertex{
+        key "vertex_id";
+        description "";
+
+        uses vertex;
+    }
+   
+
+    list edge{
+        key "edge_id";
+        description "";
+        leaf edge_id{
+            type string;
+        }
+        container aEnd{
+            uses vertex;
+        }
+        container zEnd{
+            uses vertex;
+        }
+    }
+
+    grouping edge_end{
+        leaf edge_end_id{
+            type string;
+        }
+        list vertex{
+            key "vertex_id";
+            leaf vertex_id{
+              type string;
+            }
+        }
+        leaf edge_id{
+            type string;
+        }
+    }
+}

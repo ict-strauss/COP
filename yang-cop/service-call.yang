@@ -1,0 +1,354 @@
+module service-call {
+
+    yang-version 1;
+
+    namespace "http://cttc.com/cop/service-call";
+
+    prefix s-call;
+
+    /*import ietf-inet-types {prefix inet;}
+    import ietf-yang-types {prefix yang;}
+    import service-topology {prefix topo;}*/
+
+    organization "CTTC";
+
+    description  "YANG version of the Common Orchestration Protocol (COP).";
+
+    revision "2014-11-12" {
+        description
+        "Service call module in progress.";
+    }
+
+    /*typedef endpoint-ref{
+        type leafref{
+            path "/s-call:service-call/s-call:endpoints/s-call:endpoint/s-call:id";
+        }
+    }
+
+    typedef connection-ref{
+        type leafref{
+            path "/s-call:service-call/s-call:connections/s-call:connection/s-call:id";
+        }
+    }*/
+
+    grouping transport_layer-type{
+        description "";
+        leaf layer {
+            type string;
+        }
+        leaf layer_id {
+            type string;
+        }
+    }
+
+    typedef protocol-type{
+        type enumeration{
+            enum TCP;
+            enum UDP;
+            enum ARP;
+            enum DHCP;
+        }
+    }
+
+    typedef address-type{
+        type enumeration{
+            enum IPv4 {
+                value 0;
+            }
+            enum IPv6 {
+                value 1;
+            }
+            enum DatapathID {
+                value 2;
+            }
+            enum MAC {
+                value 3;
+            }
+        }
+    }
+
+    grouping path-type{
+        description "";
+        leaf id{
+            type string;
+        }
+        leaf-list topo-components{
+            type string;
+        }
+    }
+
+    grouping match-rules{
+        description "Match rules for call - OF match rules + extentions";
+        leaf in_port{
+            //type inet:port-number; // Switch input port.
+            type string;
+        }
+        leaf in_phy_port{
+            //type inet:port-number; // Switch physical input port.
+            type string;
+        }
+        leaf metadata{
+            type string; // Metadata passed between tables.
+        }
+        leaf eth_src{
+            //type yang:mac-address; // Ethernet source address.
+            type string;
+        }
+        leaf eth_dst{
+            //type yang:mac-address; // Ethernet destination address.
+            type string;
+        }
+        leaf eth_type{
+            type int32; // Ethernet frame type.
+        }
+        leaf vlan_vid{
+            type int32; // VLAN id.
+        }
+        leaf vlan_pcp{
+            type int32; // VLAN priority.
+        }
+        leaf ip_dscp{
+            type int32; // IP DSCP (6 bits in ToS field).
+        }
+        leaf ip_ecn{
+            type int32; // IP ECN (2 bits in ToS field).
+        }
+        leaf ip_proto{
+            type int32; // IP protocol.
+        }
+        leaf ipv4_src{
+            //type inet:ip-address; // IPv4 source address.
+            type string;
+        }
+        leaf ipv4_dst{
+            //type inet:ip-address; // IPv4 destination address.
+            type string;
+        }
+        leaf tcp_src{
+            type int32; // TCP source port.
+        }
+        leaf tcp_dst{
+            type int32; // TCP destination port.
+        }
+        leaf udp_src{
+            type int32; // UDP source port.
+        }
+        leaf udp_dst{
+            type int32; // UDP destination port.
+        }
+        leaf sctp_src{
+            type int32; // SCTP source port.
+        }
+        leaf sctp_dst{
+            type int32; // SCTP destination port.
+        }
+        leaf icmpv4_type{
+            type int32; // ICMP type.
+        }
+        leaf icmpv4_code{
+            type int32; // ICMP code.
+        }
+        leaf arp_op{
+            type int32; // ARP opcode.
+        }
+        leaf arp_spa{
+            type int32; // ARP source IPv4 address.
+        }
+        leaf arp_tpa{
+            type int32; // ARP target IPv4 address.
+        }
+        leaf arp_sha{
+            type int32; // ARP source hardware address.
+        }
+        leaf arp_tha{
+            type int32; // ARP target hardware address.
+        }
+        leaf ipv6_src{
+            //type inet:ipv6-address; // IPv6 source address.
+            type string;
+        }
+        leaf ipv6_dst{
+            //type inet:ipv6-address; // IPv6 destination address.
+            type string;
+        }
+        leaf ipv6_flabel{
+            //type inet:ipv6-flow-label; // IPv6 Flow Label
+            type string;
+        }
+        leaf icmpv6_type{
+            type int32; // ICMPv6 type.
+        }
+        leaf icmpv6_code{
+            type int32; // ICMPv6 code.
+        }
+        leaf ipv6_nd_target{
+            type int32; // Target address for ND.
+        }
+        leaf ipv6_nd_sll{
+            type int32; // Source link-layer for ND.
+        }
+        leaf ipv6_nd_tll{
+            type int32; // Target link-layer for
+        }
+        leaf mpls_label{
+            type int32; // MPLS label. */
+        }
+        leaf mpls_tc{
+            type int32; // MPLS TC. */
+        }
+        leaf mpls_bos{
+            type int32; // MPLS BoS bit. */
+        }
+        leaf pbb_isid{
+            type int32; // PBB I-SID. */
+        }
+        leaf tunnel_id{
+            type int32; // Logical Port Metadata. */
+        }
+        leaf ipv6_exthdr{
+            type int32; // IPv6 Extension Header pseudo-field */
+        }
+        leaf experimental_gmpls_wson_label{
+            type int32; // GMPLS-TE Label
+        }
+        leaf experimental_teid{
+            type int64;// EXPERIMENTAL MATCH
+        }
+    }
+
+
+    grouping endpoint {
+        description "";
+
+        leaf endpoint_id{
+            type string;
+            description "Name of the endpoint, for example host1-port1";
+        }
+        leaf router_id{
+            type string;
+        }
+        leaf interface_id{
+            type string;
+        }
+        /*leaf topology-component{
+            type topo:end-ref;
+        }*/
+    }
+
+
+    grouping connection {
+        description "";
+
+        leaf connection_id{
+            type string;
+        }
+        container aEnd{
+            config false;
+            uses endpoint;
+        }
+        container zEnd{
+            config false;
+            uses endpoint;
+        }
+        container path{
+            config false;
+            uses path-type;
+        }
+        container match {
+            config false;
+            uses match-rules;
+        }
+        leaf action {
+            type string;
+        }
+        leaf bandwidth {
+            type int32;
+        }
+        container transport_layer{
+			config false;
+            uses transport_layer-type;
+        }
+        leaf operStatus {
+            description "Running status";
+            config false;
+            type enumeration {
+                enum down {
+                    value 0;
+                    description "down";
+                }
+                enum up {
+                    value 1;
+                    description "up";
+                }
+            }
+        }
+    }
+
+
+    grouping call {
+        description "";
+
+        leaf call_id{
+            type string;
+        }
+        container aEnd{
+            config false;
+            uses endpoint;
+        }
+        container zEnd{
+            config false;
+            uses endpoint;
+        }
+        container transport_layer{
+            config false;
+            uses transport_layer-type;
+        }
+        leaf operStatus {
+            description "Running status";
+            config false;
+            type enumeration {
+                enum down {
+                    value 0;
+                    description "down";
+                }
+                enum up {
+                    value 1;
+                    description "up";
+                }
+            }
+        }
+        container match{
+            config false;
+            uses match-rules;
+        }
+        leaf action {
+            config false;
+            type string;
+        }
+        leaf bandwidth {
+            config false;
+            type int32;
+        }
+        list connections{
+            config false;
+            key "connection_id";
+            uses connection;
+        }
+    }
+
+	container calls{
+		config false;
+		list call {
+			key "call_id";
+			uses call;
+		}
+	}
+	container connections{
+		config false;
+		list connection {
+			key "connection_id";
+			uses connection;
+		}
+	}
+
+}

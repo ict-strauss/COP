@@ -1,0 +1,53 @@
+module service-path-computation {
+
+    yang-version 1;
+
+    namespace "http://cttc.com/cop/service-path-computation";
+
+    prefix s-path;
+
+    import ietf-inet-types {
+		prefix inet;
+        revision-date 2013-07-15;
+	}
+
+    organization "CTTC";
+
+    grouping path_request{
+        description "";
+        
+        leaf request-id{
+            type inet:uri;
+        }
+        leaf aEnd{
+            type inet:uri;
+        }
+        leaf zEnd{
+            type inet:uri;
+        }
+        container trafficParameters{
+            description "TrafficParam covers service specific traffic attributes";
+        }
+
+    }
+    
+    grouping path_reply{
+        description "";
+        leaf id{
+            type string;
+        }
+        leaf-list topo-components{
+            type inet:uri;
+        }
+    }
+
+    rpc path-computation{
+        input {
+            uses path_request;
+        }
+        output{
+            uses path_reply;
+        }
+        
+    }
+}
