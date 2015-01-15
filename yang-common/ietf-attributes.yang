@@ -1,0 +1,121 @@
+module ietf-attributes {
+
+    namespace "http://cttc.com/cop/ietf-attributes";
+    prefix "ietf-attr";
+
+    import ietf-inet-types{
+        prefix inet;
+        revision-date 2013-07-15;
+    }
+
+    import service-call{
+        prefix s-call;
+        revision-date 2014-11-12;
+    }
+
+
+
+    typedef datapath-id {
+        type string {
+            length 16;
+        }
+    }
+
+    typedef proto{
+        type enumeration{
+                enum TCP{
+                    value 0;
+                }
+                enum UDP{
+                    value 1;
+                }
+            }
+    }
+    grouping Address{
+        leaf addressIPv4{
+            when "addressFamily == 'IPv4'";
+            type inet:ipv4-address;
+        }
+
+        leaf addressIPv6{
+            when "addressFamily == 'IPv6'";
+            type inet:ipv6-address;
+        }
+
+        leaf addressDpID{
+            when "addressFamily == 'DatapathID'";
+            type datapath-id;
+        }
+
+        leaf addressMAC{
+            when "addressFamily == 'MAC'";
+            type string;
+        }
+    }
+
+    typedef AddressFamily{
+        type enumeration{
+            enum IPv4 {
+                value 0;
+            }
+            enum IPv6 {
+                value 1;
+            }
+            enum DatapathID {
+                value 2;
+            }
+            enum MAC {
+                value 3;
+            }
+        }
+    }
+
+    grouping ietf-attributes-endpoints{
+
+        leaf addressFamily{
+            type AddressFamily;
+        }
+        container address{
+            uses Address;
+        }
+        leaf protocol{
+            type proto;
+        }
+        leaf port{
+            type int32;
+        }
+    }
+    grouping ietf-attributes-connections{
+        leaf addressFamily{
+            type AddressFamily;
+        }
+        container sessionDest{
+            container address{
+                uses Address;
+            }
+            leaf protocol{
+                type proto;
+            }
+            leaf port{
+                type int32;
+            }
+        }
+        container senderTemplateSource{
+            container address{
+                uses Address;
+            }
+            leaf port{
+                type int32;
+            }
+        }
+    }
+    augment "/s-call:service-call/s-call:endpoints/s-call:endpoint" {
+        uses ietf-attributes-endpoints;
+    }
+
+    augment "/s-call:service-call/s-call:connections/s-call:connection" {
+        uses ietf-attributes-connections;
+    }
+
+
+}
