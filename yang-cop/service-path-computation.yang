@@ -2,7 +2,7 @@ module service-path-computation {
 
     yang-version 1;
 
-    namespace "http://cttc.com/cop/service-path-computation";
+    namespace "http://cttc.es/cop/service-path-computation";
 
     prefix s-path;
 
