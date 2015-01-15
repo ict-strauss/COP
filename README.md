@@ -11,11 +11,11 @@ The Control Orchestration Procotol (COP) abstracts a set of control plane functi
 
 ## Using pyang swagger plugin
 
-Pyang is an extensible YANG validator and converter written in python. 
+[Pyang](https://code.google.com/p/pyang/) is an extensible YANG validator and converter written in python. 
 
-[pyang](https://code.google.com/p/pyang/)
+It can be used to validate YANG modules for correctness, to transform YANG modules into other formats, and to generate code from the modules. We have written a pyang plugin to obtain the RESTCONF API from a yang model. 
 
-It can be used to validate YANG modules for correctness, to transform YANG modules into other formats, and to generate code from the modules. We have written a pyang plugin to obtain the RESTCONF API from a yang model. This RESTCONF API is interpreted with [Swagger](http://swagger.io/), which is a powerful framework for API description. This framework will be used to generate a Stub server for the YANG module.
+The RESTCONF API of the YANG model is interpreted with [Swagger](http://swagger.io/), which is a powerful framework for API description. This framework will be used to generate a Stub server for the YANG module.
 
 ###Install pyang
 
