@@ -2,7 +2,7 @@ module service-call {
 
     yang-version 1;
 
-    namespace "http://cttc.com/cop/service-call";
+    namespace "http://cttc.es/cop/service-call";
 
     prefix s-call;
 
