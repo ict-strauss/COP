@@ -87,8 +87,9 @@ def emit_swagger_spec(modules, fd, path):
 		if not printed_header:
 			model = print_header(module, fd)
 			printed_header = True
-			path = '/'+str(module.arg)+':'
-		
+			#path = '/'+str(module.arg)+':'
+			path = '/'
+			
 		# It is neccesary to modify the names' syntax for swagger code-generation
 		if module.i_groupings:
 			for group in module.i_groupings:
