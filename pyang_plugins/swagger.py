@@ -85,10 +85,14 @@ def print_header(module, fd):
     header = OrderedDict()
     header['swagger'] = '2.0'
     header['info'] = {'description': str(module_name
-                      + 'API generated from service-call.yang'),
+                      + ' API generated from '
+                      + module.pos.ref.rsplit('/', 1)[1]),
                       'version': '1.0.0', 'title': str(module_name
                       + ' API')}
     header['host'] = 'localhost:8080'
+
+    # TODO: flexible base path
+
     header['basePath'] = '/restconf/config'
     header['schemes'] = ['http']
     return header
@@ -393,7 +397,8 @@ def generateRETRIEVE(
     # print path_params
 
     get = {}
-    generateAPIHeader(ch, get, 'Retrieve')
+    generateAPIHeader(ch, get, 'Retrieve', ch.keyword == 'container'
+                      and not path_params)
     if path_params:
         get['parameters'] = []
 
@@ -501,13 +506,19 @@ def generateDELETE(
 
 # Aux function to generate the API-header skeleton.
 
-def generateAPIHeader(ch, struct, operation):
-    struct['summary'] = str(operation) + ' ' + str(ch.arg).capitalize() \
-        + ' by ID'
+def generateAPIHeader(
+    ch,
+    struct,
+    operation,
+    is_collection=False,
+    ):
+    struct['summary'] = '%s %s%s' % (str(operation),
+            str(ch.arg).capitalize(), ('' if is_collection else ' by ID'
+            ))
     struct['description'] = str(operation) + ' operation of resource :' \
         + str(ch.arg)
-    struct['operationId'] = str(operation).lower() + '' \
-        + str(ch.arg).capitalize() + 'ById'
+    struct['operationId'] = '%s%s%s' % (str(operation).lower(),
+            str(ch.arg).capitalize(), ('' if is_collection else 'byID'))
     struct['produces'] = []
     struct['produces'].append('application/json')
     struct['consumes'] = []
