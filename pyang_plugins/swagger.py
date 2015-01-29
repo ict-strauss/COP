@@ -57,10 +57,16 @@ class SwaggerPlugin(plugin.PyangPlugin):
         modules,
         fd,
         ):
+
+        # TODO: the path provided by pyang is a list and not a string
+
         if ctx.opts.path is not None:
             path = string.split(ctx.opts.path, '/')
             if path[0] == '':
                 path = path[1:]
+
+        # TODO: what is filename used for?
+
         if ctx.opts.filename is not None:
             filename = ctx.opts.filename
         else:
@@ -102,28 +108,31 @@ def emit_swagger_spec(modules, fd, path):
 
             path = '/'
 
-        # It is neccesary to modify the names' syntax for swagger code-generation
+        # It is necessary to modify the names' syntax for swagger code-generation
 
         if module.i_groupings:
             for group in module.i_groupings:
                 module.i_groupings[group].keyword = \
-                    safety_sntax_check(group).capitalize()
+                    safety_syntax_check(group).capitalize()
 
-                # print module.i_groupings[group].keyword
+        # list() needed for python 3 compatibility
 
-        groupings = [module.i_groupings[group] for group in
-                     module.i_groupings]
+        groupings = list(module.i_groupings.values())
 
         # Print the swagger definitions from the Yang groupings.
 
         _definitions = gen_model(groupings, _definitions)
 
-        for i in _definitions:
-            definitions[i.capitalize()] = _definitions[i]
+        # capitalize the key names
 
-        chs = [ch for ch in module.i_children if ch.keyword
-               in statements.data_definition_keywords]
+        definitions = dict((k.capitalize(), v) for (k, v) in
+                           _definitions.items())
 
+        # extract children which contain data definition keywords
+
+        chs = filter(lambda ch: ch.keyword \
+                     in statements.data_definition_keywords,
+                     module.i_children)
         if len(chs) > 0:
             model['paths'] = OrderedDict()
             paths = gen_APIs(chs, path, model['paths'], definitions)
@@ -143,21 +152,28 @@ def gen_model(chs, tree_structure):
         if hasattr(ch, 'substmts'):
             for attribute in ch.substmts:
 
+                # process type
+
                 if attribute.keyword == 'type':
                     if attribute.arg[:3] == 'int':
                         node['type'] = 'integer'
                         node['format'] = attribute.arg
+                    elif attribute.arg == 'enumeration':
+                        node['enum'] = map(lambda e: e[0],
+                                attribute.i_type_spec.enums)
+                        node['type'] = 'string'
                     else:
+
+                    # map all other types to string
+
                         node['type'] = 'string'
                 elif attribute.keyword == 'uses':
-
-                    ref = safety_sntax_check(attribute.arg)
+                    ref = safety_syntax_check(attribute.arg)
                     ref = '#/definitions/' + str(ref).capitalize()
                     if str(ch.keyword) == 'list':
                         item = {'$ref': ref}
                         node['items'] = item
                         node['type'] = 'array'
-                        flag = True
                     else:
                         node['$ref'] = ref
                         referenced = True
@@ -168,7 +184,7 @@ def gen_model(chs, tree_structure):
         if not referenced:
             node = gen_model_node(ch, node)
 
-        tree_structure[safety_sntax_check(ch.arg)] = node
+        tree_structure[safety_syntax_check(ch.arg)] = node
 
     return tree_structure
 
@@ -193,6 +209,7 @@ def gen_APIs(
     apis,
     definitions,
     ):
+
     for ch in i_children:
         gen_API_node(ch, path, apis, definitions)
 
@@ -207,6 +224,7 @@ def gen_API_node(
     apis,
     definitions,
     ):
+
     path += str(s.arg) + '/'
     config = True
     tree = {}
@@ -223,7 +241,7 @@ def gen_API_node(
 
         # Get the reference to a pre-defined model by a grouping.
 
-            ref = safety_sntax_check(sub.arg)
+            ref = safety_syntax_check(sub.arg)
             schema = {'$ref': '#/definitions/' + str(ref).capitalize()}
 
     # API entries are only generated from the container and list nodes.
@@ -237,16 +255,31 @@ def gen_API_node(
                 apis[str(path)] = printAPI(s, config, schema, path)
         else:
 
-        # If the container has not a referenced model it is neccesary
+        # If the container has not a referenced model it is necessary
         # to generate the schema tree based on the node children.
 
-            properties = {}
-            item = {}
-            item = gen_model(s.i_children, tree)
-            properties2 = {}
-            properties2['properties'] = item
-            properties[str(s.arg)] = properties2
-            schema['properties'] = properties
+            # In our case we just need to create arrays with references
+            # TODO: extend to general case
+
+            if s.keyword == 'container':
+                for child in s.i_children:
+                    if child.keyword == 'list':
+                        schema['type'] = 'array'
+                    test = filter(lambda ch: ch.keyword == 'uses',
+                                  child.substmts)
+                    schema['items'] = {'$ref': '#/definitions/' \
+                            + safety_syntax_check(test[0].arg).capitalize()}
+            else:
+
+            # TODO: dead code for our model
+
+                properties = {}
+                item = {}
+                item = gen_model(s.i_children, tree)
+                properties2 = {}
+                properties2['properties'] = item
+                properties[str(s.arg)] = properties2
+                schema['properties'] = properties
             apis[str(path)] = printAPI(s, config, schema, path)
 
     if hasattr(s, 'i_children'):
@@ -261,6 +294,7 @@ def printAPI(
     ref,
     path,
     ):
+
     operations = {}
     is_list = False
     if ch.keyword == 'list':
@@ -307,6 +341,7 @@ def generateCREATE(
     schema,
     path,
     ):
+
     path_params = getInputPathParameters(path)
     put = {}
     generateAPIHeader(ch, put, 'Create')
@@ -352,6 +387,7 @@ def generateRETRIEVE(
     schema,
     path,
     ):
+
     path_params = getInputPathParameters(path)
 
     # print path_params
@@ -391,6 +427,7 @@ def generateUPDATE(
     schema,
     path,
     ):
+
     path_params = getInputPathParameters(path)
     post = {}
     generateAPIHeader(ch, post, 'Update')
@@ -434,6 +471,7 @@ def generateDELETE(
     ref,
     path,
     ):
+
     path_params = getInputPathParameters(path)
     delete = {}
     generateAPIHeader(ch, delete, 'Delete')
@@ -476,12 +514,12 @@ def generateAPIHeader(ch, struct, operation):
     struct['consumes'].append('application/json')
 
 
-# Safety names sintax change '-' by lowbars for swagger code-generator.
+# Check name for unsupported characters
 
-def safety_sntax_check(name):
-    for (i, letter) in enumerate(name):
-        if name[i] == '-':
-            name = name[:i] + '_' + name[i + 1:]
-    return name
+def safety_syntax_check(name):
+
+    # at the moment just one replacement is needed
+
+    return name.replace('-', '_')
 
 

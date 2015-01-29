@@ -265,7 +265,7 @@ module service-call {
             type int32;
         }
         container transport_layer{
-			config false;
+            config false;
             uses transport_layer-type;
         }
         leaf operStatus {
@@ -336,19 +336,19 @@ module service-call {
         }
     }
 
-	container calls{
-		config false;
-		list call {
-			key "call_id";
-			uses call;
-		}
-	}
-	container connections{
-		config false;
-		list connection {
-			key "connection_id";
-			uses connection;
-		}
-	}
+    container calls{
+        config false;
+        list call {
+            key "call_id";
+            uses call;
+        }
+    }
+    container connections{
+        config false;
+        list connection {
+            key "connection_id";
+            uses connection;
+        }
+    }
 
 }
