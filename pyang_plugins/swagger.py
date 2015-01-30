@@ -7,9 +7,6 @@ Idea copied from libsmi.
 """
 
 import optparse
-import sys
-import os
-import re
 import json
 import string
 from collections import OrderedDict
@@ -51,12 +48,7 @@ class SwaggerPlugin(plugin.PyangPlugin):
     def setup_fmt(self, ctx):
         pass
 
-    def emit(
-        self,
-        ctx,
-        modules,
-        fd,
-        ):
+    def emit(self,ctx,modules,fd):
 
         # TODO: the path provided by pyang is a list and not a string
 
@@ -102,7 +94,6 @@ def emit_swagger_spec(modules, fd, path):
     printed_header = False
     model = OrderedDict()
     definitions = OrderedDict()
-    _definitions = OrderedDict()
     for module in modules:
         if not printed_header:
             model = print_header(module, fd)
@@ -117,7 +108,7 @@ def emit_swagger_spec(modules, fd, path):
         if module.i_groupings:
             for group in module.i_groupings:
                 module.i_groupings[group].keyword = \
-                    safety_syntax_check(group).capitalize()
+                    safety_syntax_check(group)
 
         # list() needed for python 3 compatibility
 
@@ -125,12 +116,7 @@ def emit_swagger_spec(modules, fd, path):
 
         # Print the swagger definitions from the Yang groupings.
 
-        _definitions = gen_model(groupings, _definitions)
-
-        # capitalize the key names
-
-        definitions = dict((k.capitalize(), v) for (k, v) in
-                           _definitions.items())
+        definitions = gen_model(groupings, definitions)
 
         # extract children which contain data definition keywords
 
@@ -163,9 +149,9 @@ def gen_model(chs, tree_structure):
                         node['type'] = 'integer'
                         node['format'] = attribute.arg
                     elif attribute.arg == 'enumeration':
+                        node['type'] = 'string'
                         node['enum'] = map(lambda e: e[0],
                                 attribute.i_type_spec.enums)
-                        node['type'] = 'string'
                     else:
 
                     # map all other types to string
@@ -173,10 +159,9 @@ def gen_model(chs, tree_structure):
                         node['type'] = 'string'
                 elif attribute.keyword == 'uses':
                     ref = safety_syntax_check(attribute.arg)
-                    ref = '#/definitions/' + str(ref).capitalize()
+                    ref = '#/definitions/' + str(ref)
                     if str(ch.keyword) == 'list':
-                        item = {'$ref': ref}
-                        node['items'] = item
+                        node['items'] = {'$ref': ref}
                         node['type'] = 'array'
                     else:
                         node['$ref'] = ref
@@ -207,12 +192,7 @@ def gen_model_node(ch, tree_structure):
 
 # Generates the swagger path tree.
 
-def gen_APIs(
-    i_children,
-    path,
-    apis,
-    definitions,
-    ):
+def gen_APIs(i_children,path,apis,definitions):
 
     for ch in i_children:
         gen_API_node(ch, path, apis, definitions)
@@ -222,12 +202,7 @@ def gen_APIs(
 
 # Generates the API of the current node.
 
-def gen_API_node(
-    s,
-    path,
-    apis,
-    definitions,
-    ):
+def gen_API_node(s,path,apis,definitions):
 
     path += str(s.arg) + '/'
     config = True
@@ -246,7 +221,7 @@ def gen_API_node(
         # Get the reference to a pre-defined model by a grouping.
 
             ref = safety_syntax_check(sub.arg)
-            schema = {'$ref': '#/definitions/' + str(ref).capitalize()}
+            schema = {'$ref': '#/definitions/' + str(ref)}
 
     # API entries are only generated from the container and list nodes.
 
@@ -272,7 +247,7 @@ def gen_API_node(
                     test = filter(lambda ch: ch.keyword == 'uses',
                                   child.substmts)
                     schema['items'] = {'$ref': '#/definitions/' \
-                            + safety_syntax_check(test[0].arg).capitalize()}
+                            + safety_syntax_check(test[0].arg)}
             else:
 
             # TODO: dead code for our model
@@ -292,12 +267,7 @@ def gen_API_node(
 
 # print the API JSON structure.
 
-def printAPI(
-    ch,
-    config,
-    ref,
-    path,
-    ):
+def printAPI(ch,config,ref,path):
 
     operations = {}
     is_list = False
@@ -339,12 +309,7 @@ def getInputPathParameters(path):
 
 ## CREATE
 
-def generateCREATE(
-    ch,
-    is_list,
-    schema,
-    path,
-    ):
+def generateCREATE(ch,is_list,schema,path):
 
     path_params = getInputPathParameters(path)
     put = {}
@@ -385,12 +350,7 @@ def generateCREATE(
 
 ## RETRIEVE
 
-def generateRETRIEVE(
-    ch,
-    is_list,
-    schema,
-    path,
-    ):
+def generateRETRIEVE(ch,is_list,schema,path):
 
     path_params = getInputPathParameters(path)
 
@@ -426,12 +386,7 @@ def generateRETRIEVE(
 
 ## UPDATE
 
-def generateUPDATE(
-    ch,
-    is_list,
-    schema,
-    path,
-    ):
+def generateUPDATE(ch,is_list,schema,path):
 
     path_params = getInputPathParameters(path)
     post = {}
@@ -470,12 +425,7 @@ def generateUPDATE(
 
 ## DELETE
 
-def generateDELETE(
-    ch,
-    is_list,
-    ref,
-    path,
-    ):
+def generateDELETE(ch,is_list,ref,path):
 
     path_params = getInputPathParameters(path)
     delete = {}
@@ -506,12 +456,8 @@ def generateDELETE(
 
 # Aux function to generate the API-header skeleton.
 
-def generateAPIHeader(
-    ch,
-    struct,
-    operation,
-    is_collection=False,
-    ):
+def generateAPIHeader(ch,struct,operation,is_collection=False):
+
     struct['summary'] = '%s %s%s' % (str(operation),
             str(ch.arg).capitalize(), ('' if is_collection else ' by ID'
             ))
@@ -531,6 +477,5 @@ def safety_syntax_check(name):
 
     # at the moment just one replacement is needed
 
-    return name.replace('-', '_')
-
+    return name.replace('-', '_').capitalize()
 
