@@ -19,7 +19,15 @@ The RESTCONF API of the YANG model is interpreted with [Swagger](http://swagger.
 
 ###Install pyang
 
-### Copy pyang swagger plugin to pyang install directory:
+Download pyang [here](https://code.google.com/p/pyang/wiki/Downloads?tm=2) (tested with version 1.5).
+Extract the archive to a folder of you choice.
+Install pyang  by running the following command inside that folder:
+
+```
+sudo python setup.py install
+```
+
+### Copy the swagger plugin to pyang's plugin directory:
 
 ```
 sudo cp pyang_plugins/swagger.py /usr/local/lib/python2.7/dist-packages/pyang/plugins/
@@ -27,26 +35,30 @@ sudo cp pyang_plugins/swagger.py /usr/local/lib/python2.7/dist-packages/pyang/pl
 
 ### Run pyang swagger plugin
 
+Go to the `yang-cop` folder and run pyang:
+
 ```
 pyang -f swagger service-call.yang -o service-call.json
 ```
 
-## Try JSON output with SWAGGER editor
+## Have a look at the JSON output with the Swagger editor
 
 [Swagger editor](http://editor.swagger.io/#/)
 
 
 ## To build a server stub
 
-We will use swagger code generator. The obtained swagger files from pyang plugin are in swager v2.0. To generate code from these swagger file version we will need the development branch from swagger code generator:
+We will use the swagger code generator. The obtained swagger files from our pyang plugin are in swagger v2.0. To generate code from this swagger file version we will need the [development branch](https://github.com/swagger-api/swagger-codegen/tree/develop_2.0) of the swagger code generator:
 
 
 ```
-https://github.com/swagger-api/swagger-codegen/tree/develop_2.0
+git clone https://github.com/swagger-api/swagger-codegen.git
+cd swagger-codegen/
+git checkout -b develop_2.0 origin/develop_2.0
 ```
 
 
-Go to swagger-codegen main folder and compile the maven project:
+Go to the swagger-codegen main folder and compile the maven project:
 
 ```
 mvn clean install
@@ -55,10 +67,10 @@ mvn clean install
 Run the code-generator by executing the compiled .jar file:
 
 ```
-java -classpath 'target/swagger-codegen-2.1.0-SNAPSHOT.jar:target/lib/*' com.wordnik.swagger.codegen.Codegen -i example.json -l jaxrs
+java -classpath 'target/swagger-codegen-2.1.0-SNAPSHOT.jar:target/lib/*' com.wordnik.swagger.codegen.Codegen -i path/to/service-call.json -l jaxrs
 ```
 
-Run generated server:
+Run the generated server:
 
 ```
 cd generated-code/javaJaxRS
