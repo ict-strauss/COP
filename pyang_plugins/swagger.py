@@ -1,13 +1,9 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-"""Tree output plugin
-
-Idea copied from libsmi.
+"""Swagger output plugin for pyang.
 """
 
 import optparse
 import json
+import re
 import string
 from collections import OrderedDict
 
@@ -16,31 +12,44 @@ from pyang import statements
 
 
 def pyang_plugin_init():
+    """ Initialization function called by the plugin loader. """
     plugin.register_plugin(SwaggerPlugin())
 
 
 class SwaggerPlugin(plugin.PyangPlugin):
+
+    """ Plugin class for swagger file generation."""
 
     def add_output_format(self, fmts):
         self.multiple_modules = True
         fmts['swagger'] = self
 
     def add_opts(self, optparser):
-        optlist = [optparse.make_option('--swagger-help',
-                   dest='swagger_help', action='store_true',
-                   help='Print help on tree symbols and exit'),
-                   optparse.make_option('--swagger-depth', type='int',
-                   dest='depth', default=5,
-                   help='Number of levels to print'),
-                   optparse.make_option('--swagger-filename',
-                   dest='filename', default='service_call.json',
-                   help='Subtree to print'),
-                   optparse.make_option('--swagger-path', dest='path',
-                   type='string',
-                   default='/home/amll/COP/swagger/specs/',
-                   help='Subtree to print')]
-        g = optparser.add_option_group('Tree output specific options')
-        g.add_options(optlist)
+        # A list of command line options supported by the swagger plugin.
+        # TODO: which options are really needed?
+        optlist = [
+            optparse.make_option(
+                '--swagger-help',
+                dest='swagger_help',
+                action='store_true',
+                help='Print help on swagger options and exit'),
+            optparse.make_option(
+                '--swagger-depth',
+                type='int',
+                dest='swagger_depth',
+                default=5,
+                help='Number of levels to print'),
+            optparse.make_option(
+                '--swagger-filename',
+                dest='swagger_filename',
+                help='Subtree to print'),
+            optparse.make_option(
+                '--swagger-path',
+                dest='swagger_path',
+                type='string',
+                help='Path to print')]
+        optgrp = optparser.add_option_group('Swagger specific options')
+        optgrp.add_options(optlist)
 
     def setup_ctx(self, ctx):
         pass
@@ -48,257 +57,214 @@ class SwaggerPlugin(plugin.PyangPlugin):
     def setup_fmt(self, ctx):
         pass
 
-    def emit(self,ctx,modules,fd):
-
-        # TODO: the path provided by pyang is a list and not a string
-
-        if ctx.opts.path is not None:
-            path = string.split(ctx.opts.path, '/')
+    def emit(self, ctx, modules, fd):
+        # TODO: the path variable is currently not used.
+        if ctx.opts.swagger_path is not None:
+            path = string.split(ctx.opts.swagger_path, '/')
             if path[0] == '':
                 path = path[1:]
-
-        # TODO: what is filename used for?
-
-        if ctx.opts.filename is not None:
-            filename = ctx.opts.filename
         else:
             path = None
+
         emit_swagger_spec(modules, fd, ctx.opts.path)
 
 
-def print_help():
-    pass
-
-
-## Print the swagger header.
-
 def print_header(module, fd):
+    """ Print the swagger header information."""
     module_name = str(module.arg)
     header = OrderedDict()
     header['swagger'] = '2.0'
-    header['info'] = {'description': str(module_name
-                      + ' API generated from '
-                      + module.pos.ref.rsplit('/', 1)[1]),
-                      'version': '1.0.0', 'title': str(module_name
-                      + ' API')}
+    header['info'] = {
+        'description': '%s API generated from %s' % (
+            module_name, module.pos.ref.rsplit('/', 1)[1]),
+        'version': '1.0.0',
+        'title': str(module_name + ' API')
+    }
     header['host'] = 'localhost:8080'
-
-    # TODO: flexible base path
-
+    # TODO: introduce flexible base path. (CLI options?)
     header['basePath'] = '/restconf/config'
     header['schemes'] = ['http']
     return header
 
 
 def emit_swagger_spec(modules, fd, path):
+    """ Emits the complete swagger specification for the yang file."""
     printed_header = False
     model = OrderedDict()
     definitions = OrderedDict()
+    # Go through all modules and extend the model.
     for module in modules:
         if not printed_header:
             model = print_header(module, fd)
             printed_header = True
-
-            # path = '/'+str(module.arg)+':'
-
             path = '/'
-
-        # It is necessary to modify the names' syntax for swagger code-generation
-
-        if module.i_groupings:
-            for group in module.i_groupings:
-                module.i_groupings[group].keyword = \
-                    safety_syntax_check(group)
-
         # list() needed for python 3 compatibility
-
         groupings = list(module.i_groupings.values())
-
-        # Print the swagger definitions from the Yang groupings.
-
+        # Print the swagger definitions of the Yang groupings.
         definitions = gen_model(groupings, definitions)
-
         # extract children which contain data definition keywords
-
-        chs = filter(lambda ch: ch.keyword \
-                     in statements.data_definition_keywords,
-                     module.i_children)
+        chs = [ch for ch in module.i_children
+               if ch.keyword in statements.data_definition_keywords]
+        # generate the APIs for all children
         if len(chs) > 0:
             model['paths'] = OrderedDict()
-            paths = gen_APIs(chs, path, model['paths'], definitions)
-
-        # model["paths"] = paths
-
+            gen_apis(chs, path, model['paths'], definitions)
         model['definitions'] = definitions
         fd.write(json.dumps(model, indent=4, separators=(',', ': ')))
 
 
-# Generates the swagger definitions tree.
-
-def gen_model(chs, tree_structure):
+def gen_model(children, tree_structure):
+    """ Generates the swagger definition tree."""
     referenced = False
-    for ch in chs:
+    for child in children:
         node = {}
-        if hasattr(ch, 'substmts'):
-            for attribute in ch.substmts:
-
-                # process type
-
+        if hasattr(child, 'substmts'):
+            for attribute in child.substmts:
+                # process the 'type' attribute:
+                # Currently integer, enumeration and string are supported.
                 if attribute.keyword == 'type':
                     if attribute.arg[:3] == 'int':
                         node['type'] = 'integer'
                         node['format'] = attribute.arg
                     elif attribute.arg == 'enumeration':
                         node['type'] = 'string'
-                        node['enum'] = map(lambda e: e[0],
-                                attribute.i_type_spec.enums)
-                    else:
-
+                        node['enum'] = [e[0]
+                                        for e in attribute.i_type_spec.enums]
                     # map all other types to string
-
+                    else:
                         node['type'] = 'string'
+                # Process the reference to another model.
+                # We differentiate between single and array references.
                 elif attribute.keyword == 'uses':
-                    ref = safety_syntax_check(attribute.arg)
-                    ref = '#/definitions/' + str(ref)
-                    if str(ch.keyword) == 'list':
+                    ref = to_upper_camelcase(attribute.arg)
+                    ref = '#/definitions/' + ref
+                    if str(child.keyword) == 'list':
                         node['items'] = {'$ref': ref}
                         node['type'] = 'array'
                     else:
                         node['$ref'] = ref
                         referenced = True
-
-        # When a node contains a referenced model as an attribute
-        # the algorithm does not go deeper in the referenced model sub-tree.
-
+        # When a node contains a referenced model as an attribute the algorithm
+        # does not go deeper into the sub-tree of the referenced model.
         if not referenced:
-            node = gen_model_node(ch, node)
-
-        tree_structure[safety_syntax_check(ch.arg)] = node
-
+            node = gen_model_node(child, node)
+        # Groupings are class names and upper camelcase.
+        # All the others are variables and lower camelcase.
+        if child.keyword == 'grouping':
+            tree_structure[to_upper_camelcase(child.arg)] = node
+        else:
+            tree_structure[to_lower_camelcase(child.arg)] = node
+    # TODO: do we really need this return value? We are working on the
+    # reference anyhow.
     return tree_structure
 
 
-# Generates the properties sub-tree of the current node.
-
-def gen_model_node(ch, tree_structure):
-    if hasattr(ch, 'i_children'):
+def gen_model_node(node, tree_structure):
+    """ Generates the properties sub-tree of the current node."""
+    if hasattr(node, 'i_children'):
         properties = {}
-        properties = gen_model(ch.i_children, properties)
-        if properties and not '$ref' in tree_structure:
+        properties = gen_model(node.i_children, properties)
+        if properties:
             tree_structure['properties'] = properties
-
+    # TODO: do we need a return value or is the reference enough.
     return tree_structure
 
 
-# Generates the swagger path tree.
-
-def gen_APIs(i_children,path,apis,definitions):
-
-    for ch in i_children:
-        gen_API_node(ch, path, apis, definitions)
-
+def gen_apis(children, path, apis, definitions):
+    """ Generates the swagger path tree for the APIs."""
+    for child in children:
+        gen_api_node(child, path, apis, definitions)
+    # TODO: do we need a return value or is the reference enough.
     return apis
 
 
 # Generates the API of the current node.
 
-def gen_API_node(s,path,apis,definitions):
-
-    path += str(s.arg) + '/'
+def gen_api_node(node, path, apis, definitions):
+    """ Generate the API for a node."""
+    path += str(node.arg) + '/'
     config = True
     tree = {}
     schema = {}
-    for sub in s.substmts:
-
+    for sub in node.substmts:
         # If config is False the API entry is read-only.
-
         if sub.keyword == 'config':
+            # TODO: this is not correct in general because it does not consider
+            # inheritance. It should be changed to node.i_config.
             config = sub.arg
         elif sub.keyword == 'key':
             key = sub.arg
         elif sub.keyword == 'uses':
-
-        # Get the reference to a pre-defined model by a grouping.
-
-            ref = safety_syntax_check(sub.arg)
-            schema = {'$ref': '#/definitions/' + str(ref)}
-
-    # API entries are only generated from the container and list nodes.
-
-    if s.keyword == 'list' or s.keyword == 'container':
+            # Set the reference to a model, previously defined by a grouping.
+            schema = {'$ref': '#/definitions/' + to_upper_camelcase(sub.arg)}
+    # API entries are only generated from container and list nodes.
+    if node.keyword == 'list' or node.keyword == 'container':
         if schema:
-            if s.keyword == 'list':
-                path += '{' + str(key) + '}/'
-                apis[str(path)] = printAPI(s, config, schema, path)
-            elif s.keyword == 'container':
-                apis[str(path)] = printAPI(s, config, schema, path)
+            if node.keyword == 'list':
+                path += '{' + to_lower_camelcase(key) + '}/'
+                apis[str(path)] = print_api(node, config, schema, path)
+            elif node.keyword == 'container':
+                apis[str(path)] = print_api(node, config, schema, path)
         else:
-
-        # If the container has not a referenced model it is necessary
-        # to generate the schema tree based on the node children.
+            # If the container has not a referenced model it is necessary
+            # to generate the schema tree based on the node children.
 
             # In our case we just need to create arrays with references
-            # TODO: extend to general case
-
-            if s.keyword == 'container':
-                for child in s.i_children:
+            # TODO: extend to general case and clean up the branches.
+            if node.keyword == 'container':
+                for child in node.i_children:
                     if child.keyword == 'list':
                         schema['type'] = 'array'
-                    test = filter(lambda ch: ch.keyword == 'uses',
-                                  child.substmts)
-                    schema['items'] = {'$ref': '#/definitions/' \
-                            + safety_syntax_check(test[0].arg)}
+                    ref_model = [ch for ch in child.substmts
+                                 if ch.keyword == 'uses']
+                    schema['items'] = {
+                        '$ref': '#/definitions/' + to_upper_camelcase(
+                            ref_model[0].arg)
+                    }
             else:
-
-            # TODO: dead code for our model
-
+                # TODO: dead code for our model
                 properties = {}
                 item = {}
-                item = gen_model(s.i_children, tree)
+                item = gen_model(node.i_children, tree)
                 properties2 = {}
                 properties2['properties'] = item
-                properties[str(s.arg)] = properties2
+                properties[str(node.arg)] = properties2
                 schema['properties'] = properties
-            apis[str(path)] = printAPI(s, config, schema, path)
-
-    if hasattr(s, 'i_children'):
-        gen_APIs(s.i_children, path, apis, definitions)
+            apis[str(path)] = print_api(node, config, schema, path)
+    # Generate APIs for children.
+    if hasattr(node, 'i_children'):
+        gen_apis(node.i_children, path, apis, definitions)
 
 
 # print the API JSON structure.
 
-def printAPI(ch,config,ref,path):
-
+def print_api(node, config, ref, path):
+    """ Creates the available operations for the node."""
     operations = {}
-    is_list = False
-    if ch.keyword == 'list':
-        is_list = True
-    if hasattr(ch, 'i_children'):
-        for param in ch.i_children:
-            if param.keyword == 'list':
-                is_list = True
-
-    if config != False and config != 'false':
-
-        # print config
-
-        operations['put'] = generateCREATE(ch, is_list, ref, path)
-        operations['get'] = generateRETRIEVE(ch, is_list, ref, path)
-        operations['post'] = generateUPDATE(ch, is_list, ref, path)
-        operations['delete'] = generateDELETE(ch, is_list, ref, path)
+#     is_list = False
+#     if node.keyword == 'list':
+#         is_list = True
+#     if hasattr(node, 'i_children'):
+#         for param in node.i_children:
+#             if param.keyword == 'list':
+#                 is_list = True
+    if config and config != 'false':
+        operations['put'] = generate_create(node, ref, path)
+        operations['get'] = generate_retrieve(node, ref, path)
+        operations['post'] = generate_update(node, ref, path)
+        operations['delete'] = generate_delete(node, ref, path)
     else:
-        operations['get'] = generateRETRIEVE(ch, is_list, ref, path)
+        operations['get'] = generate_retrieve(node, ref, path)
     return operations
 
 
-# Get the input paramets in the url
-
-def getInputPathParameters(path):
+def get_input_path_parameters(path):
+    """"Get the input parameters from the path url."""
     path_params = []
     params = path.split('/')
     for param in params:
         if len(param) > 0 and param[0] == '{' and param[len(param) - 1] \
-            == '}':
+                == '}':
             path_params.append(param[1:-1])
     return path_params
 
@@ -307,95 +273,77 @@ def getInputPathParameters(path):
 ############### Creating CRUD Operations ##################
 ###########################################################
 
-## CREATE
+# CREATE
 
-def generateCREATE(ch,is_list,schema,path):
-
-    path_params = getInputPathParameters(path)
+def generate_create(stmt, schema, path):
+    """ Generates the create function definitions."""
+    path_params = get_input_path_parameters(path)
     put = {}
-    generateAPIHeader(ch, put, 'Create')
-
-    # # Input parameters
-
-    parameter = {}
-    put['parameters'] = []
+    generate_api_header(stmt, put, 'Create')
+    # Input parameters
     if path_params:
-
-        # # Input parameters
-
-        for param in path_params:
-            parameter = {}
-            parameter['in'] = 'path'
-            parameter['name'] = str(param)
-            parameter['description'] = 'ID of ' + str(param)[:-3]
-            parameter['required'] = True
-            parameter['type'] = 'string'
-            put['parameters'].append(parameter)
-    parameter2 = {}
-    parameter2['in'] = 'body'
-    parameter2['name'] = str(ch.arg)
-    parameter2['schema'] = schema
-    parameter2['description'] = 'ID of ' + str(ch.arg)
-    parameter2['required'] = True
-    put['parameters'].append(parameter2)
-
-    # # Responses
-
-    response = {'200': {'description': 'Successful operation'},
-                '400': {'description': 'Invalid ID parameter'},
-                '404': {'description': 'Call not found'}}
+        put['parameters'] = create_parameter_list(path_params)
+    else:
+        put['parameters'] = []
+    put['parameters'].append(create_body_dict(stmt.arg, schema))
+    # Responses
+    response = create_responses(stmt.arg)
     put['responses'] = response
     return put
 
 
-## RETRIEVE
+# RETRIEVE
 
-def generateRETRIEVE(ch,is_list,schema,path):
-
-    path_params = getInputPathParameters(path)
-
-    # print path_params
-
+def generate_retrieve(stmt, schema, path):
+    """ Generates the retrieve function definitions."""
+    path_params = get_input_path_parameters(path)
     get = {}
-    generateAPIHeader(ch, get, 'Retrieve', ch.keyword == 'container'
-                      and not path_params)
+    generate_api_header(stmt, get, 'Retrieve', stmt.keyword == 'container'
+                        and not path_params)
     if path_params:
-        get['parameters'] = []
-
-        # # Input parameters
-
-        for param in path_params:
-            parameter = {}
-            parameter['in'] = 'path'
-            parameter['name'] = str(param)
-            parameter['description'] = 'ID of ' + str(param)[:-3]
-            parameter['required'] = True
-            parameter['type'] = 'string'
-            get['parameters'].append(parameter)
-
-    # # Responses
-
-    response = {'200': {'description': 'Successful operation',
-                'schema': schema},
-                '400': {'description': 'Invalid ID parameter'},
-                '404': {'description': '' + str(ch.arg).capitalize() \
-                + ' not found'}}
+        # Input parameters
+        get['parameters'] = create_parameter_list(path_params)
+    # Responses
+    response = create_responses(stmt.arg, schema)
     get['responses'] = response
     return get
 
 
-## UPDATE
+# UPDATE
 
-def generateUPDATE(ch,is_list,schema,path):
-
-    path_params = getInputPathParameters(path)
+def generate_update(stmt, schema, path):
+    """ Generates the update function definitions."""
+    path_params = get_input_path_parameters(path)
     post = {}
-    generateAPIHeader(ch, post, 'Update')
+    generate_api_header(stmt, post, 'Update')
+    # Input parameters
+    post['parameters'] = create_parameter_list(path_params)
+    post['parameters'].append(create_body_dict(stmt.arg, schema))
+    # Responses
+    response = create_responses(stmt.arg)
+    post['responses'] = response
+    return post
 
-    # # Input parameters
 
-    post['parameters'] = []
+# DELETE
 
+def generate_delete(stmt, ref, path):
+    """ Generates the delete function definitions."""
+    path_params = get_input_path_parameters(path)
+    delete = {}
+    generate_api_header(stmt, delete, 'Delete')
+    # Input parameters
+    if path_params:
+        delete['parameters'] = create_parameter_list(path_params)
+    # Responses
+    response = create_responses(stmt.arg)
+    delete['responses'] = response
+    return delete
+
+
+def create_parameter_list(path_params):
+    """ Create description from a list of path parameters."""
+    param_list = []
     for param in path_params:
         parameter = {}
         parameter['in'] = 'path'
@@ -403,79 +351,60 @@ def generateUPDATE(ch,is_list,schema,path):
         parameter['description'] = 'ID of ' + str(param)[:-3]
         parameter['required'] = True
         parameter['type'] = 'string'
-        post['parameters'].append(parameter)
-
-    parameter2 = {}
-    parameter2['in'] = 'body'
-    parameter2['name'] = str(ch.arg)
-    parameter2['schema'] = schema
-    parameter2['description'] = 'ID of ' + str(ch.arg)
-    parameter2['required'] = True
-    post['parameters'].append(parameter2)
-
-    # # Responses
-
-    response = {'200': {'description': 'Successful operation'},
-                '400': {'description': 'Invalid ID parameter'},
-                '404': {'description': '' + str(ch.arg).capitalize() \
-                + ' not found'}}
-    post['responses'] = response
-    return post
+        param_list.append(parameter)
+    return param_list
 
 
-## DELETE
-
-def generateDELETE(ch,is_list,ref,path):
-
-    path_params = getInputPathParameters(path)
-    delete = {}
-    generateAPIHeader(ch, delete, 'Delete')
-
-    # # Input parameters
-
-    if path_params:
-        parameter = {}
-        delete['parameters'] = []
-        for param in path_params:
-            parameter['in'] = 'path'
-            parameter['name'] = str(param)
-            parameter['description'] = 'ID of ' + str(param)[:-3]
-            parameter['required'] = True
-            parameter['type'] = 'string'
-            delete['parameters'].append(parameter)
-
-    # # Responses
-
-    response = {'200': {'description': 'Successful operation'},
-                '400': {'description': 'Invalid ID parameter'},
-                '404': {'description': '' + str(ch.arg).capitalize() \
-                + ' not found'}}
-    delete['responses'] = response
-    return delete
+def create_body_dict(name, schema):
+    """ Create a body description from the name and the schema."""
+    body_dict = {}
+    body_dict['in'] = 'body'
+    body_dict['name'] = name
+    body_dict['schema'] = schema
+    body_dict['description'] = 'ID of ' + name
+    body_dict['required'] = True
+    return body_dict
 
 
-# Aux function to generate the API-header skeleton.
+def create_responses(name, schema=None):
+    """ Create generic responses based on the name and an optional schema."""
+    response = {
+        '200': {'description': 'Successful operation'},
+        '400': {'description': 'Invalid ID parameter'},
+        '404': {'description': '' + name.capitalize() + ' not found'}
+    }
+    if schema:
+        response['200']['schema'] = schema
+    return response
 
-def generateAPIHeader(ch,struct,operation,is_collection=False):
 
-    struct['summary'] = '%s %s%s' % (str(operation),
-            str(ch.arg).capitalize(), ('' if is_collection else ' by ID'
-            ))
-    struct['description'] = str(operation) + ' operation of resource :' \
-        + str(ch.arg)
+def generate_api_header(stmt, struct, operation, is_collection=False):
+    """ Auxiliary function to generate the API-header skeleton.
+    The "is_collection" flag is used to decide if an ID is needed.
+    """
+    struct['summary'] = '%s %s%s' % (
+        str(operation), str(stmt.arg),
+        ('' if is_collection else ' by ID'))
+    struct['description'] = str(operation) + ' operation of resource: ' \
+        + str(stmt.arg)
     struct['operationId'] = '%s%s%s' % (str(operation).lower(),
-            str(ch.arg).capitalize(), ('' if is_collection else 'byID'))
-    struct['produces'] = []
-    struct['produces'].append('application/json')
-    struct['consumes'] = []
-    struct['consumes'].append('application/json')
+                                        to_upper_camelcase(stmt.arg),
+                                        ('' if is_collection else 'ById'))
+    struct['produces'] = ['application/json']
+    struct['consumes'] = ['application/json']
 
 
-# Check name for unsupported characters
+def to_lower_camelcase(name):
+    """ Converts the name string to lower camelcase by using "-" and "_" as
+    markers.
+    """
+    return re.sub(r'(?:\B_|\b\-)([a-zA-Z0-9])', lambda l: l.group(1).upper(),
+                  name)
 
-def safety_syntax_check(name):
 
-    # at the moment just one replacement is needed
-
-    return name.replace('-', '_').capitalize()
-
+def to_upper_camelcase(name):
+    """ Converts the name string to upper camelcase by using "-" and "_" as
+    markers.
+    """
+    return re.sub(r'(?:\B_|\b\-|^)([a-zA-Z0-9])', lambda l: l.group(1).upper(),
+                  name)
