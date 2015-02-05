@@ -77,6 +77,15 @@ cd generated-code/javaJaxRS
 mvn jetty:run
 ```
 
+After starting the server open the following link: 
+```
+http://localhost:8002/restconf/config/calls
+```
+If everything worked, you will see this reply:
+```
+{"code":4,"type":"ok","message":"magic!"}
+```
+
 
 License
 -------
