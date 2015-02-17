@@ -148,6 +148,12 @@ def gen_model(children, tree_structure):
         # does not go deeper into the sub-tree of the referenced model.
         if not referenced:
             node = gen_model_node(child, node)
+        # Leaf-lists need to create arrays.
+        # Copy the 'node' content to 'items' and change the reference
+        if child.keyword == 'leaf-list':
+            ll_node = {'type': 'array'}
+            ll_node['items'] = node
+            node = ll_node
         # Groupings are class names and upper camelcase.
         # All the others are variables and lower camelcase.
         if child.keyword == 'grouping':
