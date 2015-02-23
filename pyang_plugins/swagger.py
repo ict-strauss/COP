@@ -76,7 +76,7 @@ def print_header(module, fd):
     header['swagger'] = '2.0'
     header['info'] = {
         'description': '%s API generated from %s' % (
-            module_name, module.pos.ref.rsplit('/', 1)[1]),
+            module_name, module.pos.ref.rsplit('/')[-1]),
         'version': '1.0.0',
         'title': str(module_name + ' API')
     }
