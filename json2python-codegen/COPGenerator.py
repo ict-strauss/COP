@@ -2,6 +2,8 @@
     List of contributors:
     -Alejandro Aguado (May, 2015), High Performance Networks group, University of Bristol
     [a.aguado@bristol.ac.uk]
+    -Arturo Mayoral (May, 2015), Optical Networks & Systems group, Centre Tecnologic de Telecomunicacions de Catalunya (CTTC).
+    [arturo.mayoral@cttc.es]
 
 
     -Description:
