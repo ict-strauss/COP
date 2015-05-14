@@ -125,7 +125,7 @@ def handleResponse(id,description,schema=None):
         return 'print "There is something wrong with responses"'
 
 
-def generateRESTapi(data,name,imp):
+def generateRESTapi(data,name,imp, restname):
     index=0
     line="\n"
     out=open(name,"w+")
@@ -133,7 +133,7 @@ def generateRESTapi(data,name,imp):
     out.write("import web\nimport json"+line)
     out.write(line+"#CALLABLE OBJECTS"+line)
     for im in imp:
-        out.write("from objects."+im+" import "+im+line)
+        out.write("from objects_"+restname+"."+im+" import "+im+line)
     out.write(line)
     out.write("class MyApplication(web.application):\n"+tab(1)+"def run(self, port=8080, *middleware):\n"+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
     urls="( "
@@ -148,21 +148,24 @@ def generateRESTapi(data,name,imp):
     out.write("class NotFoundError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '404 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
     out.write("class BadRequestError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '400 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
     out.write("class Successful(web.HTTPError):\n"+tab(1)+"def __init__(self,message,info=''):\n"+tab(2)+"status = '200 '+message\n"+tab(2)+"headers = {'Content-Type': 'application/json'}\n"+tab(2)+"data = info\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
-
+    ret={}
     for func in info.keys():
         #create class
         out.write("#"+info[func]['url']+line)
         out.write("class "+func+":"+line+line)
         #create funcs with inlineVars
+        ret[func+"Handle"]=[]
         for method in info[func]['methods'].keys():
             index+=1
             out.write(tab(index)+"def "+method.upper()+generateParameters(info[func]["inlineVars"])+line)
             index+=1
+            ret[func+"Handle"].append(method)
             out.write(tab(index)+"print \""+info[func]['methods'][method]['desc']+"\""+line)
             if (info[func]['methods'][method]['body']):
                 out.write(tab(index)+"data=web.data() #data in body"+line)
                 if (info[func]['methods'][method]['json']):
                     out.write(tab(index)+"input=json.loads(data) #json data as input"+line)
+            out.write(tab(index)+"#from funcs_"+restname+"."+func+"Handle import "+func+"Handle"+line)
             out.write(tab(index)+"#response = "+func+"Handle()."+method+"() #You should uncomment and create this class to handle this request"+line) #The names of the classes could change. See how to fix them
             for resp in info[func]['methods'][method]["resp"].keys():
                 jotason=False
@@ -184,6 +187,7 @@ def generateRESTapi(data,name,imp):
     out.write(tab(index)+"app.run("+str(data['port'])+")"+line)
     index-=1
     out.close()
+    return ret
 
 def generateAttribute(att): #Initialization of different attributes
     text="self."+att['att']+"="
@@ -198,11 +202,11 @@ def generateAttribute(att): #Initialization of different attributes
     else:
         return text+"None #FIXME: This parameter is not well defined"
 
-def generateClasses(data):
+def generateClasses(data, restname):
     line="\n"
-    if not os.path.exists("objects/"):
-        os.makedirs("objects/")
-    out=open("objects/__init__.py","w+")
+    if not os.path.exists("objects_"+restname+"/"):
+        os.makedirs("objects_"+restname+"/")
+    out=open("objects_"+restname+"/__init__.py","w+")
     out.write(" "+line)
     out.close()
     for klass in data:
@@ -210,7 +214,7 @@ def generateClasses(data):
         name=klass['class']
         imports=klass['imports']
         atts=klass['atts']
-        out=open("objects/"+name+".py","w+")
+        out=open("objects_"+restname+"/"+name+".py","w+")
         #Necessary imports
         for imp in imports:
             out.write("from "+imp+" import "+imp+line)
@@ -245,6 +249,35 @@ def generateClasses(data):
         index-=1
         out.close()
 
+def generateCallableClasses(funcs, restname):
+    line="\n"
+    if not os.path.exists("funcs_"+restname+"/"):
+        os.makedirs("funcs_"+restname+"/")
+        out=open("funcs_"+restname+"/__init__.py","w+")
+        out.write(line)
+        out.close()
+    index=0
+    for func in funcs:
+        if (os.path.isfile("funcs_"+restname+"/"+func+".py")): #if exists, don't create
+            print "funcs_"+restname+"/"+func+".py already exists, not overwrite"
+        else:
+            out=open("funcs_"+restname+"/"+func+".py","w+")
+            out.write(line+line+"class "+func+":"+line+line)
+            index+=1
+            out.write(tab(index)+"def __init__(self):"+line)
+            index+=1
+            out.write(tab(index)+"print 'initialize class'"+line+line)
+            index-=1
+            for method in funcs[func]:
+                out.write(tab(index)+"def "+method+"(self):"+line)
+                index+=1
+                out.write(tab(index)+"print 'handling "+method+"'"+line+line)
+                index-=1
+            index-=1
+            out.close()
+
+
+
 if (len(sys.argv)==1):
     print "Filename argument required"
 else:
@@ -255,6 +288,7 @@ else:
     file=open(filename, 'rb')
 
     name=filename.split("/")[-1].split(".")[0]+".py"
+    restname=filename.split("/")[-1].split(".")[0].replace("-","_")
 
     stri=file.read()
     js=json.loads(stri)
@@ -263,8 +297,8 @@ else:
     #print json.dumps(jsret)
     #generating classes first
     print "Generating Rest Server and Classes for "+name
-    print "classes could be found in './objects/' folder"
-    generateClasses(jsret)
+    print "classes could be found in './objects_"+restname+"/' folder"
+    generateClasses(jsret,restname)
     imp=[]
     #create imports for the main class (in case the user needs to use them)
     for klass in jsret:
@@ -272,7 +306,8 @@ else:
     #generate (is any) the RESTful Server
     if "paths" in js.keys():
         jsret2=translateRequest(js)
-        generateRESTapi(jsret2,name,imp)
+        ret=generateRESTapi(jsret2,name,imp, restname)
+        generateCallableClasses(ret,restname)
     print "Finished"
 
 
