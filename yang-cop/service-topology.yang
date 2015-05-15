@@ -19,38 +19,17 @@ module service-topology {
       description "Service topology module in progress.";
     }
 
-    grouping vertex{
-        leaf vertex_id{
+    grouping topology{
+        leaf topology_id{
             type string;
         }
-        leaf name{
-            type string;
+        list nodes{
+			key "node_id";
+            uses node;
         }
-        list edge_end{
-            key "edge_end_id";
-            uses edge_end;
-        }
-    }
-
-    list vertex{
-        key "vertex_id";
-        description "";
-
-        uses vertex;
-    }
-   
-
-    list edge{
-        key "edge_id";
-        description "";
-        leaf edge_id{
-            type string;
-        }
-        container aEnd{
-            uses vertex;
-        }
-        container zEnd{
-            uses vertex;
+        list edges{
+            key "edge_id";
+            uses edge;
         }
     }
 
@@ -58,14 +37,104 @@ module service-topology {
         leaf edge_end_id{
             type string;
         }
-        list vertex{
-            key "vertex_id";
-            leaf vertex_id{
-              type string;
-            }
+        leaf switching_cap{
+            type string;
         }
         leaf edge_id{
             type string;
         }
+		leaf peer_node_id{
+			type string;	
+		}
     }
+
+    grouping node{
+        leaf node_id{
+            type string;
+        }
+        leaf name{
+            type string;
+        }
+		leaf domain{
+			type string;
+		}
+		leaf nodetype{
+			type string;		
+		}
+        list edge_end{
+            key "edge_end_id";
+            uses edge_end;
+        }
+    }
+
+    grouping edge{
+        leaf edge_id{
+            type string;
+        }
+        leaf name{
+            type string;
+        }
+		leaf linkType{
+			type string;		
+		}
+		leaf metric{
+			type string;		
+		}
+		leaf max_resv_bw{
+			type string;	
+		}
+		leaf unreserv_bw{
+			type string;	
+		}
+        container source{
+			config false;
+            uses node;
+        }
+        container target{
+			config false;
+            uses node;
+        }
+        container local_ifid{
+			config false;
+            uses edge_end;
+        }
+        container remote_ifid{
+			config false;
+            uses edge_end;
+        }
+    }
+
+    container topologies{
+        config false;
+        list topology{
+            key "topology_id";
+            uses topology;
+        }
+    }
+
+    container nodes{
+        config false;
+        list node{
+            key "node_id";
+            uses node;
+        }
+    }
+   
+    container edges{
+        config false;
+        list edge{
+            key "edge_id";
+            uses edge;
+        }
+    }
+
+    container edge_ends{
+        config false;
+        list edge_end{
+            key "edge_end_id";
+            uses edge_end;
+        }
+    }
+
+
 }
