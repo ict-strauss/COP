@@ -153,7 +153,7 @@ def generateRESTapi(data,name,imp, restname):
 
 	out.write(line+"# CALLABLE OBJECTS"+line)
 	for im in imp:
-		out.write("from objects_"+restname+"."+im.lower()+" import "+im+line)
+		out.write("from objects_"+restname+"."+im[0].lower()+im[1:]+" import "+im+line)
 
 	out.write(line)
 	out.write("class MyApplication(web.application):\n"+tab(1)+"def run(self, port=8080, *middleware):\n"+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
@@ -234,10 +234,10 @@ def generateClasses(data, restname):
 		name=klass['class']
 		imports=klass['imports']
 		atts=klass['atts']
-		out=open("objects_"+restname+"/"+name.lower()+".py","w+")
+		out=open("objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
 		#Necessary imports
 		for imp in imports:
-			out.write("from "+imp.lower()+" import "+imp+line)
+			out.write("from "+imp[0].lower()+imp[1:]+" import "+imp+line)
 		out.write(line)
 		#Main class
 		out.write("class "+name+":"+line+line)
