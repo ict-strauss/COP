@@ -16,6 +16,7 @@
 import sys
 import json
 import os
+from CGConfiguration import CGConfiguration
 
 def decomposeUrl(str):
     slices=str.split("{")
@@ -127,87 +128,102 @@ def handleResponse(id,description,schema=None):
         return 'print "There is something wrong with responses"'
 
 
-def generateRESTapi(data,name,imp, restname):
-	index=0
-	line="\n"
-	out=open(name,"w+")
+def generateRESTapi(data,name,imp, restname, params):
+    index=0
+    line="\n"
+    out=open(name,"w+")
 
-	urls="( "
-	info=data['paths']
-	name_classes = {}
-	params_callback = {}
-	for func in info.keys():
-		# Here we generate the name of the class and its related callback to the backend program based on the API syntax of each function.
-		list_element_url = info[func]['url'].split('/')
-		indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
-		name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
-		params_callback[func] = "("+",".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)'])+")"
+    urls="( "
+    info=data['paths']
+    name_classes = {}
+    params_callback = {}
+    for func in info.keys():
+        # Here we generate the name of the class and its related callback to the backend program based on the API syntax of each function.
+        list_element_url = info[func]['url'].split('/')
+        indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
+        name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
+        params_callback[func] = "("+",".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)'])+")"
 
-		urls+="\""+info[func]['url']+"\" , \""+name_classes[func]+"\" , \n\t"
+        urls+="\""+info[func]['url']+"\" , \""+name_classes[func]+"\" , \n\t"
 
-	#imports
-	out.write("import web\nimport json"+line)
-	out.write(line+"# BACKEND FUNCTIONS"+line)
-	for func in info.keys():
-		out.write("from funcs_"+restname+"."+name_classes[func][0].lower()+name_classes[func][1:]+"Impl import "+name_classes[func]+"Impl"+line)
+    #imports
+    out.write("import web\nimport json"+line)
+    out.write(line+"# BACKEND FUNCTIONS"+line)
+    for func in info.keys():
+        out.write("from funcs_"+restname+"."+name_classes[func][0].lower()+name_classes[func][1:]+"Impl import "+name_classes[func]+"Impl"+line)
 
-	out.write(line+"# CALLABLE OBJECTS"+line)
-	for im in imp:
-		out.write("from objects_"+restname+"."+im[0].lower()+im[1:]+" import "+im+line)
+    out.write(line+"# CALLABLE OBJECTS"+line)
+    for im in imp:
+        out.write("from objects_"+restname+"."+im[0].lower()+im[1:]+" import "+im+line)
 
-	out.write(line)
-	out.write("class MyApplication(web.application):\n"+tab(1)+"def run(self, port=8080, *middleware):\n"+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
-	urls=urls[:-2]+")"
+    out.write(line)
+    out.write("class MyApplication(web.application):\n"+tab(1)+"def run(self, port=8080, *middleware):\n"+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
+    urls=urls[:-2]+")"
 
-	#urls and app initialization
-	out.write("urls = "+urls+line)
-	out.write("app = MyApplication(urls, globals())"+line+line)
-	#error functions
-	out.write("class NotFoundError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '404 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
-	out.write("class BadRequestError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '400 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
-	out.write("class Successful(web.HTTPError):\n"+tab(1)+"def __init__(self,message,info=''):\n"+tab(2)+"status = '200 '+message\n"+tab(2)+"headers = {'Content-Type': 'application/json'}\n"+tab(2)+"data = info\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
-	ret={}
-	for func in info.keys():
-		# Create class
-		out.write("#"+info[func]['url']+line)
-		out.write("class "+name_classes[func]+":"+line+line)
-		# Create funcs with inlineVars
-		ret[func+"Handle"]=[]
-		for method in info[func]['methods'].keys():
-			index+=1
-			out.write(tab(index)+"def "+method.upper()+generateParameters(info[func]["inlineVars"])+line)
-			index+=1
-			ret[func+"Handle"].append(method)
-			out.write(tab(index)+"print \""+info[func]['methods'][method]['desc']+"\""+line)
-			if (info[func]['methods'][method]['body']):
-				out.write(tab(index)+"data=web.data() #data in body"+line)
-				if (info[func]['methods'][method]['json']):
-					out.write(tab(index)+"input=json.loads(data) #json data as input"+line)
-			out.write(tab(index)+"#from funcs_"+restname+"."+func+"Handle import "+func+"Handle"+line)
-			out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+params_callback[func]+" #You should uncomment and create this class to handle this request"+line)
+    #urls and app initialization
+    out.write("urls = "+urls+line)
+    out.write("app = MyApplication(urls, globals())"+line+line)
+    #error functions
+    out.write("class NotFoundError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '404 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
+    out.write("class BadRequestError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '400 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
+    out.write("class Successful(web.HTTPError):\n"+tab(1)+"def __init__(self,message,info=''):\n"+tab(2)+"status = '200 '+message\n"+tab(2)+"headers = {'Content-Type': 'application/json'}\n"+tab(2)+"data = info\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
+    ret={}
+    for func in info.keys():
+        # Create class
+        out.write("#"+info[func]['url']+line)
+        out.write("class "+name_classes[func]+":"+line+line)
+        # Create funcs with inlineVars
+        ret[func+"Handle"]=[]
+        for method in info[func]['methods'].keys():
+            index+=1
+            out.write(tab(index)+"def "+method.upper()+generateParameters(info[func]["inlineVars"])+line)
+            index+=1
+            ret[func+"Handle"].append(method)
+            out.write(tab(index)+"print \""+info[func]['methods'][method]['desc']+"\""+line)
+            if params.isCORS:
+                out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)
+            if (info[func]['methods'][method]['body']):
+                out.write(tab(index)+"data=web.data() #data in body"+line)
+                if (info[func]['methods'][method]['json']):
+                    out.write(tab(index)+"input=json.loads(data) #json data as input"+line)
+            out.write(tab(index)+"#from funcs_"+restname+"."+func+"Handle import "+func+"Handle"+line)
+            out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+params_callback[func]+" #You should uncomment and create this class to handle this request"+line)
 
-			#FIXME LEGACY CALLBACK : out.write(tab(index)+"#response = "+func+"Handle()."+method+"() #You should uncomment and create this class to handle this request"+line) #The names of the classes could change. See how to fix them
-			for resp in info[func]['methods'][method]["resp"].keys():
-				jotason=False
-				if "schema" in info[func]['methods'][method]["resp"][resp].keys():
-					handleResp=handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'],info[func]['methods'][method]["resp"][resp]["schema"])
-					jotason=True
-				else:
-					handleResp=handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'])
-				if jotason:
-					out.write(tab(index)+"#js={} #Uncomment to create json response"+line)
-				out.write(tab(index)+"#"+handleResp+" #Uncomment to handle responses"+line)
-			out.write(tab(index)+"raise Successful('Successful operation','{\"description\":\""+info[func]['methods'][method]['desc']+"\"}')"+line)
-			index-=1
-			out.write(line)
-			index-=1
+            #FIXME LEGACY CALLBACK : out.write(tab(index)+"#response = "+func+"Handle()."+method+"() #You should uncomment and create this class to handle this request"+line) #The names of the classes could change. See how to fix them
+            for resp in info[func]['methods'][method]["resp"].keys():
+                jotason=False
+                if "schema" in info[func]['methods'][method]["resp"][resp].keys():
+                    handleResp=handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'],info[func]['methods'][method]["resp"][resp]["schema"])
+                    jotason=True
+                else:
+                    handleResp=handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'])
+                if jotason:
+                    out.write(tab(index)+"#js={} #Uncomment to create json response"+line)
+                out.write(tab(index)+"#"+handleResp+" #Uncomment to handle responses"+line)
+            out.write(tab(index)+"raise Successful('Successful operation','{\"description\":\""+info[func]['methods'][method]['desc']+"\"}')"+line)
+            index-=1
+            out.write(line)
+            index-=1
+        if (params.isCORS):
+            index+=1
+            out.write(tab(index)+"def OPTIONS"+generateParameters(info[func]["inlineVars"])+line)
+            index+=1
+            out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)
+            out.write(tab(index)+"web.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, Authorization')"+line)
+            text="raise Successful('Successful operation','{"
+            text+='"description":"Options called CORS"}'
+            text+="')"
+            out.write(tab(index)+text+line+line)
+            index-=1
+            index-=1
 
-	out.write("if __name__ == \"__main__\":"+line)
-	index+=1
-	out.write(tab(index)+"app.run("+str(data['port'])+")"+line)
-	index-=1
-	out.close()
-	return ret
+
+    out.write("if __name__ == \"__main__\":"+line)
+    index+=1
+    out.write(tab(index)+"app.run("+str(data['port'])+")"+line)
+    index-=1
+    out.close()
+    return ret
 
 def generateAttribute(att): #Initialization of different attributes
     text="self."+att['att']+"="
@@ -346,7 +362,7 @@ if (len(sys.argv)==1):
 else:
     filename=sys.argv[1]
 
-    #print filename
+    params = CGConfiguration("CGConfiguration.xml")
 
     file=open(filename, 'rb')
 
@@ -369,7 +385,7 @@ else:
     #generate (is any) the RESTful Server
     if "paths" in js.keys():
         jsret2=translateRequest(js)
-        ret=generateRESTapi(jsret2,name,imp, restname)
+        ret=generateRESTapi(jsret2,name,imp, restname,params)
         generateCallableClasses(ret,jsret2,restname)
     print "Finished"
 
