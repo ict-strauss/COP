@@ -16,6 +16,7 @@
 import sys
 import json
 import os
+sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
 from CGConfiguration import CGConfiguration
 
 def decomposeUrl(str):
@@ -239,130 +240,150 @@ def generateAttribute(att): #Initialization of different attributes
         return text+"None #FIXME: This parameter is not well defined"
 
 def generateClasses(data, restname):
-	line="\n"
-	if not os.path.exists("objects_"+restname+"/"):
-		os.makedirs("objects_"+restname+"/")
-	out=open("objects_"+restname+"/__init__.py","w+")
-	out.write(" "+line)
-	out.close()
-	for klass in data:
-		index=0
-		name=klass['class']
-		imports=klass['imports']
-		atts=klass['atts']
-		out=open("objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
-		#Necessary imports
-		for imp in imports:
-			out.write("from "+imp[0].lower()+imp[1:]+" import "+imp+line)
-		out.write(line)
-		#Main class
-		out.write("class "+name+":"+line+line)
-		index+=1
-		#Init function
-		out.write(tab(index)+"def __init__(self):"+line)
-		index+=1
-		for att in klass['atts']:
-			out.write(tab(index)+generateAttribute(att)+line)
-		out.write(line)
-		index-=1
-		#optional functions -->toJson
-		out.write(tab(index)+"def json_serializer(self):"+line)
-		index+=1
-		out.write(tab(index)+"ret={}"+line)
-		for att in klass['atts']:
-			if ("array" in att['type']) and (att['other'] in imports):
-				out.write(tab(index)+"ret['"+att['att']+"']=[]"+line)
-				out.write(tab(index)+"for a in self."+att['att']+":"+line)
-				index+=1
-				out.write(tab(index)+"ret['"+att['att']+"'].append(a.json_serializer())"+line)
-				index-=1
-			elif "import" in att['type']:
-				out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+".json_serializer()"+line)
-			else:
-				out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
-		out.write(tab(index)+"return ret"+line)
-		index-=1
-		#optional function --> __str__
-		out.write(line+tab(index)+"def __str__(self):")
-		index+=1
-		out.write(line+tab(index)+"return str(self.json_serializer())"+line)
-		index-=1
-		#optional function --> load_json
-		out.write(line+tab(index)+"def load_json(self, json_string):"+line)
-		index+=1
-		out.write(tab(index)+"for key in ("+line)
-		index+=1
-		for i,att in enumerate(klass['atts']):
-			out.write(tab(index)+"'"+att['att']+"'")
-			if i != len(klass['atts'])-1:
-				out.write(","+line)
-		out.write(line+tab(index)+"):"+line)
-		out.write(tab(index)+"if key in json_string:"+line)
-		index+=1
-		first = 0
-		for att in klass['atts']:
-			if "import" in att['type']:
-				if first == 0:
-					first = 1
-					out.write(tab(index)+'if key == "'+att['att']+'":'+line)
-				else:
-					out.write(tab(index)+'elif key == "'+att['att']+'":'+line)
-				index+=1
-				out.write(tab(index)+'self.'+att['att']+' = '+att['other']+'(json_string=json_string[key])'+line)
-				index+=-1
-		if first !=0:
-			out.write(tab(index)+'else:'+line)
-			index+=1
-		out.write(tab(index)+'setattr(self, key, json_string[key])'+line)
+    line="\n"
+    if not os.path.exists("objects_"+restname+"/"):
+        os.makedirs("objects_"+restname+"/")
+    out=open("objects_"+restname+"/__init__.py","w+")
+    out.write(" "+line)
+    out.close()
+    for klass in data:
+        index=0
+        name=klass['class']
+        imports=klass['imports']
+        atts=klass['atts']
+        out=open("objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
+        #Necessary imports
+        for imp in imports:
+            out.write("from "+imp[0].lower()+imp[1:]+" import "+imp+line)
+        out.write(line)
+        #Main class
+        out.write("class "+name+":"+line+line)
+        index+=1
+        #Init function
+        out.write(tab(index)+"def __init__(self, json_string=None):"+line)
+        index+=1
+        for att in klass['atts']:
+            out.write(tab(index)+generateAttribute(att)+line)
+        out.write(tab(index)+"if json_string:"+line)
+        index+=1
+        out.write(tab(index)+"self.load_json(json_string)"+line)
+        index-=1
+        out.write(line)
+        index-=1
+        #optional functions -->toJson
+        out.write(tab(index)+"def json_serializer(self):"+line)
+        index+=1
+        out.write(tab(index)+"ret={}"+line)
+        for att in klass['atts']:
+            if ("array" in att['type']) and (att['other'] in imports):
+                out.write(tab(index)+"ret['"+att['att']+"']=[]"+line)
+                out.write(tab(index)+"for a in self."+att['att']+":"+line)
+                index+=1
+                out.write(tab(index)+"ret['"+att['att']+"'].append(a.json_serializer())"+line)
+                index-=1
+            elif "import" in att['type']:
+                out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+".json_serializer()"+line)
+            else:
+                out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
+        out.write(tab(index)+"return ret"+line)
+        index-=1
+        #optional function --> __str__
+        out.write(line+tab(index)+"def __str__(self):")
+        index+=1
+        out.write(line+tab(index)+"return str(self.json_serializer())"+line)
+        index-=1
+        #optional function --> load_json
+        out.write(line+tab(index)+"def load_json(self, json_string):"+line)
+        index+=1
+        out.write(tab(index)+"for key in ("+line)
+        index+=1
+        for i,att in enumerate(klass['atts']):
+            out.write(tab(index)+"'"+att['att']+"'")
+            if i != len(klass['atts'])-1:
+                out.write(","+line)
+        out.write(line+tab(index)+"):"+line)
+        out.write(tab(index)+"if key in json_string:"+line)
+        index+=1
+        first = 0
+        for att in klass['atts']:
+            if "import" in att['type']:
+                if first == 0:
+                    first = 1
+                    out.write(tab(index)+'if key == "'+att['att']+'":'+line)
+                else:
+                    out.write(tab(index)+'elif key == "'+att['att']+'":'+line)
+                index+=1
+                out.write(tab(index)+'self.'+att['att']+' = '+att['other']+'(json_string=json_string[key])'+line)
+                index+=-1
+            elif  "array" in att['type']:
+                if first == 0:
+                    first = 1
+                    out.write(tab(index)+'if key == "'+att['att']+'":'+line)
+                else:
+                    out.write(tab(index)+'elif key == "'+att['att']+'":'+line)
+                index+=1
+                out.write(tab(index)+att['att']+' = json_string[key]'+line)
+                out.write(tab(index)+"for element in "+att['att']+":"+line)
+                index+=1
+                if att['other'] in imports:
+                    out.write(tab(index)+'self.'+att['att']+'.append('+att['other']+'(json_string=element))'+line)
+                else:
+                    out.write(tab(index)+'self.'+att['att']+'.append(element)'+line)
+                index+=-1
+                index+=-1
+        if first !=0:
+            out.write(tab(index)+'else:'+line)
+            index+=1
+        out.write(tab(index)+'setattr(self, key, json_string[key])'+line)
 
-		out.close()
+        out.close()
 
 def generateCallableClasses(funcs, data, restname):
-	line="\n"
-	if not os.path.exists("funcs_"+restname+"/"):
-		os.makedirs("funcs_"+restname+"/")
-		out=open("funcs_"+restname+"/__init__.py","w+")
-		out.write(line)
-		out.close()
-	index=0
-	info=data['paths']
-	name_classes = {}
-	params_callback = {}
-	for func in info.keys():
-		# Here we generate the name of the class_name and its related callback_name to the backend program based on the API syntax of each function.
-		list_element_url = info[func]['url'].split('/')
-		indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
-		name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
-		params_callback[func] = ", ".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)'])
+    line="\n"
+    if not os.path.exists("funcs_"+restname+"/"):
+        os.makedirs("funcs_"+restname+"/")
+        out=open("funcs_"+restname+"/__init__.py","w+")
+        out.write(line)
+        out.close()
+    index=0
+    info=data['paths']
+    name_classes = {}
+    params_callback = {}
+    for func in info.keys():
+        # Here we generate the name of the class_name and its related callback_name to the backend program based on the API syntax of each function.
+        list_element_url = info[func]['url'].split('/')
+        indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
+        name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
+        params_callback[func] = ", ".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)'])
 
-		if (os.path.isfile("funcs_"+restname+"/"+name_classes[func][0].lower()+""+name_classes[func][1:]+"Impl.py")): #if exists, don't create
-			print "funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py already exists, not overwrite"
-		else:
-			out=open("funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
-			out.write(line+line+"class "+name_classes[func]+"Impl :"+line+line)
-			index+=1
-			'''out.write(tab(index)+"def __init__(self):"+line)
-			index+=1
-			out.write(tab(index)+"print 'initialize class'"+line+line)
-			index-=1'''
-			for method in info[func]['methods'].keys():
-				out.write(tab(index)+"@classmethod"+line)
-				if len (params_callback[func]) > 0:
-					out.write(tab(index)+"def "+method+"(cls, "+params_callback[func]+"):"+line)
-				else:
-					out.write(tab(index)+"def "+method+"(cls):"+line)
-				index+=1
-				out.write(tab(index)+"print 'handling "+method+"'"+line+line)
-				index-=1
-			index-=1
-			out.close()
+        if (os.path.isfile("funcs_"+restname+"/"+name_classes[func][0].lower()+""+name_classes[func][1:]+"Impl.py")): #if exists, don't create
+            print "funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py already exists, not overwrite"
+        else:
+            out=open("funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
+            out.write(line+line+"class "+name_classes[func]+"Impl :"+line+line)
+            index+=1
+            '''out.write(tab(index)+"def __init__(self):"+line)
+            index+=1
+            out.write(tab(index)+"print 'initialize class'"+line+line)
+            index-=1'''
+            for method in info[func]['methods'].keys():
+                out.write(tab(index)+"@classmethod"+line)
+                if len (params_callback[func]) > 0:
+                    out.write(tab(index)+"def "+method+"(cls, "+params_callback[func]+"):"+line)
+                else:
+                    out.write(tab(index)+"def "+method+"(cls):"+line)
+                index+=1
+                out.write(tab(index)+"print 'handling "+method+"'"+line+line)
+                index-=1
+            index-=1
+            out.close()
 
 if (len(sys.argv)==1):
     print "Filename argument required"
 else:
     filename=sys.argv[1]
 
-    params = CGConfiguration("CGConfiguration.xml")
+    params = CGConfiguration(os.path.abspath(os.path.dirname(sys.argv[0]))+"/CGConfiguration.xml")
 
     file=open(filename, 'rb')
 

@@ -354,7 +354,7 @@ def create_parameter_list(path_params):
         parameter = {}
         parameter['in'] = 'path'
         parameter['name'] = str(param)
-        parameter['description'] = 'ID of ' + str(param)[:-3]
+        parameter['description'] = 'ID of ' + str(param)[:-2]
         parameter['required'] = True
         parameter['type'] = 'string'
         param_list.append(parameter)
