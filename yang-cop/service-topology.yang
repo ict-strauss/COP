@@ -39,7 +39,7 @@ module service-topology {
             type string;
         }
         leaf-list underlay-topology {
-            description "List of topologies from which this depends on."
+            description "List of topologies from which this depends on.";
             type topology-ref;
 		}
         list nodes{
@@ -72,7 +72,7 @@ module service-topology {
             type string;
         }
         leaf-list underlay-abstract-topology{
-            description "List of topology_ids which are represented by this node."
+            description "List of topology_ids which are represented by this node.";
             type topology-ref;
         }
         leaf name{
