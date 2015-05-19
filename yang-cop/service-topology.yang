@@ -19,10 +19,29 @@ module service-topology {
       description "Service topology module in progress.";
     }
 
+    typedef topology-ref {
+        type leafref {
+            path "/topologies/topology/topology_id";
+        }
+        description
+            "A type for an absolute reference a topology instance.";
+    }
+    typedef node-ref {
+        type leafref {
+            path "/topologies/topology/topology_id/nodes/node/node_id";
+        }
+        description
+            "A type for an absolute reference a node instance.";
+    }
+
     grouping topology{
         leaf topology_id{
             type string;
         }
+        leaf-list underlay-topology {
+            description "List of topologies from which this depends on."
+            type topology-ref;
+		}
         list nodes{
 			key "node_id";
             uses node;
@@ -51,6 +70,10 @@ module service-topology {
     grouping node{
         leaf node_id{
             type string;
+        }
+        leaf-list underlay-abstract-topology{
+            description "List of topology_ids which are represented by this node."
+            type topology-ref;
         }
         leaf name{
             type string;
@@ -111,30 +134,5 @@ module service-topology {
             uses topology;
         }
     }
-
-    container nodes{
-        config false;
-        list node{
-            key "node_id";
-            uses node;
-        }
-    }
-   
-    container edges{
-        config false;
-        list edge{
-            key "edge_id";
-            uses edge;
-        }
-    }
-
-    container edge_ends{
-        config false;
-        list edge_end{
-            key "edge_end_id";
-            uses edge_end;
-        }
-    }
-
 
 }
