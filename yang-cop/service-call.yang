@@ -72,8 +72,9 @@ module service-call {
         leaf id{
             type string;
         }
-        leaf-list topo-components{
-            type string;
+        list topo_components{
+            key "endpoint_id";
+            uses endpoint;
         }
     }
 
@@ -235,6 +236,18 @@ module service-call {
         }*/
     }
 
+	grouping traffic_params{
+		description "";
+
+		leaf bandwidth {
+			description "Bandwidth measured in bits/s";
+            type int32;
+        }
+		leaf delay {
+			description "Connection delay measured in ms";
+            type int32;
+        }
+	}
 
     grouping connection {
         description "";
@@ -258,11 +271,9 @@ module service-call {
             config false;
             uses match-rules;
         }
-        leaf action {
-            type string;
-        }
-        leaf bandwidth {
-            type int32;
+        container traffic_params {
+            config false;
+            uses traffic_params;
         }
         container transport_layer{
             config false;
@@ -283,7 +294,6 @@ module service-call {
             }
         }
     }
-
 
     grouping call {
         description "";
@@ -321,13 +331,9 @@ module service-call {
             config false;
             uses match-rules;
         }
-        leaf action {
+        container traffic_params {
             config false;
-            type string;
-        }
-        leaf bandwidth {
-            config false;
-            type int32;
+            uses traffic_params;
         }
         list connections{
             config false;

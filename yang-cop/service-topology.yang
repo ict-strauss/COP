@@ -26,13 +26,6 @@ module service-topology {
         description
             "A type for an absolute reference a topology instance.";
     }
-    typedef node-ref {
-        type leafref {
-            path "/topologies/topology/topology_id/nodes/node/node_id";
-        }
-        description
-            "A type for an absolute reference a node instance.";
-    }
 
     grouping topology{
         leaf topology_id{
