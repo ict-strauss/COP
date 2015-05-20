@@ -191,7 +191,6 @@ def gen_api_node(node, path, apis, definitions):
     config = True
     tree = {}
     schema = {}
-    print node.keyword
     for sub in node.substmts:
         # If config is False the API entry is read-only.
         if sub.keyword == 'config':

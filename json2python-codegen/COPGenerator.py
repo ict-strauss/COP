@@ -88,13 +88,11 @@ def getType(js):
 def translateClasses(js):
     res=[]
     for klass in js['definitions'].keys():
-        print klass
         imports=[]
         cl={}
         atts=[]
         cl['class']=klass
         for att in js['definitions'][klass]['properties'].keys():
-            print att
             taip,other,imp=getType(js['definitions'][klass]['properties'][att])
             atts.append({"att":att,"type":taip,"other":other})
             if imp:
@@ -253,7 +251,6 @@ def generateClasses(data, restname):
     out.write(" "+line)
     out.close()
     for klass in data:
-        print klass
         index=0
         name=klass['class']
         imports=klass['imports']
