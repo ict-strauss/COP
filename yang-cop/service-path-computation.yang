@@ -13,20 +13,64 @@ module service-path-computation {
 
     organization "CTTC";
 
+    grouping endpoint {
+        description "";
+
+        leaf endpoint_id{
+            type string;
+            description "Name of the endpoint, for example host1-port1";
+        }
+        leaf router_id{
+            type string;
+        }
+        leaf interface_id{
+            type string;
+        }
+        /*leaf topology-component{
+            type topo:end-ref;
+        }*/
+    }
+    grouping path-type{
+        description "";
+        leaf id{
+            type string;
+        }
+        list topo_components{
+            key "endpoint_id";
+            uses endpoint;
+        }
+    }
+
+
+	grouping traffic_params{
+		description "";
+
+		leaf bandwidth {
+			description "Bandwidth measured in bits/s";
+            type int32;
+        }
+		leaf delay {
+			description "Connection delay measured in ms";
+            type int32;
+        }
+	}
+
+
     grouping path_request{
         description "";
         
         leaf request-id{
             type string;
         }
-        leaf aEnd{
-            type inet:uri;
+        container aEnd{
+            uses endpoint;
         }
-        leaf zEnd{
-            type inet:uri;
+        container zEnd{
+            uses endpoint;
         }
-        container trafficParameters{
+        container traffic_parameters{
             description "TrafficParam covers service specific traffic attributes";
+            uses traffic_params;
         }
 
     }
@@ -36,12 +80,13 @@ module service-path-computation {
         leaf reply-id{
             type string;
         }
-        leaf-list topo-components{
-            type inet:uri;
+        container path{
+            config false;
+            uses path-type;
         }
     }
 
-    rpc path-computation{
+    rpc path_computation{
         input {
             uses path_request;
         }

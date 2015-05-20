@@ -88,11 +88,13 @@ def getType(js):
 def translateClasses(js):
     res=[]
     for klass in js['definitions'].keys():
+        print klass
         imports=[]
         cl={}
         atts=[]
         cl['class']=klass
         for att in js['definitions'][klass]['properties'].keys():
+            print att
             taip,other,imp=getType(js['definitions'][klass]['properties'][att])
             atts.append({"att":att,"type":taip,"other":other})
             if imp:
@@ -143,7 +145,7 @@ def generateRESTapi(data,name,imp, restname, params):
         list_element_url = info[func]['url'].split('/')
         indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
         name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
-        params_callback[func] = "("+",".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)'])+")"
+        params_callback[func] = ",".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)'])
 
         urls+="\""+info[func]['url']+"\" , \""+name_classes[func]+"\" , \n\t"
 
@@ -183,12 +185,16 @@ def generateRESTapi(data,name,imp, restname, params):
             out.write(tab(index)+"print \""+info[func]['methods'][method]['desc']+"\""+line)
             if params.isCORS:
                 out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)
-            if (info[func]['methods'][method]['body']):
+            if info[func]['methods'][method]['body']:
                 out.write(tab(index)+"data=web.data() #data in body"+line)
-                if (info[func]['methods'][method]['json']):
+                if info[func]['methods'][method]['json']:
                     out.write(tab(index)+"input=json.loads(data) #json data as input"+line)
-            out.write(tab(index)+"#from funcs_"+restname+"."+func+"Handle import "+func+"Handle"+line)
-            out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+params_callback[func]+" #You should uncomment and create this class to handle this request"+line)
+                    if len(params_callback[func])>0:
+                        out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+"("+params_callback[func]+", input)"+line)
+                    else:
+                        out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+"(input)"+line)
+            else:
+                out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+"("+params_callback[func]+")"+line)
 
             #FIXME LEGACY CALLBACK : out.write(tab(index)+"#response = "+func+"Handle()."+method+"() #You should uncomment and create this class to handle this request"+line) #The names of the classes could change. See how to fix them
             for resp in info[func]['methods'][method]["resp"].keys():
@@ -247,6 +253,7 @@ def generateClasses(data, restname):
     out.write(" "+line)
     out.close()
     for klass in data:
+        print klass
         index=0
         name=klass['class']
         imports=klass['imports']

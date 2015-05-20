@@ -82,7 +82,7 @@ def print_header(module, fd):
     }
     header['host'] = 'localhost:8080'
     # TODO: introduce flexible base path. (CLI options?)
-    header['basePath'] = '/restconf/config'
+    header['basePath'] = '/restconf'
     header['schemes'] = ['http']
     return header
 
@@ -104,7 +104,7 @@ def emit_swagger_spec(modules, fd, path):
         definitions = gen_model(groupings, definitions)
         # extract children which contain data definition keywords
         chs = [ch for ch in module.i_children
-               if ch.keyword in statements.data_definition_keywords]
+               if ch.keyword in (statements.data_definition_keywords + ['rpc','notifications'])]
         # generate the APIs for all children
         if len(chs) > 0:
             model['paths'] = OrderedDict()
@@ -151,8 +151,7 @@ def gen_model(children, tree_structure):
         # Leaf-lists need to create arrays.
         # Copy the 'node' content to 'items' and change the reference
         if child.keyword == 'leaf-list':
-            ll_node = {'type': 'array'}
-            ll_node['items'] = node
+            ll_node = {'type': 'array', 'items': node}
             node = ll_node
         # Groupings are class names and upper camelcase.
         # All the others are variables and lower camelcase.
@@ -192,6 +191,7 @@ def gen_api_node(node, path, apis, definitions):
     config = True
     tree = {}
     schema = {}
+    print node.keyword
     for sub in node.substmts:
         # If config is False the API entry is read-only.
         if sub.keyword == 'config':
@@ -208,9 +208,9 @@ def gen_api_node(node, path, apis, definitions):
         if schema:
             if node.keyword == 'list':
                 path += '{' + to_lower_camelcase(key) + '}/'
-                apis[str(path)] = print_api(node, config, schema, path)
+                apis['/config'+str(path)] = print_api(node, config, schema, path)
             elif node.keyword == 'container':
-                apis[str(path)] = print_api(node, config, schema, path)
+                apis['/config'+str(path)] = print_api(node, config, schema, path)
         else:
             # If the container has not a referenced model it is necessary
             # to generate the schema tree based on the node children.
@@ -236,12 +236,36 @@ def gen_api_node(node, path, apis, definitions):
                 properties2['properties'] = item
                 properties[str(node.arg)] = properties2
                 schema['properties'] = properties
-            apis[str(path)] = print_api(node, config, schema, path)
+            apis['/config'+str(path)] = print_api(node, config, schema, path)
+
+    elif node.keyword == 'rpc':
+        #print node.i_children
+        for child in node.i_children:
+            if child.keyword == 'input':
+                ref_model = [ch for ch in child.substmts
+                                 if ch.keyword == 'uses']
+                schema['type'] = {'$ref':'#/definitions/' + to_upper_camelcase(
+                            ref_model[0].arg)}
+            elif child.keyword == 'output':
+                schema_out = dict()
+                ref_model = [ch for ch in child.substmts
+                                 if ch.keyword == 'uses']
+                schema_out['type'] = {'$ref':'#/definitions/' + to_upper_camelcase(
+                            ref_model[0].arg)}
+
+
+        apis['/operations'+str(path)] = print_rpc(node, schema, schema_out)
+        return apis
+
     # Generate APIs for children.
     if hasattr(node, 'i_children'):
         gen_apis(node.i_children, path, apis, definitions)
 
 
+def print_rpc(node, schema_in, schema_out):
+    operations = {}
+    operations['post'] = generate_update(node, schema_in, None, schema_out)
+    return operations
 # print the API JSON structure.
 
 def print_api(node, config, ref, path):
@@ -317,16 +341,23 @@ def generate_retrieve(stmt, schema, path):
 
 # UPDATE
 
-def generate_update(stmt, schema, path):
+def generate_update(stmt, schema, path, rpc=None):
     """ Generates the update function definitions."""
-    path_params = get_input_path_parameters(path)
+    if path:
+        path_params = get_input_path_parameters(path)
     post = {}
     generate_api_header(stmt, post, 'Update')
     # Input parameters
-    post['parameters'] = create_parameter_list(path_params)
+    if path:
+        post['parameters'] = create_parameter_list(path_params)
+    else:
+        post['parameters'] = []
     post['parameters'].append(create_body_dict(stmt.arg, schema))
     # Responses
-    response = create_responses(stmt.arg)
+    if rpc:
+        response = create_responses(stmt.arg, rpc)
+    else:
+        response = create_responses(stmt.arg)
     post['responses'] = response
     return post
 
