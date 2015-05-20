@@ -93,6 +93,9 @@ module service-topology {
 		leaf linkType{
 			type string;		
 		}
+		leaf switching_cap{
+			type string;
+		}
 		leaf metric{
 			type string;		
 		}
