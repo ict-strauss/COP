@@ -149,6 +149,8 @@ def generateRESTapi(data,name,imp, restname, params):
 
     #imports
     out.write("import web\nimport json"+line)
+    if params.isAuth:
+        out.write("import base64\nimport re"+line)
     out.write(line+"# BACKEND FUNCTIONS"+line)
     for func in info.keys():
         out.write("from funcs_"+restname+"."+name_classes[func][0].lower()+name_classes[func][1:]+"Impl import "+name_classes[func]+"Impl"+line)
@@ -162,13 +164,37 @@ def generateRESTapi(data,name,imp, restname, params):
     urls=urls[:-2]+")"
 
     #urls and app initialization
-    out.write("urls = "+urls+line)
+    out.write("urls = "+urls+line+line)
+    if (params.isAuth):
+        out.write("users = "+json.dumps(params.users)+line+line)
     out.write("app = MyApplication(urls, globals())"+line+line)
     #error functions
     out.write("class NotFoundError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '404 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
     out.write("class BadRequestError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '400 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
     out.write("class Successful(web.HTTPError):\n"+tab(1)+"def __init__(self,message,info=''):\n"+tab(2)+"status = '200 '+message\n"+tab(2)+"headers = {'Content-Type': 'application/json'}\n"+tab(2)+"data = info\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
     ret={}
+    if (params.isAuth):
+        out.write("class basicauth:"+line+line)
+        index+=1
+        out.write(tab(index)+"@classmethod"+line)
+        out.write(tab(index)+"def check(self,auth):"+line)
+        index+=1
+        out.write(tab(index)+"if auth is not None:"+line)
+        index+=1
+        out.write(tab(index)+'auth2 = re.sub("^Basic ","", auth)'+line)
+        out.write(tab(index)+"user,pswd = base64.decodestring(auth2).split(':')"+line)
+        out.write(tab(index)+"if user in users.keys() and pswd == users[user]:"+line)
+        index+=1
+        out.write(tab(index)+"return True"+line)
+        index-=1
+        out.write(tab(index)+"else:"+line)
+        index+=1
+        out.write(tab(index)+"return False"+line)
+        index-=2
+        out.write(tab(index)+"else:"+line)
+        index+=1
+        out.write(tab(index)+"return False"+line+line)
+        index-=3
     for func in info.keys():
         # Create class
         out.write("#"+info[func]['url']+line)
@@ -180,6 +206,15 @@ def generateRESTapi(data,name,imp, restname, params):
             out.write(tab(index)+"def "+method.upper()+generateParameters(info[func]["inlineVars"])+line)
             index+=1
             ret[func+"Handle"].append(method)
+            if params.isAuth:
+                out.write(tab(index)+'if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):'+line)
+                index+=1
+                out.write(tab(index)+"web.header('WWW-Authenticate','Basic realm=")
+                out.write('"Auth example"')
+                out.write("')"+line)
+                out.write(tab(index)+"web.ctx.status = '401 Unauthorized'"+line)
+                out.write(tab(index)+"return 'Unauthorized'"+line)
+                index-=1
             out.write(tab(index)+"print \""+info[func]['methods'][method]['desc']+"\""+line)
             if params.isCORS:
                 out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)

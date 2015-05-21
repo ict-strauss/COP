@@ -10,7 +10,7 @@ Python code that uses json outputs from **pyang** to generate **RESTful server**
 
 - Run: `$ python COPGenerator.py jsonfile.json` with **jsonfile** as **service-call/topology/path-computation.json**
 
-- Check **CGConfiguration.xml** to enable/disable CORS
+- Check **CGConfiguration.xml** to enable/disable CORS and Basic Authentication
 
 ### Dependencies
  - This code generates python code that uses [web.py](http://webpy.org/install)
