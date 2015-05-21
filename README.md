@@ -17,6 +17,10 @@ It can be used to validate YANG modules for correctness, to transform YANG modul
 
 The RESTCONF API of the YANG model is interpreted with [Swagger](http://swagger.io/), which is a powerful framework for API description. This framework will be used to generate a Stub server for the YANG module.
 
+## Build a Python server stub
+
+We have created [json2python-codegen](https://github.com/ict-strauss/COP/tree/master/json2python-codegen) to allow the creation of a Python server stub from the obtained JSON swagger definition.
+
 ###Install pyang
 
 Download pyang [here](https://code.google.com/p/pyang/wiki/Downloads?tm=2) (tested with version 1.5).
