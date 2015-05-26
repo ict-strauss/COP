@@ -2,7 +2,7 @@ module service-topology {
 
     yang-version 1;
 
-    namespace "http://cttc.es/cop/service-topology";
+    namespace "file:///home/amll/COP/";
 
     prefix s-topology;
 
@@ -11,7 +11,7 @@ module service-topology {
             revision-date 2013-07-15;
       }*/
 
-      organization "CTTC";
+    organization "CTTC";
 
     description "YANG version of the Common Orchestration Protocol (COP).";
 
@@ -121,6 +121,45 @@ module service-topology {
 			config false;
             uses edge_end;
         }
+    }
+
+    grouping dwdm_channel{
+        leaf g694_id{
+            type int32;
+        }
+        leaf state{
+            type int32;
+        }
+    }
+
+    grouping bitmap{
+        leaf numChannels{
+            type int16;
+        }
+        leaf-list arrayBits{
+            type int16;
+        }
+    }
+
+    grouping dwdm_edge{
+        container bitmap{
+            uses bitmap;
+        }
+        list channels{
+            key "g694_id";
+            uses dwdm_channel;
+        }
+    }
+    grouping eth_edge{
+        leaf typeEdge{
+            type string;
+        }
+    }
+
+
+    augment "/topologies/topology/edges" {
+        when "/topologies/topology/edges[linkType == 'Ethernet']";
+        uses eth_edge;
     }
 
     container topologies{

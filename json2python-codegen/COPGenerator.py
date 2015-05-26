@@ -92,12 +92,25 @@ def translateClasses(js):
         cl={}
         atts=[]
         cl['class']=klass
-        for att in js['definitions'][klass]['properties'].keys():
-            taip,other,imp=getType(js['definitions'][klass]['properties'][att])
-            atts.append({"att":att,"type":taip,"other":other})
-            if imp:
-                if other not in imports:
-                    imports.append(other)
+        # Special case where the model extending a father class
+        if 'allOf' in js['definitions'][klass]:
+            for item in js['definitions'][klass]['allOf']:
+                if "$ref" in item:
+                    cl['extend_class'] = item['$ref'].split("/")[-1]
+                elif "properties" in item:
+                    for att in item['properties'].keys():
+                        taip,other,imp=getType(item['properties'][att])
+                        atts.append({"att":att,"type":taip,"other":other})
+                        if imp:
+                            if other not in imports:
+                                imports.append(other)
+        else:
+            for att in js['definitions'][klass]['properties'].keys():
+                taip,other,imp=getType(js['definitions'][klass]['properties'][att])
+                atts.append({"att":att,"type":taip,"other":other})
+                if imp:
+                    if other not in imports:
+                        imports.append(other)
         cl["atts"]=atts
         cl["imports"]=imports
         res.append(cl)
@@ -278,6 +291,7 @@ def generateAttribute(att): #Initialization of different attributes
     else:
         return text+"None #FIXME: This parameter is not well defined"
 
+
 def generateClasses(data, restname):
     line="\n"
     if not os.path.exists("objects_"+restname+"/"):
@@ -288,6 +302,8 @@ def generateClasses(data, restname):
     for klass in data:
         index=0
         name=klass['class']
+        if 'extend_class' in klass:
+            klass['imports'].append(klass['extend_class'])
         imports=klass['imports']
         atts=klass['atts']
         out=open("objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
@@ -296,11 +312,18 @@ def generateClasses(data, restname):
             out.write("from "+imp[0].lower()+imp[1:]+" import "+imp+line)
         out.write(line)
         #Main class
-        out.write("class "+name+":"+line+line)
+        if 'extend_class' in klass:
+            out.write("class "+name+"("+klass['extend_class']+"):"+line+line)
+        else:
+            out.write("class "+name+":"+line+line)
         index+=1
         #Init function
+
         out.write(tab(index)+"def __init__(self, json_string=None):"+line)
         index+=1
+        if 'extend_class' in klass:
+             out.write(tab(index)+"super("+name+", self).__init__()"+line)
+
         for att in klass['atts']:
             out.write(tab(index)+generateAttribute(att)+line)
         out.write(tab(index)+"if json_string:"+line)
@@ -334,6 +357,9 @@ def generateClasses(data, restname):
         #optional function --> load_json
         out.write(line+tab(index)+"def load_json(self, json_string):"+line)
         index+=1
+        # If is a child class the json decoder has to include the parent decoder as well
+        if 'extend_class' in klass:
+            out.write(tab(index)+"super("+klass['class']+",self).load_json(json_string)"+line)
         out.write(tab(index)+"for key in ("+line)
         index+=1
         for i,att in enumerate(klass['atts']):

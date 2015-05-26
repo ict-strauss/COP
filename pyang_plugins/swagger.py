@@ -3,12 +3,16 @@
 
 import optparse
 import json
+import os
 import re
 import string
+import pyang
 from collections import OrderedDict
 
 from pyang import plugin
 from pyang import statements
+from pyang import Context as ctx
+import sys
 
 
 def pyang_plugin_init():
@@ -40,9 +44,10 @@ class SwaggerPlugin(plugin.PyangPlugin):
                 default=5,
                 help='Number of levels to print'),
             optparse.make_option(
-                '--swagger-filename',
-                dest='swagger_filename',
-                help='Subtree to print'),
+                '--namespace',
+                dest='yangfile_path',
+                type='string',
+                help='Path to print'),
             optparse.make_option(
                 '--swagger-path',
                 dest='swagger_path',
@@ -65,8 +70,12 @@ class SwaggerPlugin(plugin.PyangPlugin):
                 path = path[1:]
         else:
             path = None
+        if ctx.opts.yangfile_path is not None:
+            yang_path = ctx.opts.yangfile_path
+        else:
+            yang_path = None
 
-        emit_swagger_spec(modules, fd, ctx.opts.path)
+        emit_swagger_spec(modules, fd, ctx.opts.path, yang_path)
 
 
 def print_header(module, fd):
@@ -87,37 +96,56 @@ def print_header(module, fd):
     return header
 
 
-def emit_swagger_spec(modules, fd, path):
+def emit_swagger_spec(modules, fd, path, yang_path = None):
     """ Emits the complete swagger specification for the yang file."""
+    if yang_path is not None:
+        print yang_path
+        repos = pyang.FileRepository(yang_path)
+        ctx = pyang.Context(repos)
+
     printed_header = False
     model = OrderedDict()
     definitions = OrderedDict()
+    augments = list()
     # Go through all modules and extend the model.
     for module in modules:
+
         if not printed_header:
             model = print_header(module, fd)
             printed_header = True
             path = '/'
+        if module.search('import'):
+            imported_models = import_models(module, path)
+
         # list() needed for python 3 compatibility
-        groupings = list(module.i_groupings.values())
+        models = list(module.i_groupings.values())
         # Print the swagger definitions of the Yang groupings.
-        definitions = gen_model(groupings, definitions)
+        definitions = gen_model(models, definitions)
+
         # extract children which contain data definition keywords
         chs = [ch for ch in module.i_children
                if ch.keyword in (statements.data_definition_keywords + ['rpc','notifications'])]
+
         # generate the APIs for all children
         if len(chs) > 0:
             model['paths'] = OrderedDict()
             gen_apis(chs, path, model['paths'], definitions)
+
+        # Now the definitions are modified if there is augmentations in the model
+        augments = [ch for ch in module.substmts
+                    if ch.keyword in ['augment']]
+
+        gen_augments(augments, definitions)
+
         model['definitions'] = definitions
         fd.write(json.dumps(model, indent=4, separators=(',', ': ')))
-
 
 def gen_model(children, tree_structure):
     """ Generates the swagger definition tree."""
     referenced = False
     for child in children:
         node = {}
+        extended = False
         if hasattr(child, 'substmts'):
             for attribute in child.substmts:
                 # process the 'type' attribute:
@@ -141,12 +169,15 @@ def gen_model(children, tree_structure):
                     if str(child.keyword) == 'list':
                         node['items'] = {'$ref': ref}
                         node['type'] = 'array'
+                        referenced = True
                     else:
                         node['$ref'] = ref
                         referenced = True
+
+
         # When a node contains a referenced model as an attribute the algorithm
         # does not go deeper into the sub-tree of the referenced model.
-        if not referenced:
+        if not referenced :
             node = gen_model_node(child, node)
         # Leaf-lists need to create arrays.
         # Copy the 'node' content to 'items' and change the reference
@@ -173,6 +204,30 @@ def gen_model_node(node, tree_structure):
             tree_structure['properties'] = properties
     # TODO: do we need a return value or is the reference enough.
     return tree_structure
+
+
+def gen_augments(children, tree_structure):
+    for child in children:
+        node_ref = [item for item in child.arg.split('/') if item != '']
+        node_ref = [item.capitalize() if i ==0  else item for i,item in enumerate(node_ref[1:])]
+        var = tree_structure
+        for level in range(0,len(node_ref)):
+            var = var[node_ref[level]]
+            if 'properties' in var:
+                var = var['properties']
+        augemented_model = var['items']['$ref'].split('/')[-1]
+        if hasattr(child, 'substmts'):
+            for attribute in child.substmts:
+                if attribute.keyword == 'when':
+                    if 'properties' in var:
+                        ## TODO:Add the attribute discrimitator at this definition level
+                        pass
+                    elif 'items' in var:
+                        ## Seach for a referenced model
+                        tree_structure[augemented_model]['discriminator'] = attribute.arg[attribute.arg.find('[')+1:attribute.arg.find(' =')]
+                if attribute.keyword == 'uses':
+                    ref = '#/definitions/' + augemented_model
+                    tree_structure[to_upper_camelcase(attribute.arg)]={'allOf':[{'$ref':ref}, tree_structure[to_upper_camelcase(attribute.arg)]]}
 
 
 def gen_apis(children, path, apis, definitions):
@@ -259,6 +314,51 @@ def gen_api_node(node, path, apis, definitions):
     # Generate APIs for children.
     if hasattr(node, 'i_children'):
         gen_apis(node.i_children, path, apis, definitions)
+
+
+def import_models(module, path):
+    if module.search('namespace'):
+        if module.search('namespace')[0].arg[:4] == 'http':
+            namespace = ""
+            ##TODO: implement a method to access to this repository.
+            pass
+        elif module.search('namespace')[0].arg[:4] == 'file':
+            namespace = module.search('namespace')[0].arg[7:]
+            repos = pyang.FileRepository(namespace)
+            ctx = pyang.Context(repos)
+        else:
+            raise Exception('The namespace is incorrect or is missing, impossible to import modules')
+
+    imported_models = OrderedDict()
+    for i in module.search('import'):
+        filename = "/".join([element for element in i.arg.split(":")]) + ".yang"
+        for ch in i.substmts:
+            if ch.keyword == "prefix":
+                prefix = ch.arg
+            elif ch.keyword == "revision-date":
+                rev = ch.arg
+        if namespace != "":
+            f = open(namespace+filename)
+        else:
+            raise Exception('Namespace not found')
+            return None
+
+        text = f.read()
+        imported_module = ctx.add_module(filename, text, format, i.arg, rev, expect_failure_error=False)
+        imported_groupings = list(imported_module.i_groupings.values())
+        imported_definitions = OrderedDict()
+        imported_definitions = gen_model(imported_groupings, imported_definitions)
+
+        imported_chs = [ch for ch in imported_module.i_children
+           if ch.keyword in (statements.data_definition_keywords + ['rpc','notifications'])]
+        imported_model = OrderedDict()
+        if len(imported_chs) > 0:
+            imported_model['paths'] = OrderedDict()
+            gen_apis(imported_chs, path, imported_model['paths'], imported_definitions)
+
+        imported_model['definitions'] = imported_definitions
+        imported_models[prefix] = imported_model
+    return imported_models
 
 
 def print_rpc(node, schema_in, schema_out):

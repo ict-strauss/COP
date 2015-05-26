@@ -2,14 +2,18 @@ module service-path-computation {
 
     yang-version 1;
 
-    namespace "http://cttc.es/cop/service-path-computation";
+    namespace "file:///home/amll/COP/";
 
     prefix s-path;
-
+/*
     import ietf-inet-types {
 		prefix inet;
         revision-date 2013-07-15;
 	}
+    import service-call {
+		prefix sc;
+	}*/
+
 
     organization "CTTC";
 
