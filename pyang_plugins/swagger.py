@@ -122,6 +122,10 @@ def emit_swagger_spec(modules, fd, path, yang_path = None):
         # Print the swagger definitions of the Yang groupings.
         definitions = gen_model(models, definitions)
 
+        # If a model at runtime was dependant of another model which had been encounter yet, it is generated 'a posteriori'.
+        if pending_models:
+            gen_model(pending_models, definitions)
+
         # extract children which contain data definition keywords
         chs = [ch for ch in module.i_children
                if ch.keyword in (statements.data_definition_keywords + ['rpc','notifications'])]
@@ -131,18 +135,15 @@ def emit_swagger_spec(modules, fd, path, yang_path = None):
             model['paths'] = OrderedDict()
             gen_apis(chs, path, model['paths'], definitions)
 
-        # Now the definitions are modified if there is augmentations in the model
-        augments = [ch for ch in module.substmts
-                    if ch.keyword in ['augment']]
-
-        gen_augments(augments, definitions)
-
         model['definitions'] = definitions
         fd.write(json.dumps(model, indent=4, separators=(',', ': ')))
+
+pending_models = []
 
 def gen_model(children, tree_structure):
     """ Generates the swagger definition tree."""
     referenced = False
+    extended = False
     for child in children:
         node = {}
         extended = False
@@ -170,6 +171,23 @@ def gen_model(children, tree_structure):
                         node['items'] = {'$ref': ref}
                         node['type'] = 'array'
                         referenced = True
+                    elif str(child.keyword) == 'grouping':
+                        ref = to_upper_camelcase(attribute.arg)
+                        if ref in tree_structure:
+                            list_properties = [item for item in tree_structure[ref]['properties']]
+                            ref = '#/definitions/' + ref
+                            node['allOf'] = []
+                            node['allOf'].append({'$ref': ref})
+                            index = 0
+                            for i in range(0, len(child.i_children)):
+                                #print len(child.i_children)
+                                if to_lower_camelcase(child.i_children[index].arg) in list_properties:
+                                    del child.i_children[index]
+                                else:
+                                    index+=1
+                            extended = True
+                        else:
+                            pending_models.append(child)
                     else:
                         node['$ref'] = ref
                         referenced = True
@@ -178,7 +196,14 @@ def gen_model(children, tree_structure):
         # When a node contains a referenced model as an attribute the algorithm
         # does not go deeper into the sub-tree of the referenced model.
         if not referenced :
-            node = gen_model_node(child, node)
+            if not extended:
+                node = gen_model_node(child, node)
+            else:
+                node_ext = dict()
+                node_ext = gen_model_node(child, node_ext)
+                node['allOf'].append( node_ext)
+                extended = False
+
         # Leaf-lists need to create arrays.
         # Copy the 'node' content to 'items' and change the reference
         if child.keyword == 'leaf-list':
@@ -204,31 +229,6 @@ def gen_model_node(node, tree_structure):
             tree_structure['properties'] = properties
     # TODO: do we need a return value or is the reference enough.
     return tree_structure
-
-
-def gen_augments(children, tree_structure):
-    for child in children:
-        node_ref = [item for item in child.arg.split('/') if item != '']
-        node_ref = [item.capitalize() if i ==0  else item for i,item in enumerate(node_ref[1:])]
-        var = tree_structure
-        for level in range(0,len(node_ref)):
-            var = var[node_ref[level]]
-            if 'properties' in var:
-                var = var['properties']
-        augemented_model = var['items']['$ref'].split('/')[-1]
-        if hasattr(child, 'substmts'):
-            for attribute in child.substmts:
-                if attribute.keyword == 'when':
-                    if 'properties' in var:
-                        ## TODO:Add the attribute discrimitator at this definition level
-                        pass
-                    elif 'items' in var:
-                        ## Seach for a referenced model
-                        tree_structure[augemented_model]['discriminator'] = attribute.arg[attribute.arg.find('[')+1:attribute.arg.find(' =')]
-                if attribute.keyword == 'uses':
-                    ref = '#/definitions/' + augemented_model
-                    tree_structure[to_upper_camelcase(attribute.arg)]={'allOf':[{'$ref':ref}, tree_structure[to_upper_camelcase(attribute.arg)]]}
-
 
 def gen_apis(children, path, apis, definitions):
     """ Generates the swagger path tree for the APIs."""
