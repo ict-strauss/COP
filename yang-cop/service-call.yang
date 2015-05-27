@@ -2,7 +2,7 @@ module service-call {
 
     yang-version 1;
 
-    namespace "http://cttc.es/cop/service-call";
+    namespace "http://ict-strauss.eu/cop/service-call";
 
     prefix s-call;
 
@@ -14,27 +14,33 @@ module service-call {
 
     description  "YANG version of the Common Orchestration Protocol (COP).";
 
-    revision "2014-11-12" {
+    revision "2015-05-30" {
         description
-        "Service call module in progress.";
+        "Service call module for STRAUSS";
     }
 
-    /*typedef endpoint-ref{
-        type leafref{
-            path "/s-call:service-call/s-call:endpoints/s-call:endpoint/s-call:id";
+
+    typedef transport_layer_type_enumeration {
+        type enumeration {
+            enum dwdm_link {
+                description "Setup a dwdm link";
+                value 1;
+            }
+            enum ethernet {
+                description "Setup an end to end ethernet path";
+                value 2;
+            }
+            enum mpls {
+                description "Setup an MPLS path";
+                value 3;
+            }
         }
     }
-
-    typedef connection-ref{
-        type leafref{
-            path "/s-call:service-call/s-call:connections/s-call:connection/s-call:id";
-        }
-    }*/
 
     grouping transport_layer-type{
         description "";
         leaf layer {
-            type string;
+            type transport_layer_type_enumeration;
         }
         leaf layer_id {
             type string;
@@ -68,7 +74,7 @@ module service-call {
     }
 
     grouping path-type{
-        description "";
+        description "The Path represents the individual routes of a Connection.";
         leaf id{
             type string;
         }
@@ -219,7 +225,7 @@ module service-call {
 
 
     grouping endpoint {
-        description "";
+        description "The End-Point represents the access to the forwarding (as Connection-End-Point) and/or adjacency (as Link-End-Point) function";
 
         leaf endpoint_id{
             type string;
@@ -237,20 +243,20 @@ module service-call {
     }
 
 	grouping traffic_params{
-		description "";
+		description "Basic Traffic Parameters to be offered within a Call";
 
-		leaf bandwidth {
-			description "Bandwidth measured in bits/s";
+		leaf reserved_bandwidth {
+			description "Reserved Bandwidth measured in Mb/s i.e. 10, 100, 1000 Mb/s";
             type int32;
         }
-		leaf delay {
-			description "Connection delay measured in ms";
+		leaf latency {
+			description "Connection latency measured in ms";
             type int32;
         }
 	}
 
     grouping connection {
-        description "";
+        description "The Connection represents an enabled potential for forwarding (including all circuit and packet forms) between two or more endpoints";
 
         leaf connection_id{
             type string;
@@ -296,7 +302,7 @@ module service-call {
     }
 
     grouping call {
-        description "";
+        description "A call represents an “intent-request” for connectivity within a Forwarding-Domain between the endpoints. Call is distinct from the Connection that realizes the Call.";
 
         leaf call_id{
             type string;

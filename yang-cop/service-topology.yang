@@ -2,7 +2,7 @@ module service-topology {
 
     yang-version 1;
 
-    namespace "file:///home/amll/COP/";
+    namespace "http://ict-strauss.eu/cop/service-call";
 
     prefix s-topology;
 
@@ -15,8 +15,9 @@ module service-topology {
 
     description "YANG version of the Common Orchestration Protocol (COP).";
 
-    revision "2014-11-12" {
-      description "Service topology module in progress.";
+    revision "2015-05-30" {
+        description
+        "Service Topology module for STRAUSS";
     }
 
     typedef topology-ref {
@@ -25,6 +26,32 @@ module service-topology {
         }
         description
             "A type for an absolute reference a topology instance.";
+    }
+
+    typedef edge_type_enumeration {
+        type enumeration {
+            enum dwdm {
+                description "DWDM link";
+                value 1;
+            }
+            enum ethernet {
+                description "Ethernet link";
+                value 2;
+            }
+        }
+    }
+    
+    typedef switching_cap_enumeration {
+        type enumeration {
+            enum lsc {
+                description "lsc sw_cap";
+                value 1;
+            }
+            enum psc {
+                description "psc sw_cap";
+                value 2;
+            }
+        }
     }
 
     grouping topology{
@@ -50,9 +77,9 @@ module service-topology {
             type string;
         }
         leaf switching_cap{
-            type string;
+            type switching_cap_enumeration;
         }
-        leaf edge_id{
+        leaf name{
             type string;
         }
 		leaf peer_node_id{
@@ -90,8 +117,8 @@ module service-topology {
         leaf name{
             type string;
         }
-		leaf linkType{
-			type string;		
+		leaf edge_type{
+			type edge_type_enumeration;		
 		}
 		leaf switching_cap{
 			type string;
@@ -149,17 +176,15 @@ module service-topology {
             key "g694_id";
             uses dwdm_channel;
         }
+        uses edge;
     }
+    
     grouping eth_edge{
-        leaf typeEdge{
+        leaf eth_edge_param{
             type string;
         }
-    }
-
-
-    augment "/topologies/topology/edges" {
-        when "/topologies/topology/edges[linkType == 'Ethernet']";
-        uses eth_edge;
+        uses edge;
+        
     }
 
     container topologies{

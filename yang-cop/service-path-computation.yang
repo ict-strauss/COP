@@ -2,11 +2,11 @@ module service-path-computation {
 
     yang-version 1;
 
-    namespace "file:///home/amll/COP/";
+    namespace "http://ict-strauss.eu/cop/service-call";
 
     prefix s-path;
-/*
-    import ietf-inet-types {
+
+    /*import ietf-inet-types {
 		prefix inet;
         revision-date 2013-07-15;
 	}
@@ -14,8 +14,14 @@ module service-path-computation {
 		prefix sc;
 	}*/
 
-
     organization "CTTC";
+
+    revision "2015-05-30" {
+        description
+        "Service Path Computation module for STRAUSS";
+    }
+    
+    
 
     grouping endpoint {
         description "";
@@ -34,6 +40,7 @@ module service-path-computation {
             type topo:end-ref;
         }*/
     }
+    
     grouping path-type{
         description "";
         leaf id{
@@ -85,7 +92,6 @@ module service-path-computation {
             type string;
         }
         container path{
-            config false;
             uses path-type;
         }
     }
