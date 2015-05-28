@@ -1,0 +1,59 @@
+'Download plantuml from http://plantuml.sourceforge.net/ 
+'Generate png with java -jar plantuml.jar <file> 
+'Output in img/<module>.png 
+'If Java spits out memory error increase heap size with java -Xmx1024m  -jar plantuml.jar <file> 
+@startuml img/service-path-computation.png 
+hide empty fields 
+hide empty methods 
+hide <<case>> circle
+hide <<augment>> circle
+hide <<choice>> circle
+hide <<leafref>> stereotype
+hide <<leafref>> circle
+page 1x1 
+Title service-path-computation 
+note top of s_path_service_path_computation : <b>Namespace: </b> http://ict-strauss.eu/cop/service-call \n<b>Prefix: </b> s-path \n<b>Organization : </b>\nCTTC \n<b>Revision : </b> 2015-05-30 \n
+package "s-path:service-path-computation" as s_path_service_path_computation { 
+class "service-path-computation" as service_path_computation << (M, #33CCFF) module>> 
+class "endpoint" as service_path_computation_I_endpoint_grouping <<(G,Lime) grouping>> 
+service_path_computation_I_endpoint_grouping : endpoint_id : string  
+service_path_computation_I_endpoint_grouping : router_id : string  
+service_path_computation_I_endpoint_grouping : interface_id : string  
+class "path-type" as service_path_computation_I_path_type_grouping <<(G,Lime) grouping>> 
+service_path_computation_I_path_type_grouping : id : string  
+class "topo_components" as service_path_computation_I_path_type_I_topo_components << (L, #FF7700) list>> 
+service_path_computation_I_path_type_grouping *-- "0..N" service_path_computation_I_path_type_I_topo_components 
+service_path_computation_I_path_type_I_topo_components : endpoint {uses} 
+class "traffic_params" as service_path_computation_I_traffic_params_grouping <<(G,Lime) grouping>> 
+service_path_computation_I_traffic_params_grouping : bandwidth : int32  
+service_path_computation_I_traffic_params_grouping : delay : int32  
+class "path_request" as service_path_computation_I_path_request_grouping <<(G,Lime) grouping>> 
+service_path_computation_I_path_request_grouping : request-id : string  
+class "aEnd" as  service_path_computation_I_path_request_I_aEnd <<container>> 
+service_path_computation_I_path_request_grouping *-- "1" service_path_computation_I_path_request_I_aEnd 
+service_path_computation_I_path_request_I_aEnd : endpoint {uses} 
+class "zEnd" as  service_path_computation_I_path_request_I_zEnd <<container>> 
+service_path_computation_I_path_request_grouping *-- "1" service_path_computation_I_path_request_I_zEnd 
+service_path_computation_I_path_request_I_zEnd : endpoint {uses} 
+class "traffic_parameters" as  service_path_computation_I_path_request_I_traffic_parameters <<container>> 
+service_path_computation_I_path_request_grouping *-- "1" service_path_computation_I_path_request_I_traffic_parameters 
+service_path_computation_I_path_request_I_traffic_parameters : traffic_params {uses} 
+class "path_reply" as service_path_computation_I_path_reply_grouping <<(G,Lime) grouping>> 
+service_path_computation_I_path_reply_grouping : reply-id : string  
+class "path" as  service_path_computation_I_path_reply_I_path <<container>> 
+service_path_computation_I_path_reply_grouping *-- "1" service_path_computation_I_path_reply_I_path 
+service_path_computation_I_path_reply_I_path : path-type {uses} 
+service_path_computation : path_computation( in: path_request out: path_reply)
+} 
+
+service_path_computation_I_path_type_I_topo_components --> service_path_computation_I_endpoint_grouping : uses 
+service_path_computation_I_path_request_I_aEnd --> service_path_computation_I_endpoint_grouping : uses 
+service_path_computation_I_path_request_I_zEnd --> service_path_computation_I_endpoint_grouping : uses 
+service_path_computation_I_path_request_I_traffic_parameters --> service_path_computation_I_traffic_params_grouping : uses 
+service_path_computation_I_path_reply_I_path --> service_path_computation_I_path_type_grouping : uses 
+service_path_computation --> service_path_computation_I_path_request_grouping : uses 
+service_path_computation --> service_path_computation_I_path_reply_grouping : uses 
+center footer
+ <size:20> UML Generated : 2015-05-27 12:00 </size>
+ endfooter 
+@enduml 

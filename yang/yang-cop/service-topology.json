@@ -1,0 +1,1492 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "1.0.0",
+        "description": "service-topology API generated from service-topology.yang",
+        "title": "service-topology API"
+    },
+    "host": "localhost:8080",
+    "basePath": "/restconf",
+    "schemes": [
+        "http"
+    ],
+    "paths": {
+        "/config/topologies/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Topology"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "404": {
+                        "description": "Topologies not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "description": "Retrieve operation of resource: topologies",
+                "summary": "Retrieve topologies",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveTopologies"
+            }
+        },
+        "/config/topologies/topology/{topologyId}/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Topology not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: topology",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of topology",
+                        "schema": {
+                            "$ref": "#/definitions/Topology"
+                        },
+                        "name": "topology",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create topology by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createTopologyById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Topology not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: topology",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of topology",
+                        "schema": {
+                            "$ref": "#/definitions/Topology"
+                        },
+                        "name": "topology",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update topology by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateTopologyById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Topology not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: topology",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete topology by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteTopologyById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Topology"
+                        }
+                    },
+                    "404": {
+                        "description": "Topology not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: topology",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve topology by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveTopologyById"
+            }
+        },
+        "/config/topologies/topology/{topologyId}/nodes/{nodeId}/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Nodes not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: nodes",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of node",
+                        "required": true,
+                        "type": "string",
+                        "name": "nodeId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of nodes",
+                        "schema": {
+                            "$ref": "#/definitions/Node"
+                        },
+                        "name": "nodes",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create nodes by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createNodesById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Nodes not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: nodes",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of node",
+                        "required": true,
+                        "type": "string",
+                        "name": "nodeId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of nodes",
+                        "schema": {
+                            "$ref": "#/definitions/Node"
+                        },
+                        "name": "nodes",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update nodes by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateNodesById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Nodes not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: nodes",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of node",
+                        "required": true,
+                        "type": "string",
+                        "name": "nodeId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete nodes by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteNodesById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Node"
+                        }
+                    },
+                    "404": {
+                        "description": "Nodes not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: nodes",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of node",
+                        "required": true,
+                        "type": "string",
+                        "name": "nodeId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve nodes by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveNodesById"
+            }
+        },
+        "/config/topologies/topology/{topologyId}/nodes/{nodeId}/edge_end/{edgeEndId}/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of node",
+                        "required": true,
+                        "type": "string",
+                        "name": "nodeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of edge_end",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        },
+                        "name": "edge_end",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createEdgeEndById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of node",
+                        "required": true,
+                        "type": "string",
+                        "name": "nodeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of edge_end",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        },
+                        "name": "edge_end",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateEdgeEndById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of node",
+                        "required": true,
+                        "type": "string",
+                        "name": "nodeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteEdgeEndById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        }
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of node",
+                        "required": true,
+                        "type": "string",
+                        "name": "nodeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveEdgeEndById"
+            }
+        },
+        "/config/topologies/topology/{topologyId}/edges/{edgeId}/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edges not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: edges",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of edges",
+                        "schema": {
+                            "$ref": "#/definitions/Edge"
+                        },
+                        "name": "edges",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create edges by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createEdgesById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edges not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: edges",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of edges",
+                        "schema": {
+                            "$ref": "#/definitions/Edge"
+                        },
+                        "name": "edges",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update edges by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateEdgesById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edges not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: edges",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete edges by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteEdgesById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Edge"
+                        }
+                    },
+                    "404": {
+                        "description": "Edges not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: edges",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve edges by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveEdgesById"
+            }
+        },
+        "/config/topologies/topology/{topologyId}/edges/{edgeId}/source/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Node"
+                        }
+                    },
+                    "404": {
+                        "description": "Source not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: source",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve source by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveSourceById"
+            }
+        },
+        "/config/topologies/topology/{topologyId}/edges/{edgeId}/source/edge_end/{edgeEndId}/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of edge_end",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        },
+                        "name": "edge_end",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createEdgeEndById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of edge_end",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        },
+                        "name": "edge_end",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateEdgeEndById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteEdgeEndById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        }
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveEdgeEndById"
+            }
+        },
+        "/config/topologies/topology/{topologyId}/edges/{edgeId}/target/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Node"
+                        }
+                    },
+                    "404": {
+                        "description": "Target not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: target",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve target by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveTargetById"
+            }
+        },
+        "/config/topologies/topology/{topologyId}/edges/{edgeId}/target/edge_end/{edgeEndId}/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of edge_end",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        },
+                        "name": "edge_end",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createEdgeEndById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of edge_end",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        },
+                        "name": "edge_end",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateEdgeEndById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteEdgeEndById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        }
+                    },
+                    "404": {
+                        "description": "Edge_end not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: edge_end",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edgeEnd",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeEndId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve edge_end by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveEdgeEndById"
+            }
+        },
+        "/config/topologies/topology/{topologyId}/edges/{edgeId}/local_ifid/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        }
+                    },
+                    "404": {
+                        "description": "Local_ifid not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: local_ifid",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve local_ifid by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveLocalIfidById"
+            }
+        },
+        "/config/topologies/topology/{topologyId}/edges/{edgeId}/remote_ifid/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/EdgeEnd"
+                        }
+                    },
+                    "404": {
+                        "description": "Remote_ifid not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: remote_ifid",
+                "parameters": [
+                    {
+                        "description": "ID of topology",
+                        "required": true,
+                        "type": "string",
+                        "name": "topologyId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of edge",
+                        "required": true,
+                        "type": "string",
+                        "name": "edgeId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve remote_ifid by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveRemoteIfidById"
+            }
+        }
+    },
+    "definitions": {
+        "Node": {
+            "properties": {
+                "domain": {
+                    "type": "string"
+                },
+                "nodetype": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "edgeEnd": {
+                    "items": {
+                        "$ref": "#/definitions/EdgeEnd"
+                    },
+                    "type": "array"
+                },
+                "nodeId": {
+                    "type": "string"
+                },
+                "underlayAbstractTopology": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            }
+        },
+        "EdgeEnd": {
+            "properties": {
+                "switchingCap": {
+                    "type": "string"
+                },
+                "edgeEndId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "peerNodeId": {
+                    "type": "string"
+                }
+            }
+        },
+        "EthEdge": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Edge"
+                },
+                {
+                    "properties": {
+                        "ethEdgeParam": {
+                            "type": "string"
+                        }
+                    }
+                }
+            ]
+        },
+        "Bitmap": {
+            "properties": {
+                "arrayBits": {
+                    "items": {
+                        "type": "integer",
+                        "format": "int16"
+                    },
+                    "type": "array"
+                },
+                "numChannels": {
+                    "type": "integer",
+                    "format": "int16"
+                }
+            }
+        },
+        "Edge": {
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "edgeId": {
+                    "type": "string"
+                },
+                "edgeType": {
+                    "type": "string"
+                },
+                "switchingCap": {
+                    "type": "string"
+                },
+                "metric": {
+                    "type": "string"
+                },
+                "maxResvBw": {
+                    "type": "string"
+                },
+                "source": {
+                    "$ref": "#/definitions/Node"
+                },
+                "localIfid": {
+                    "$ref": "#/definitions/EdgeEnd"
+                },
+                "remoteIfid": {
+                    "$ref": "#/definitions/EdgeEnd"
+                },
+                "unreservBw": {
+                    "type": "string"
+                },
+                "target": {
+                    "$ref": "#/definitions/Node"
+                }
+            }
+        },
+        "DwdmChannel": {
+            "properties": {
+                "state": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "g694Id": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            }
+        },
+        "DwdmEdge": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Edge"
+                },
+                {
+                    "properties": {
+                        "channels": {
+                            "items": {
+                                "$ref": "#/definitions/DwdmChannel"
+                            },
+                            "type": "array"
+                        },
+                        "bitmap": {
+                            "$ref": "#/definitions/Bitmap"
+                        }
+                    }
+                }
+            ]
+        },
+        "Topology": {
+            "properties": {
+                "topologyId": {
+                    "type": "string"
+                },
+                "underlayTopology": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "nodes": {
+                    "items": {
+                        "$ref": "#/definitions/Node"
+                    },
+                    "type": "array"
+                },
+                "edges": {
+                    "items": {
+                        "$ref": "#/definitions/Edge"
+                    },
+                    "type": "array"
+                }
+            }
+        }
+    }
+}

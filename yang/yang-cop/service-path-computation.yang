@@ -1,0 +1,108 @@
+module service-path-computation {
+
+    yang-version 1;
+
+    namespace "http://ict-strauss.eu/cop/service-call";
+
+    prefix s-path;
+
+    /*import ietf-inet-types {
+		prefix inet;
+        revision-date 2013-07-15;
+	}
+    import service-call {
+		prefix sc;
+	}*/
+
+    organization "CTTC";
+
+    revision "2015-05-30" {
+        description
+        "Service Path Computation module for STRAUSS";
+    }
+    
+    
+
+    grouping endpoint {
+        description "";
+
+        leaf endpoint_id{
+            type string;
+            description "Name of the endpoint, for example host1-port1";
+        }
+        leaf router_id{
+            type string;
+        }
+        leaf interface_id{
+            type string;
+        }
+        /*leaf topology-component{
+            type topo:end-ref;
+        }*/
+    }
+    
+    grouping path-type{
+        description "";
+        leaf id{
+            type string;
+        }
+        list topo_components{
+            key "endpoint_id";
+            uses endpoint;
+        }
+    }
+
+
+	grouping traffic_params{
+		description "";
+
+		leaf bandwidth {
+			description "Bandwidth measured in bits/s";
+            type int32;
+        }
+		leaf delay {
+			description "Connection delay measured in ms";
+            type int32;
+        }
+	}
+
+
+    grouping path_request{
+        description "";
+        
+        leaf request-id{
+            type string;
+        }
+        container aEnd{
+            uses endpoint;
+        }
+        container zEnd{
+            uses endpoint;
+        }
+        container traffic_parameters{
+            description "TrafficParam covers service specific traffic attributes";
+            uses traffic_params;
+        }
+
+    }
+    
+    grouping path_reply{
+        description "";
+        leaf reply-id{
+            type string;
+        }
+        container path{
+            uses path-type;
+        }
+    }
+
+    rpc path_computation{
+        input {
+            uses path_request;
+        }
+        output{
+            uses path_reply;
+        }
+        
+    }
+}

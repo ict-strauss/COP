@@ -1,0 +1,123 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "1.0.0",
+        "description": "service-path-computation API generated from service-path-computation.yang",
+        "title": "service-path-computation API"
+    },
+    "host": "localhost:8080",
+    "basePath": "/restconf",
+    "schemes": [
+        "http"
+    ],
+    "paths": {
+        "/operations/path_computation/": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": {
+                                "$ref": "#/definitions/PathReply"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Path_computation not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: path_computation",
+                "parameters": [
+                    {
+                        "required": true,
+                        "description": "ID of path_computation",
+                        "schema": {
+                            "type": {
+                                "$ref": "#/definitions/PathRequest"
+                            }
+                        },
+                        "name": "path_computation",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update path_computation by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updatePathComputationById"
+            }
+        }
+    },
+    "definitions": {
+        "Endpoint": {
+            "properties": {
+                "routerId": {
+                    "type": "string"
+                },
+                "interfaceId": {
+                    "type": "string"
+                },
+                "endpointId": {
+                    "type": "string"
+                }
+            }
+        },
+        "PathType": {
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "topoComponents": {
+                    "items": {
+                        "$ref": "#/definitions/Endpoint"
+                    },
+                    "type": "array"
+                }
+            }
+        },
+        "PathReply": {
+            "properties": {
+                "path": {
+                    "$ref": "#/definitions/PathType"
+                },
+                "replyId": {
+                    "type": "string"
+                }
+            }
+        },
+        "TrafficParams": {
+            "properties": {
+                "delay": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "bandwidth": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            }
+        },
+        "PathRequest": {
+            "properties": {
+                "aEnd": {
+                    "$ref": "#/definitions/Endpoint"
+                },
+                "requestId": {
+                    "type": "string"
+                },
+                "trafficParameters": {
+                    "$ref": "#/definitions/TrafficParams"
+                },
+                "zEnd": {
+                    "$ref": "#/definitions/Endpoint"
+                }
+            }
+        }
+    }
+}

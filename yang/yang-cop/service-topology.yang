@@ -1,0 +1,198 @@
+module service-topology {
+
+    yang-version 1;
+
+    namespace "http://ict-strauss.eu/cop/service-call";
+
+    prefix s-topology;
+
+    /*import ietf-inet-types {
+            prefix inet;
+            revision-date 2013-07-15;
+      }*/
+
+    organization "CTTC";
+
+    description "YANG version of the Common Orchestration Protocol (COP).";
+
+    revision "2015-05-30" {
+        description
+        "Service Topology module for STRAUSS";
+    }
+
+    typedef topology-ref {
+        type leafref {
+            path "/topologies/topology/topology_id";
+        }
+        description
+            "A type for an absolute reference a topology instance.";
+    }
+
+    typedef edge_type_enumeration {
+        type enumeration {
+            enum dwdm {
+                description "DWDM link";
+                value 1;
+            }
+            enum ethernet {
+                description "Ethernet link";
+                value 2;
+            }
+        }
+    }
+    
+    typedef switching_cap_enumeration {
+        type enumeration {
+            enum lsc {
+                description "lsc sw_cap";
+                value 1;
+            }
+            enum psc {
+                description "psc sw_cap";
+                value 2;
+            }
+        }
+    }
+
+    grouping topology{
+        leaf topology_id{
+            type string;
+        }
+        leaf-list underlay-topology {
+            description "List of topologies from which this depends on.";
+            type topology-ref;
+		}
+        list nodes{
+			key "node_id";
+            uses node;
+        }
+        list edges{
+            key "edge_id";
+            uses edge;
+        }
+    }
+
+    grouping edge_end{
+        leaf edge_end_id{
+            type string;
+        }
+        leaf switching_cap{
+            type switching_cap_enumeration;
+        }
+        leaf name{
+            type string;
+        }
+		leaf peer_node_id{
+			type string;	
+		}
+    }
+
+    grouping node{
+        leaf node_id{
+            type string;
+        }
+        leaf-list underlay-abstract-topology{
+            description "List of topology_ids which are represented by this node.";
+            type topology-ref;
+        }
+        leaf name{
+            type string;
+        }
+		leaf domain{
+			type string;
+		}
+		leaf nodetype{
+			type string;		
+		}
+        list edge_end{
+            key "edge_end_id";
+            uses edge_end;
+        }
+    }
+
+    grouping edge{
+        leaf edge_id{
+            type string;
+        }
+        leaf name{
+            type string;
+        }
+		leaf edge_type{
+			type edge_type_enumeration;		
+		}
+		leaf switching_cap{
+			type string;
+		}
+		leaf metric{
+			type string;		
+		}
+		leaf max_resv_bw{
+			type string;	
+		}
+		leaf unreserv_bw{
+			type string;	
+		}
+        container source{
+			config false;
+            uses node;
+        }
+        container target{
+			config false;
+            uses node;
+        }
+        container local_ifid{
+			config false;
+            uses edge_end;
+        }
+        container remote_ifid{
+			config false;
+            uses edge_end;
+        }
+    }
+
+    grouping dwdm_channel{
+        leaf g694_id{
+            type int32;
+        }
+        leaf state{
+            type int32;
+        }
+    }
+
+    grouping bitmap{
+        leaf numChannels{
+            type int16;
+        }
+        leaf-list arrayBits{
+            type int16;
+        }
+    }
+
+    grouping dwdm_edge{
+        container bitmap{
+            uses bitmap;
+        }
+        list channels{
+            key "g694_id";
+            uses dwdm_channel;
+        }
+        uses edge;
+    }
+    
+    grouping eth_edge{
+        leaf eth_edge_param{
+            type string;
+        }
+        uses edge;
+        
+    }
+
+    container topologies{
+        config false;
+        list topology{
+            key "topology_id";
+            uses topology;
+        }
+    }
+
+}

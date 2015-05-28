@@ -1,0 +1,207 @@
+'Download plantuml from http://plantuml.sourceforge.net/ 
+'Generate png with java -jar plantuml.jar <file> 
+'Output in img/<module>.png 
+'If Java spits out memory error increase heap size with java -Xmx1024m  -jar plantuml.jar <file> 
+@startuml img/service-call.png 
+hide empty fields 
+hide empty methods 
+hide <<case>> circle
+hide <<augment>> circle
+hide <<choice>> circle
+hide <<leafref>> stereotype
+hide <<leafref>> circle
+page 1x1 
+Title service-call 
+note top of s_call_service_call : <b>Namespace: </b> http://ict-strauss.eu/cop/service-call \n<b>Prefix: </b> s-call \n<b>Organization : </b>\nCTTC \n<b>Revision : </b> 2015-05-30 \n
+package "s-call:service-call" as s_call_service_call { 
+class "service-call" as service_call << (M, #33CCFF) module>> 
+enum "transport_layer_type_enumeration" as service_call_I_transport_layer_type_enumeration {
+dwdm_link
+ethernet
+mpls
+}
+class "transport_layer-type" as service_call_I_transport_layer_type_grouping <<(G,Lime) grouping>> 
+service_call_I_transport_layer_type_grouping : layer : transport_layer_type_enumeration  
+service_call_I_transport_layer_type_grouping : layer_id : string  
+enum "protocol-type" as service_call_I_protocol_type {
+TCP
+UDP
+ARP
+MORE
+}
+enum "address-type" as service_call_I_address_type {
+IPv4
+IPv6
+DatapathID
+MORE
+}
+class "path-type" as service_call_I_path_type_grouping <<(G,Lime) grouping>> 
+service_call_I_path_type_grouping : id : string  
+class "topo_components" as service_call_I_path_type_I_topo_components << (L, #FF7700) list>> 
+service_call_I_path_type_grouping *-- "0..N" service_call_I_path_type_I_topo_components 
+service_call_I_path_type_I_topo_components : endpoint {uses} 
+class "match-rules" as service_call_I_match_rules_grouping <<(G,Lime) grouping>> 
+service_call_I_match_rules_grouping : in_port : string  
+service_call_I_match_rules_grouping : in_phy_port : string  
+service_call_I_match_rules_grouping : metadata : string  
+service_call_I_match_rules_grouping : eth_src : string  
+service_call_I_match_rules_grouping : eth_dst : string  
+service_call_I_match_rules_grouping : eth_type : int32  
+service_call_I_match_rules_grouping : vlan_vid : int32  
+service_call_I_match_rules_grouping : vlan_pcp : int32  
+service_call_I_match_rules_grouping : ip_dscp : int32  
+service_call_I_match_rules_grouping : ip_ecn : int32  
+service_call_I_match_rules_grouping : ip_proto : int32  
+service_call_I_match_rules_grouping : ipv4_src : string  
+service_call_I_match_rules_grouping : ipv4_dst : string  
+service_call_I_match_rules_grouping : tcp_src : int32  
+service_call_I_match_rules_grouping : tcp_dst : int32  
+service_call_I_match_rules_grouping : udp_src : int32  
+service_call_I_match_rules_grouping : udp_dst : int32  
+service_call_I_match_rules_grouping : sctp_src : int32  
+service_call_I_match_rules_grouping : sctp_dst : int32  
+service_call_I_match_rules_grouping : icmpv4_type : int32  
+service_call_I_match_rules_grouping : icmpv4_code : int32  
+service_call_I_match_rules_grouping : arp_op : int32  
+service_call_I_match_rules_grouping : arp_spa : int32  
+service_call_I_match_rules_grouping : arp_tpa : int32  
+service_call_I_match_rules_grouping : arp_sha : int32  
+service_call_I_match_rules_grouping : arp_tha : int32  
+service_call_I_match_rules_grouping : ipv6_src : string  
+service_call_I_match_rules_grouping : ipv6_dst : string  
+service_call_I_match_rules_grouping : ipv6_flabel : string  
+service_call_I_match_rules_grouping : icmpv6_type : int32  
+service_call_I_match_rules_grouping : icmpv6_code : int32  
+service_call_I_match_rules_grouping : ipv6_nd_target : int32  
+service_call_I_match_rules_grouping : ipv6_nd_sll : int32  
+service_call_I_match_rules_grouping : ipv6_nd_tll : int32  
+service_call_I_match_rules_grouping : mpls_label : int32  
+service_call_I_match_rules_grouping : mpls_tc : int32  
+service_call_I_match_rules_grouping : mpls_bos : int32  
+service_call_I_match_rules_grouping : pbb_isid : int32  
+service_call_I_match_rules_grouping : tunnel_id : int32  
+service_call_I_match_rules_grouping : ipv6_exthdr : int32  
+service_call_I_match_rules_grouping : experimental_gmpls_wson_label : int32  
+service_call_I_match_rules_grouping : experimental_teid : int64  
+class "endpoint" as service_call_I_endpoint_grouping <<(G,Lime) grouping>> 
+service_call_I_endpoint_grouping : +endpoint_id : string  {key} 
+service_call_I_endpoint_grouping : router_id : string  
+service_call_I_endpoint_grouping : interface_id : string  
+class "traffic_params" as service_call_I_traffic_params_grouping <<(G,Lime) grouping>> 
+service_call_I_traffic_params_grouping : reserved_bandwidth : int32  
+service_call_I_traffic_params_grouping : latency : int32  
+class "connection" as service_call_I_connection_grouping <<(G,Lime) grouping>> 
+service_call_I_connection_grouping : connection_id : string  
+class "aEnd" as  service_call_I_connection_I_aEnd <<container>> 
+service_call_I_connection_grouping *-- "1" service_call_I_connection_I_aEnd 
+note bottom of service_call_I_connection_I_aEnd
+<b>Config = </b>false
+end note 
+service_call_I_connection_I_aEnd : endpoint {uses} 
+class "zEnd" as  service_call_I_connection_I_zEnd <<container>> 
+service_call_I_connection_grouping *-- "1" service_call_I_connection_I_zEnd 
+note bottom of service_call_I_connection_I_zEnd
+<b>Config = </b>false
+end note 
+service_call_I_connection_I_zEnd : endpoint {uses} 
+class "path" as  service_call_I_connection_I_path <<container>> 
+service_call_I_connection_grouping *-- "1" service_call_I_connection_I_path 
+note bottom of service_call_I_connection_I_path
+<b>Config = </b>false
+end note 
+service_call_I_connection_I_path : path-type {uses} 
+class "match" as  service_call_I_connection_I_match <<container>> 
+service_call_I_connection_grouping *-- "1" service_call_I_connection_I_match 
+note bottom of service_call_I_connection_I_match
+<b>Config = </b>false
+end note 
+service_call_I_connection_I_match : match-rules {uses} 
+class "traffic_params" as  service_call_I_connection_I_traffic_params <<container>> 
+service_call_I_connection_grouping *-- "1" service_call_I_connection_I_traffic_params 
+note bottom of service_call_I_connection_I_traffic_params
+<b>Config = </b>false
+end note 
+service_call_I_connection_I_traffic_params : traffic_params {uses} 
+class "transport_layer" as  service_call_I_connection_I_transport_layer <<container>> 
+service_call_I_connection_grouping *-- "1" service_call_I_connection_I_transport_layer 
+note bottom of service_call_I_connection_I_transport_layer
+<b>Config = </b>false
+end note 
+service_call_I_connection_I_transport_layer : transport_layer-type {uses} 
+service_call_I_connection_grouping : operStatus : enumeration : {down,up,}   {Config : false}
+class "call" as service_call_I_call_grouping <<(G,Lime) grouping>> 
+service_call_I_call_grouping : call_id : string  
+class "aEnd" as  service_call_I_call_I_aEnd <<container>> 
+service_call_I_call_grouping *-- "1" service_call_I_call_I_aEnd 
+note bottom of service_call_I_call_I_aEnd
+<b>Config = </b>false
+end note 
+service_call_I_call_I_aEnd : endpoint {uses} 
+class "zEnd" as  service_call_I_call_I_zEnd <<container>> 
+service_call_I_call_grouping *-- "1" service_call_I_call_I_zEnd 
+note bottom of service_call_I_call_I_zEnd
+<b>Config = </b>false
+end note 
+service_call_I_call_I_zEnd : endpoint {uses} 
+class "transport_layer" as  service_call_I_call_I_transport_layer <<container>> 
+service_call_I_call_grouping *-- "1" service_call_I_call_I_transport_layer 
+note bottom of service_call_I_call_I_transport_layer
+<b>Config = </b>false
+end note 
+service_call_I_call_I_transport_layer : transport_layer-type {uses} 
+service_call_I_call_grouping : operStatus : enumeration : {down,up,}   {Config : false}
+class "match" as  service_call_I_call_I_match <<container>> 
+service_call_I_call_grouping *-- "1" service_call_I_call_I_match 
+note bottom of service_call_I_call_I_match
+<b>Config = </b>false
+end note 
+service_call_I_call_I_match : match-rules {uses} 
+class "traffic_params" as  service_call_I_call_I_traffic_params <<container>> 
+service_call_I_call_grouping *-- "1" service_call_I_call_I_traffic_params 
+note bottom of service_call_I_call_I_traffic_params
+<b>Config = </b>false
+end note 
+service_call_I_call_I_traffic_params : traffic_params {uses} 
+class "connections" as service_call_I_call_I_connections << (L, #FF7700) list>> 
+service_call_I_call_grouping *-- "0..N" service_call_I_call_I_connections 
+note bottom of service_call_I_call_I_connections
+<b>Config = </b>false
+end note 
+service_call_I_call_I_connections : connection {uses} 
+class "calls" as  service_call_I_calls <<container>> 
+service_call *-- "1" service_call_I_calls 
+note bottom of service_call_I_calls
+<b>Config = </b>false
+end note 
+class "call" as service_call_I_calls_I_call << (L, #FF7700) list>> 
+service_call_I_calls *-- "0..N" service_call_I_calls_I_call 
+service_call_I_calls_I_call : call {uses} 
+class "connections" as  service_call_I_connections <<container>> 
+service_call *-- "1" service_call_I_connections 
+note bottom of service_call_I_connections
+<b>Config = </b>false
+end note 
+class "connection" as service_call_I_connections_I_connection << (L, #FF7700) list>> 
+service_call_I_connections *-- "0..N" service_call_I_connections_I_connection 
+service_call_I_connections_I_connection : connection {uses} 
+} 
+
+service_call_I_path_type_I_topo_components --> service_call_I_endpoint_grouping : uses 
+service_call_I_connection_I_aEnd --> service_call_I_endpoint_grouping : uses 
+service_call_I_connection_I_zEnd --> service_call_I_endpoint_grouping : uses 
+service_call_I_connection_I_path --> service_call_I_path_type_grouping : uses 
+service_call_I_connection_I_match --> service_call_I_match_rules_grouping : uses 
+service_call_I_connection_I_traffic_params --> service_call_I_traffic_params_grouping : uses 
+service_call_I_connection_I_transport_layer --> service_call_I_transport_layer_type_grouping : uses 
+service_call_I_call_I_aEnd --> service_call_I_endpoint_grouping : uses 
+service_call_I_call_I_zEnd --> service_call_I_endpoint_grouping : uses 
+service_call_I_call_I_transport_layer --> service_call_I_transport_layer_type_grouping : uses 
+service_call_I_call_I_match --> service_call_I_match_rules_grouping : uses 
+service_call_I_call_I_traffic_params --> service_call_I_traffic_params_grouping : uses 
+service_call_I_call_I_connections --> service_call_I_connection_grouping : uses 
+service_call_I_calls_I_call --> service_call_I_call_grouping : uses 
+service_call_I_connections_I_connection --> service_call_I_connection_grouping : uses 
+center footer
+ <size:20> UML Generated : 2015-05-27 11:57 </size>
+ endfooter 
+@enduml 

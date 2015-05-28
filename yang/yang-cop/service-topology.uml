@@ -1,0 +1,126 @@
+'Download plantuml from http://plantuml.sourceforge.net/ 
+'Generate png with java -jar plantuml.jar <file> 
+'Output in img/<module>.png 
+'If Java spits out memory error increase heap size with java -Xmx1024m  -jar plantuml.jar <file> 
+@startuml img/service-topology.png 
+hide empty fields 
+hide empty methods 
+hide <<case>> circle
+hide <<augment>> circle
+hide <<choice>> circle
+hide <<leafref>> stereotype
+hide <<leafref>> circle
+page 1x1 
+Title service-topology 
+note top of s_topology_service_topology : <b>Namespace: </b> http://ict-strauss.eu/cop/service-call \n<b>Prefix: </b> s-topology \n<b>Organization : </b>\nCTTC \n<b>Revision : </b> 2015-05-30 \n
+package "s-topology:service-topology" as s_topology_service_topology { 
+class "service-topology" as service_topology << (M, #33CCFF) module>> 
+class "topology-ref" as topology_ref << (T, YellowGreen) typedef>>
+topology_ref : leafref : /topologies/topology/topology_id
+enum "edge_type_enumeration" as service_topology_I_edge_type_enumeration {
+dwdm
+ethernet
+}
+enum "switching_cap_enumeration" as service_topology_I_switching_cap_enumeration {
+lsc
+psc
+}
+class "topology" as service_topology_I_topology_grouping <<(G,Lime) grouping>> 
+service_topology_I_topology_grouping : topology_id : string  
+service_topology_I_topology_grouping : underlay-topology []: topology-ref 
+class "nodes" as service_topology_I_topology_I_nodes << (L, #FF7700) list>> 
+service_topology_I_topology_grouping *-- "0..N" service_topology_I_topology_I_nodes 
+service_topology_I_topology_I_nodes : node {uses} 
+class "edges" as service_topology_I_topology_I_edges << (L, #FF7700) list>> 
+service_topology_I_topology_grouping *-- "0..N" service_topology_I_topology_I_edges 
+service_topology_I_topology_I_edges : edge {uses} 
+class "edge_end" as service_topology_I_edge_end_grouping <<(G,Lime) grouping>> 
+service_topology_I_edge_end_grouping : edge_end_id : string  
+service_topology_I_edge_end_grouping : switching_cap : switching_cap_enumeration  
+service_topology_I_edge_end_grouping : name : string  
+service_topology_I_edge_end_grouping : peer_node_id : string  
+class "node" as service_topology_I_node_grouping <<(G,Lime) grouping>> 
+service_topology_I_node_grouping : node_id : string  
+service_topology_I_node_grouping : underlay-abstract-topology []: topology-ref 
+service_topology_I_node_grouping : name : string  
+service_topology_I_node_grouping : domain : string  
+service_topology_I_node_grouping : nodetype : string  
+class "edge_end" as service_topology_I_node_I_edge_end << (L, #FF7700) list>> 
+service_topology_I_node_grouping *-- "0..N" service_topology_I_node_I_edge_end 
+service_topology_I_node_I_edge_end : edge_end {uses} 
+class "edge" as service_topology_I_edge_grouping <<(G,Lime) grouping>> 
+service_topology_I_edge_grouping : edge_id : string  
+service_topology_I_edge_grouping : name : string  
+service_topology_I_edge_grouping : edge_type : edge_type_enumeration  
+service_topology_I_edge_grouping : switching_cap : string  
+service_topology_I_edge_grouping : metric : string  
+service_topology_I_edge_grouping : max_resv_bw : string  
+service_topology_I_edge_grouping : unreserv_bw : string  
+class "source" as  service_topology_I_edge_I_source <<container>> 
+service_topology_I_edge_grouping *-- "1" service_topology_I_edge_I_source 
+note bottom of service_topology_I_edge_I_source
+<b>Config = </b>false
+end note 
+service_topology_I_edge_I_source : node {uses} 
+class "target" as  service_topology_I_edge_I_target <<container>> 
+service_topology_I_edge_grouping *-- "1" service_topology_I_edge_I_target 
+note bottom of service_topology_I_edge_I_target
+<b>Config = </b>false
+end note 
+service_topology_I_edge_I_target : node {uses} 
+class "local_ifid" as  service_topology_I_edge_I_local_ifid <<container>> 
+service_topology_I_edge_grouping *-- "1" service_topology_I_edge_I_local_ifid 
+note bottom of service_topology_I_edge_I_local_ifid
+<b>Config = </b>false
+end note 
+service_topology_I_edge_I_local_ifid : edge_end {uses} 
+class "remote_ifid" as  service_topology_I_edge_I_remote_ifid <<container>> 
+service_topology_I_edge_grouping *-- "1" service_topology_I_edge_I_remote_ifid 
+note bottom of service_topology_I_edge_I_remote_ifid
+<b>Config = </b>false
+end note 
+service_topology_I_edge_I_remote_ifid : edge_end {uses} 
+class "dwdm_channel" as service_topology_I_dwdm_channel_grouping <<(G,Lime) grouping>> 
+service_topology_I_dwdm_channel_grouping : g694_id : int32  
+service_topology_I_dwdm_channel_grouping : state : int32  
+class "bitmap" as service_topology_I_bitmap_grouping <<(G,Lime) grouping>> 
+service_topology_I_bitmap_grouping : numChannels : int16  
+service_topology_I_bitmap_grouping : arrayBits []: int16 
+class "dwdm_edge" as service_topology_I_dwdm_edge_grouping <<(G,Lime) grouping>> 
+class "bitmap" as  service_topology_I_dwdm_edge_I_bitmap <<container>> 
+service_topology_I_dwdm_edge_grouping *-- "1" service_topology_I_dwdm_edge_I_bitmap 
+service_topology_I_dwdm_edge_I_bitmap : bitmap {uses} 
+class "channels" as service_topology_I_dwdm_edge_I_channels << (L, #FF7700) list>> 
+service_topology_I_dwdm_edge_grouping *-- "0..N" service_topology_I_dwdm_edge_I_channels 
+service_topology_I_dwdm_edge_I_channels : dwdm_channel {uses} 
+service_topology_I_dwdm_edge_grouping : edge {uses} 
+class "eth_edge" as service_topology_I_eth_edge_grouping <<(G,Lime) grouping>> 
+service_topology_I_eth_edge_grouping : eth_edge_param : string  
+service_topology_I_eth_edge_grouping : edge {uses} 
+class "topologies" as  service_topology_I_topologies <<container>> 
+service_topology *-- "1" service_topology_I_topologies 
+note bottom of service_topology_I_topologies
+<b>Config = </b>false
+end note 
+class "topology" as service_topology_I_topologies_I_topology << (L, #FF7700) list>> 
+service_topology_I_topologies *-- "0..N" service_topology_I_topologies_I_topology 
+service_topology_I_topologies_I_topology : topology {uses} 
+} 
+
+service_topology_I_topology_I_nodes --> service_topology_I_node_grouping : uses 
+service_topology_I_topology_I_edges --> service_topology_I_edge_grouping : uses 
+service_topology_I_node_I_edge_end --> service_topology_I_edge_end_grouping : uses 
+service_topology_I_edge_I_source --> service_topology_I_node_grouping : uses 
+service_topology_I_edge_I_target --> service_topology_I_node_grouping : uses 
+service_topology_I_edge_I_local_ifid --> service_topology_I_edge_end_grouping : uses 
+service_topology_I_edge_I_remote_ifid --> service_topology_I_edge_end_grouping : uses 
+service_topology_I_dwdm_edge_I_bitmap --> service_topology_I_bitmap_grouping : uses 
+service_topology_I_dwdm_edge_I_channels --> service_topology_I_dwdm_channel_grouping : uses 
+service_topology_I_dwdm_edge_grouping --> service_topology_I_edge_grouping : uses 
+service_topology_I_eth_edge_grouping --> service_topology_I_edge_grouping : uses 
+service_topology_I_topologies_I_topology --> service_topology_I_topology_grouping : uses 
+topology_ref-->"topology_id"service_topology_I_topologies_I_topology: topology-ref
+center footer
+ <size:20> UML Generated : 2015-05-27 11:52 </size>
+ endfooter 
+@enduml 
