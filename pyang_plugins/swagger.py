@@ -15,6 +15,7 @@ from pyang import Context as ctx
 import sys
 
 
+TYPEDEFS = dict()
 def pyang_plugin_init():
     """ Initialization function called by the plugin loader. """
     plugin.register_plugin(SwaggerPlugin())
@@ -117,6 +118,9 @@ def emit_swagger_spec(modules, fd, path, yang_path = None):
         if module.search('import'):
             imported_models = import_models(module, path)
 
+        # The attribute definitions are processed and stored in the "typedefs" data structure for further use.
+        gen_typedefs(module)
+
         # list() needed for python 3 compatibility
         models = list(module.i_groupings.values())
         # Print the swagger definitions of the Yang groupings.
@@ -152,7 +156,19 @@ def gen_model(children, tree_structure):
                 # process the 'type' attribute:
                 # Currently integer, enumeration and string are supported.
                 if attribute.keyword == 'type':
-                    if attribute.arg[:3] == 'int':
+                    # Firstly, it is checked if the attribute type has been previously define in typedefs.
+                    if attribute.arg in TYPEDEFS:
+                        if TYPEDEFS[attribute.arg]['type'][:3] == 'int':
+                            node['type'] = 'integer'
+                            node['format'] = attribute.arg
+                        elif TYPEDEFS[attribute.arg]['type'] == 'enumeration':
+                            node['type'] = 'string'
+                            node['enum'] = [e
+                                            for e in TYPEDEFS[attribute.arg]['enum']]
+                        # map all other types to string
+                        else:
+                            node['type'] = 'string'
+                    elif attribute.arg[:3] == 'int':
                         node['type'] = 'integer'
                         node['format'] = attribute.arg
                     elif attribute.arg == 'enumeration':
@@ -314,6 +330,24 @@ def gen_api_node(node, path, apis, definitions):
     # Generate APIs for children.
     if hasattr(node, 'i_children'):
         gen_apis(node.i_children, path, apis, definitions)
+
+
+def gen_typedefs(module):
+    for typedef in module.i_typedefs:
+        type = {'name':typedef}
+        for attribute in module.i_typedefs[typedef].substmts:
+            if attribute.keyword == 'type':
+                if attribute.arg[:3] == 'int':
+                    type['type'] = 'integer'
+                    type['format'] = attribute.arg
+                elif attribute.arg == 'enumeration':
+                    type['type'] = 'enumeration'
+                    type['enum'] = [e[0]
+                                    for e in attribute.i_type_spec.enums]
+                # map all other types to string
+                else:
+                    type['type'] = 'string'
+        TYPEDEFS[typedef] = type
 
 
 def import_models(module, path):
