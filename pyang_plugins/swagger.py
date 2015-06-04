@@ -314,13 +314,13 @@ def gen_api_node(node, path, apis, definitions):
             if child.keyword == 'input':
                 ref_model = [ch for ch in child.substmts
                                  if ch.keyword == 'uses']
-                schema['type'] = {'$ref':'#/definitions/' + to_upper_camelcase(
+                schema = {'$ref':'#/definitions/' + to_upper_camelcase(
                             ref_model[0].arg)}
             elif child.keyword == 'output':
                 schema_out = dict()
                 ref_model = [ch for ch in child.substmts
                                  if ch.keyword == 'uses']
-                schema_out['type'] = {'$ref':'#/definitions/' + to_upper_camelcase(
+                schema_out = {'$ref':'#/definitions/' + to_upper_camelcase(
                             ref_model[0].arg)}
 
 
