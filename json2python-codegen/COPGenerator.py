@@ -146,7 +146,9 @@ def handleResponse(id,description,schema=None):
     else:
         return 'print "There is something wrong with responses"'
 
-def generateServer(restname, data):
+
+## This function generates a HTTP Server which will serve as a unique access point to our COP server implementation.
+def generateServerStub(restname, data):
     line="\n"
     out_server = open(restname+".py","w+")
     out_server.write("import web"+line)
@@ -168,7 +170,7 @@ def generateServer(restname, data):
 
 def generateRESTapi(data,name,imp, restname, params):
     if not os.path.isfile("server.py"):
-        generateServer("server", data)
+        generateServerStub("server", data)
 
     line="\n"
     index=0
@@ -202,14 +204,12 @@ def generateRESTapi(data,name,imp, restname, params):
         out.write("from objects_"+restname+"."+im[0].lower()+im[1:]+" import "+im+line)
 
     out.write(line)
-    #out.write("class MyApplication(web.application):\n"+tab(1)+"def run(self, port=8080, *middleware):\n"+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
     urls=urls[:-2]+")"
 
     #urls and app initialization
     out.write("urls = "+urls+line+line)
     if (params.isAuth):
         out.write("users = "+json.dumps(params.users)+line+line)
-    #out.write("app = MyApplication(urls, globals())"+line+line)
     #error functions
     out.write("class NotFoundError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '404 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
     out.write("class BadRequestError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '400 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
@@ -271,7 +271,6 @@ def generateRESTapi(data,name,imp, restname, params):
             else:
                 out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+"("+params_callback[func]+")"+line)
 
-            #FIXME LEGACY CALLBACK : out.write(tab(index)+"#response = "+func+"Handle()."+method+"() #You should uncomment and create this class to handle this request"+line) #The names of the classes could change. See how to fix them
             for resp in info[func]['methods'][method]["resp"].keys():
                 jotason=False
                 if "schema" in info[func]['methods'][method]["resp"][resp].keys():
@@ -299,11 +298,6 @@ def generateRESTapi(data,name,imp, restname, params):
             index-=1
             index-=1
 
-
-    #out.write("if __name__ == \"__main__\":"+line)
-    #index+=1
-    #out.write(tab(index)+"app.run("+str(data['port'])+")"+line)
-    #index-=1
     out.close()
     return ret
 
@@ -451,33 +445,30 @@ def generateCallableClasses(funcs, data, restname):
         name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
         params_callback[func]= [info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
 
-        if (os.path.isfile("funcs_"+restname+"/"+name_classes[func][0].lower()+""+name_classes[func][1:]+"Impl.py")): #if exists, don't create
+        if os.path.isfile("funcs_"+restname+"/"+name_classes[func][0].lower()+""+name_classes[func][1:]+"Impl.py"): #if exists, don't create
             print "funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py already exists, not overwrite"
         else:
             out=open("funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
             out.write(line+line+"class "+name_classes[func]+"Impl :"+line+line)
             index+=1
-            '''out.write(tab(index)+"def __init__(self):"+line)
-            index+=1
-            out.write(tab(index)+"print 'initialize class'"+line+line)
-            index-=1'''
+
             for method in info[func]['methods'].keys():
-                input_methods = ''
                 out.write(tab(index)+"@classmethod"+line)
                 if len (params_callback[func]) > 0:
+                    ## Input body parameters are included into the class headers if so.
                     if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
-                        input_methods =params_callback[func] + info[func]['methods'][method]['in_params']
-                        input_methods = ", ".join([element for element in input_methods])
-
+                        body_inputs = params_callback[func] + info[func]['methods'][method]['in_params']
+                        body_inputs = ", ".join([element for element in body_inputs])
                     else:
-                        input_methods = ", ".join([element for element in params_callback[func]])
-                    out.write(tab(index)+"def "+method+"(cls, "+input_methods+"):"+line)
-                else:
-                    input_methods = ' '
-                    if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
-                        input_methods += ", ".join([element for element in info[func]['methods'][method]['in_params']])
+                        body_inputs = ", ".join([element for element in params_callback[func]])
 
-                    out.write(tab(index)+"def "+method+"(cls, "+input_methods+"):"+line)
+                    out.write(tab(index)+"def "+method+"(cls, "+body_inputs+"):"+line)
+                else:
+                    body_inputs = ' '
+                    if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
+                        body_inputs += ", ".join([element for element in info[func]['methods'][method]['in_params']])
+
+                    out.write(tab(index)+"def "+method+"(cls, "+body_inputs+"):"+line)
                 index+=1
                 out.write(tab(index)+"print 'handling "+method+"'"+line+line)
                 index-=1
