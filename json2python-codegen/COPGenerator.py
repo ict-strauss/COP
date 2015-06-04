@@ -58,11 +58,6 @@ def translateRequest(js):
                 for param in js["paths"][path][method]['parameters']:
                     if "body" in param['in']:
                         ids[method]['body']=True
-                        if 'in_params' not in ids[method]:
-                            ids[method]['in_params'] = [param['schema']['$ref'].split('/')[-1]]
-                        else:
-                            ids[method]['in_params'].append(param['schema']['$ref'].split('/')[-1])
-
             if "application/json" in js["paths"][path][method]['consumes']:
                 ids[method]['json']=True
         res["func"+str(i)]={"url":bp+url,"inlineVars":vars, "methods":ids}
@@ -146,38 +141,14 @@ def handleResponse(id,description,schema=None):
     else:
         return 'print "There is something wrong with responses"'
 
-def generateServer(restname, data):
-    line="\n"
-    out_server = open(restname+".py","w+")
-    out_server.write("import web"+line)
-    out_server.write("## EXAMPLE IMPORT SERVER MODELS"+line)
-    out_server.write("#import service_call"+line)
-    out_server.write("#import service_path_computation"+line)
-    out_server.write("#import service_topology"+line+line)
-
-    out_server.write(line)
-    out_server.write("class MyApplication(web.application):"+line+tab(1)+"def run(self, port=8080, *middleware):"+line+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
-    out_server.write("##EXAMPLE import urls in the server "+line)
-    out_server.write("#urls = service_call.urls + service_path_computation.urls + service_topology.urls "+line)
-    out_server.write("app = MyApplication(urls, globals())"+line+line)
-
-    out_server.write("if __name__ == \"__main__\":"+line)
-    out_server.write(tab(1)+"app.run("+str(data['port'])+")"+line)
-    out_server.close()
-
 
 def generateRESTapi(data,name,imp, restname, params):
-    if not os.path.isfile("server.py"):
-        generateServer("server", data)
-
-    line="\n"
     index=0
     line="\n"
-    out=open(restname+".py","w+")
+    out=open(name,"w+")
 
     urls="( "
     info=data['paths']
-
     name_classes = {}
     params_callback = {}
     for func in info.keys():
@@ -187,7 +158,7 @@ def generateRESTapi(data,name,imp, restname, params):
         name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
         params_callback[func] = ",".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)'])
 
-        urls+="\""+info[func]['url']+"\" , \""+restname+"."+name_classes[func]+"\" , \n\t"
+        urls+="\""+info[func]['url']+"\" , \""+name_classes[func]+"\" , \n\t"
 
     #imports
     out.write("import web\nimport json"+line)
@@ -202,14 +173,14 @@ def generateRESTapi(data,name,imp, restname, params):
         out.write("from objects_"+restname+"."+im[0].lower()+im[1:]+" import "+im+line)
 
     out.write(line)
-    #out.write("class MyApplication(web.application):\n"+tab(1)+"def run(self, port=8080, *middleware):\n"+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
+    out.write("class MyApplication(web.application):\n"+tab(1)+"def run(self, port=8080, *middleware):\n"+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
     urls=urls[:-2]+")"
 
     #urls and app initialization
     out.write("urls = "+urls+line+line)
     if (params.isAuth):
         out.write("users = "+json.dumps(params.users)+line+line)
-    #out.write("app = MyApplication(urls, globals())"+line+line)
+    out.write("app = MyApplication(urls, globals())"+line+line)
     #error functions
     out.write("class NotFoundError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '404 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
     out.write("class BadRequestError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '400 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
@@ -300,10 +271,10 @@ def generateRESTapi(data,name,imp, restname, params):
             index-=1
 
 
-    #out.write("if __name__ == \"__main__\":"+line)
-    #index+=1
-    #out.write(tab(index)+"app.run("+str(data['port'])+")"+line)
-    #index-=1
+    out.write("if __name__ == \"__main__\":"+line)
+    index+=1
+    out.write(tab(index)+"app.run("+str(data['port'])+")"+line)
+    index-=1
     out.close()
     return ret
 
@@ -376,7 +347,6 @@ def generateClasses(data, restname):
                 out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+".json_serializer()"+line)
             else:
                 out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
-
         out.write(tab(index)+"return ret"+line)
         index-=1
         #optional function --> __str__
@@ -449,7 +419,7 @@ def generateCallableClasses(funcs, data, restname):
         list_element_url = info[func]['url'].split('/')
         indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
         name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
-        params_callback[func]= [info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
+        params_callback[func] = ", ".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)'])
 
         if (os.path.isfile("funcs_"+restname+"/"+name_classes[func][0].lower()+""+name_classes[func][1:]+"Impl.py")): #if exists, don't create
             print "funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py already exists, not overwrite"
@@ -462,22 +432,11 @@ def generateCallableClasses(funcs, data, restname):
             out.write(tab(index)+"print 'initialize class'"+line+line)
             index-=1'''
             for method in info[func]['methods'].keys():
-                input_methods = ''
                 out.write(tab(index)+"@classmethod"+line)
                 if len (params_callback[func]) > 0:
-                    if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
-                        input_methods =params_callback[func] + info[func]['methods'][method]['in_params']
-                        input_methods = ", ".join([element for element in input_methods])
-
-                    else:
-                        input_methods = ", ".join([element for element in params_callback[func]])
-                    out.write(tab(index)+"def "+method+"(cls, "+input_methods+"):"+line)
+                    out.write(tab(index)+"def "+method+"(cls, "+params_callback[func]+"):"+line)
                 else:
-                    input_methods = ' '
-                    if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
-                        input_methods += ", ".join([element for element in info[func]['methods'][method]['in_params']])
-
-                    out.write(tab(index)+"def "+method+"(cls, "+input_methods+"):"+line)
+                    out.write(tab(index)+"def "+method+"(cls):"+line)
                 index+=1
                 out.write(tab(index)+"print 'handling "+method+"'"+line+line)
                 index-=1
