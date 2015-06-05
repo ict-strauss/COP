@@ -391,6 +391,8 @@ def generateClasses(data, restname):
             else:
                 out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
 
+        out.write(tab(index)+"ret['class'] = self.__class__.__name__"+line)
+
         out.write(tab(index)+"return ret"+line)
         index-=1
         #optional function --> __str__
@@ -412,38 +414,7 @@ def generateClasses(data, restname):
                 out.write(","+line)
         out.write(line+tab(index)+"):"+line)
         out.write(tab(index)+"if key in json_string:"+line)
-        index+=1
-        first = 0
-        for att in klass['atts']:
-            if "import" in att['type']:
-                if first == 0:
-                    first = 1
-                    out.write(tab(index)+'if key == "'+att['att']+'":'+line)
-                else:
-                    out.write(tab(index)+'elif key == "'+att['att']+'":'+line)
-                index+=1
-                out.write(tab(index)+'self.'+att['att']+' = '+att['other']+'(json_string=json_string[key])'+line)
-                index+=-1
-            elif  "array" in att['type']:
-                if first == 0:
-                    first = 1
-                    out.write(tab(index)+'if key == "'+att['att']+'":'+line)
-                else:
-                    out.write(tab(index)+'elif key == "'+att['att']+'":'+line)
-                index+=1
-                out.write(tab(index)+att['att']+' = json_string[key]'+line)
-                out.write(tab(index)+"for element in "+att['att']+":"+line)
-                index+=1
-                if att['other'] in imports:
-                    out.write(tab(index)+'self.'+att['att']+'.append('+att['other']+'(json_string=element))'+line)
-                else:
-                    out.write(tab(index)+'self.'+att['att']+'.append(element)'+line)
-                index+=-1
-                index+=-1
-        if first !=0:
-            out.write(tab(index)+'else:'+line)
-            index+=1
-        out.write(tab(index)+'setattr(self, key, json_string[key])'+line)
+        out.write(completeDecoder(index))
 
         ## Finally if it were any enumeration define we create the corresponding classes
         if enum_class_string:
@@ -451,6 +422,60 @@ def generateClasses(data, restname):
                 out.write(enum_class_string[element])
 
         out.close()
+
+def completeDecoder(index):
+    line = "\n"
+    index+=1
+    out = tab(index)+"if type(json_string[key]) in [list,dict]:"+line
+    index+=1
+    out += tab(index)+"if 'class' in json_string[key]:"+line
+    index+=1
+    out += tab(index)+"setattr(self, key, globals()[json_string[key]['class']](json_string=json_string[key]))"+line
+    index-=1
+    out += tab(index)+"else:"+line
+    index+=1
+    out += tab(index)+'if type(json_string[key]) is list:'+line
+    index+=1
+    out += tab(index)+'setattr(self, key, list())'+line
+    out += tab(index)+'for element in json_string[key]:'+line
+    index+=1
+    out += tab(index)+'if type(element) is dict:'+line
+    index+=1
+    out += tab(index)+'if \'class\' in element:'+line
+    index+=1
+    out += tab(index)+'getattr(self, key).append(globals()[json_string[key][\'class\']](json_string=element))'+line
+    index-=1
+    out += tab(index)+"else:"+line
+    index+=1
+    out += tab(index)+'getattr(self, key).append(element)'+line
+    index-=2
+    out += tab(index)+"else:"+line
+    index+=1
+    out += tab(index)+'getattr(self, key).append(element)'+line+line
+    index-=3
+    out += tab(index)+'elif type(json_string[key]) is dict:'+line
+    index+=1
+    out += tab(index)+'setattr(self, key, dict())'+line
+    out += tab(index)+'for element in json_string[key]:'+line
+    index+=1
+    out += tab(index)+'if type(json_string[key][element]) is dict:'+line
+    index+=1
+    out += tab(index)+'if \'class\' in json_string[key][element]:'+line
+    index+=1
+    out += tab(index)+'getattr(self, key)[element] =globals()[json_string[key][element][\'class\']](json_string=json_string[key][element])'+line+line
+    index-=1
+    out += tab(index)+"else:"+line
+    index+=1
+    out += tab(index)+'getattr(self, key)[element] = json_string[key][element]'+line
+    index-=2
+    out += tab(index)+"else:"+line
+    index+=1
+    out += tab(index)+'getattr(self, key)[element] = json_string[key][element]'+line
+    index-=5
+    out += tab(index)+"else:"+line
+    index+=1
+    out += tab(index)+'setattr(self, key, json_string[key])'+line
+    return out
 
 def generateCallableClasses(funcs, data, restname):
     line="\n"
