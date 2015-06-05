@@ -72,6 +72,8 @@ def translateRequest(js):
 
 def getType(js):
     if "type" in js.keys():
+        if "enum" in js.keys():
+            return "enum",[enum for enum in js['enum']],False
         if "integer" in js['type']:
             return js['format'],"none",False
         if "string" in js['type']:
@@ -315,6 +317,19 @@ def generateAttribute(att): #Initialization of different attributes
         return text+"None #FIXME: This parameter is not well defined"
 
 
+def generateEnumClass(att):
+    line="\n"
+    index=0
+    out = line+tab(index)+'class '+ att['att']+ ':' +line
+    index+=1
+    out+=tab(index)
+    for enum in att['other']:
+        out += enum+ ', '
+
+    out+= ' = range('+str(len(att['other']))+')'+line
+    return out
+
+
 def generateClasses(data, restname):
     line="\n"
     if not os.path.exists("objects_"+restname+"/"):
@@ -359,6 +374,7 @@ def generateClasses(data, restname):
         out.write(tab(index)+"def json_serializer(self):"+line)
         index+=1
         out.write(tab(index)+"ret={}"+line)
+        enum_class_string = {}
         for att in klass['atts']:
             if ("array" in att['type']) and (att['other'] in imports):
                 out.write(tab(index)+"ret['"+att['att']+"']=[]"+line)
@@ -366,6 +382,10 @@ def generateClasses(data, restname):
                 index+=1
                 out.write(tab(index)+"ret['"+att['att']+"'].append(a.json_serializer())"+line)
                 index-=1
+            elif "enum" in att['type']:
+                enum_class_string[att['att']] = generateEnumClass(att)
+                out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
+
             elif "import" in att['type']:
                 out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+".json_serializer()"+line)
             else:
@@ -424,6 +444,11 @@ def generateClasses(data, restname):
             out.write(tab(index)+'else:'+line)
             index+=1
         out.write(tab(index)+'setattr(self, key, json_string[key])'+line)
+
+        ## Finally if it were any enumeration define we create the corresponding classes
+        if enum_class_string:
+            for element in enum_class_string:
+                out.write(enum_class_string[element])
 
         out.close()
 
