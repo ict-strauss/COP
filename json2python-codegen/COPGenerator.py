@@ -150,19 +150,24 @@ def handleResponse(id,description,schema=None):
 
 
 ## This function generates a HTTP Server which will serve as a unique access point to our COP server implementation.
-def generateServerStub(restname, data):
+def generateServerStub(restname, data, services, path):
     line="\n"
-    out_server = open(restname+".py","w+")
+    out_server = open(path+restname+".py","w+")
     out_server.write("import web"+line)
     out_server.write("## EXAMPLE IMPORT SERVER MODELS"+line)
-    out_server.write("#import service_call"+line)
-    out_server.write("#import service_path_computation"+line)
-    out_server.write("#import service_topology"+line+line)
+    urls="urls = "
+    for serv in services:
+        out_server.write("import "+serv.replace("-","_")+line)
+        urls += " "+serv.replace("-","_")+".urls +"
+    urls=urls[:-1]+line
+    #out_server.write("#import service_call"+line)
+    #out_server.write("#import service_path_computation"+line)
+    #out_server.write("#import service_topology"+line+line)
 
-    out_server.write(line)
+    out_server.write(line*2)
     out_server.write("class MyApplication(web.application):"+line+tab(1)+"def run(self, port=8080, *middleware):"+line+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
     out_server.write("##EXAMPLE import urls in the server "+line)
-    out_server.write("#urls = service_call.urls + service_path_computation.urls + service_topology.urls "+line)
+    out_server.write(urls)
     out_server.write("app = MyApplication(urls, globals())"+line+line)
 
     out_server.write("if __name__ == \"__main__\":"+line)
@@ -170,14 +175,14 @@ def generateServerStub(restname, data):
     out_server.close()
 
 
-def generateRESTapi(data,name,imp, restname, params):
-    if not os.path.isfile("server.py"):
-        generateServerStub("server", data)
+def generateRESTapi(data, name, imp, restname, params, services, path):
+    #if not os.path.isfile("server.py"):
+    generateServerStub("server", data, services, path)
 
     line="\n"
     index=0
     line="\n"
-    out=open(restname+".py","w+")
+    out=open(path + restname+".py","w+")
 
     urls="( "
     info=data['paths']
@@ -262,10 +267,13 @@ def generateRESTapi(data,name,imp, restname, params):
             out.write(tab(index)+"print \""+info[func]['methods'][method]['desc']+"\""+line)
             if params.isCORS:
                 out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)
+
             if info[func]['methods'][method]['body']:
                 out.write(tab(index)+"data=web.data() #data in body"+line)
                 if info[func]['methods'][method]['json']:
-                    out.write(tab(index)+"input=json.loads(data) #json data as input"+line)
+                    out.write(tab(index)+"input_json=json.loads(data) #json parser."+line)
+                    out.write(tab(index)+"input="+info[func]['methods'][method]['in_params'][0]+"(input_json) #It creates an object instance from the json_input data."+line)
+
                     if len(params_callback[func])>0:
                         out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+"("+params_callback[func]+", input)"+line)
                     else:
@@ -330,11 +338,11 @@ def generateEnumClass(att):
     return out
 
 
-def generateClasses(data, restname):
+def generateClasses(data, restname, path):
     line="\n"
-    if not os.path.exists("objects_"+restname+"/"):
-        os.makedirs("objects_"+restname+"/")
-    out=open("objects_"+restname+"/__init__.py","w+")
+    if not os.path.exists(path+"objects_"+restname+"/"):
+        os.makedirs(path+"objects_"+restname+"/")
+    out=open(path+"objects_"+restname+"/__init__.py","w+")
     out.write(" "+line)
     out.close()
     for klass in data:
@@ -344,7 +352,7 @@ def generateClasses(data, restname):
             klass['imports'].append(klass['extend_class'])
         imports=klass['imports']
         atts=klass['atts']
-        out=open("objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
+        out=open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
         #Necessary imports
         for imp in imports:
             out.write("from "+imp[0].lower()+imp[1:]+" import "+imp+line)
@@ -443,7 +451,7 @@ def completeDecoder(index):
     index+=1
     out += tab(index)+'if \'class\' in element:'+line
     index+=1
-    out += tab(index)+'getattr(self, key).append(globals()[json_string[key][\'class\']](json_string=element))'+line
+    out += tab(index)+'getattr(self, key).append(globals()[element[\'class\']](json_string=element))'+line
     index-=1
     out += tab(index)+"else:"+line
     index+=1
@@ -477,11 +485,12 @@ def completeDecoder(index):
     out += tab(index)+'setattr(self, key, json_string[key])'+line
     return out
 
-def generateCallableClasses(funcs, data, restname):
+
+def generateCallableClasses(funcs, data, imp, restname, path):
     line="\n"
-    if not os.path.exists("funcs_"+restname+"/"):
-        os.makedirs("funcs_"+restname+"/")
-        out=open("funcs_"+restname+"/__init__.py","w+")
+    if not os.path.exists(path+"funcs_"+restname+"/"):
+        os.makedirs(path+"funcs_"+restname+"/")
+        out=open(path+"funcs_"+restname+"/__init__.py","w+")
         out.write(line)
         out.close()
     index=0
@@ -495,10 +504,14 @@ def generateCallableClasses(funcs, data, restname):
         name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
         params_callback[func]= [info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
 
-        if os.path.isfile("funcs_"+restname+"/"+name_classes[func][0].lower()+""+name_classes[func][1:]+"Impl.py"): #if exists, don't create
+        if os.path.isfile(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+""+name_classes[func][1:]+"Impl.py"): #if exists, don't create
             print "funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py already exists, not overwrite"
         else:
-            out=open("funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
+            out=open(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
+
+            out.write("import os.path, sys"+line)
+            out.write("sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))"+line+line)
+
             out.write(line+line+"class "+name_classes[func]+"Impl :"+line+line)
             index+=1
 
@@ -507,7 +520,8 @@ def generateCallableClasses(funcs, data, restname):
                 if len (params_callback[func]) > 0:
                     ## Input body parameters are included into the class headers if so.
                     if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
-                        body_inputs = params_callback[func] + info[func]['methods'][method]['in_params']
+                        in_params = [element.lower() for element in info[func]['methods'][method]['in_params']]
+                        body_inputs = params_callback[func] + in_params
                         body_inputs = ", ".join([element for element in body_inputs])
                     else:
                         body_inputs = ", ".join([element for element in params_callback[func]])
@@ -516,10 +530,13 @@ def generateCallableClasses(funcs, data, restname):
                 else:
                     body_inputs = ' '
                     if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
-                        body_inputs += ", ".join([element for element in info[func]['methods'][method]['in_params']])
+                        body_inputs += ", ".join([element.lower() for element in info[func]['methods'][method]['in_params']])
 
                     out.write(tab(index)+"def "+method+"(cls, "+body_inputs+"):"+line)
+
                 index+=1
+                if 'in_params' in info[func]['methods'][method]:
+                    out.write(tab(index)+"print str("+info[func]['methods'][method]['in_params'][0].lower()+")"+line)
                 out.write(tab(index)+"print 'handling "+method+"'"+line+line)
                 index-=1
             index-=1
@@ -529,13 +546,17 @@ if (len(sys.argv)==1):
     print "Filename argument required"
 else:
     filename=sys.argv[1]
-
+    if sys.argv[2]:
+        path=sys.argv[2]
+    else:
+        path = ""
     params = CGConfiguration(os.path.abspath(os.path.dirname(sys.argv[0]))+"/CGConfiguration.xml")
 
-    file=open(filename, 'rb')
 
-    name=filename.split("/")[-1].split(".")[0]+".py"
-    restname=filename.split("/")[-1].split(".")[0].replace("-","_")
+    file=open(filename, 'rb')
+    service=filename.split("/")[-1].split(".")[0]
+    name=service+".py"
+    restname=service.replace("-","_")
 
     stri=file.read()
     js=json.loads(stri)
@@ -545,18 +566,30 @@ else:
     #generating classes first
     print "Generating Rest Server and Classes for "+name
     print "classes could be found in './objects_"+restname+"/' folder"
-    generateClasses(jsret,restname)
+    generateClasses(jsret,restname, path)
     imp=[]
+    services=[]
+    if not os.path.exists(path+".cop/"):
+        os.makedirs(path+".cop/")
+    if os.path.isfile(path+".cop/services.json"):
+        servicefile=open(path+".cop/services.json", 'rb')
+        services=json.loads(servicefile.read())
+        servicefile.close()
+
     #create imports for the main class (in case the user needs to use them)
     for klass in jsret:
         imp.append(klass['class'])
     #generate (is any) the RESTful Server
     if "paths" in js.keys():
+        if service not in services:
+            services.append(service)
         jsret2=translateRequest(js)
-        ret=generateRESTapi(jsret2,name,imp, restname,params)
-        generateCallableClasses(ret,jsret2,restname)
+        ret=generateRESTapi(jsret2,name,imp, restname,params, services, path)
+        generateCallableClasses(ret,jsret2, imp, restname, path)
+    servicefile=open(path+".cop/services.json", 'w+')
+    servicefile.write(json.dumps(services))
+    servicefile.close()
     print "Finished"
-
 
 
 
