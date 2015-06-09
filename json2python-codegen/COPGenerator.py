@@ -551,7 +551,7 @@ else:
     else:
         path = ""
     params = CGConfiguration(os.path.abspath(os.path.dirname(sys.argv[0]))+"/CGConfiguration.xml")
-    if  path[-1]!="/":
+    if  len(path)>0 and path[-1]!="/":
         path+="/"
 
     file=open(filename, 'rb')
