@@ -30,9 +30,13 @@ module service-call {
                 description "Setup an end to end ethernet path";
                 value 2;
             }
+            enum ethernet_broadcast {
+                description "Setup an ethernet Flood";
+                value 3;
+            }
             enum mpls {
                 description "Setup an MPLS path";
-                value 3;
+                value 4;
             }
         }
     }
