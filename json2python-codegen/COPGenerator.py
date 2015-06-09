@@ -546,12 +546,13 @@ if (len(sys.argv)==1):
     print "Filename argument required"
 else:
     filename=sys.argv[1]
-    if sys.argv[2]:
+    if len(sys.argv)>2:
         path=sys.argv[2]
     else:
         path = ""
     params = CGConfiguration(os.path.abspath(os.path.dirname(sys.argv[0]))+"/CGConfiguration.xml")
-
+    if  path[-1]!="/":
+        path+="/"
 
     file=open(filename, 'rb')
     service=filename.split("/")[-1].split(".")[0]
@@ -565,7 +566,7 @@ else:
     #print json.dumps(jsret)
     #generating classes first
     print "Generating Rest Server and Classes for "+name
-    print "classes could be found in './objects_"+restname+"/' folder"
+    print "classes could be found in '"+path+"objects_"+restname+"/' folder"
     generateClasses(jsret,restname, path)
     imp=[]
     services=[]
