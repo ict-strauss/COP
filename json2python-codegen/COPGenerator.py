@@ -78,11 +78,20 @@ def getType(js):
             return js['format'],"none",False
         if "string" in js['type']:
             return "string","none",False
+        if "boolean" in js['type']:
+            return "boolean","none",False
         if "array" in js['type']:
             if "type" in js['items'].keys():
                 return "array", js['items']['type'],False
             elif "$ref" in js['items'].keys():
                 return "array",js['items']['$ref'].split("/")[-1],True
+            else:
+                return "none","none", False
+        if "object" in js['type']:
+            if "type" in js['additionalProperties'].keys():
+                return "object", js['additionalProperties']['type'],False
+            elif "$ref" in js['additionalProperties'].keys():
+                return "object",js['additionalProperties']['$ref'].split("/")[-1],True
             else:
                 return "none","none", False
         else:
@@ -317,10 +326,16 @@ def generateAttribute(att): #Initialization of different attributes
         return text+'""'
     elif "int" in att['type']:
         return text+'0'
+    elif "boolean" in att['type']:
+        return text + 'False'
     elif "array" in att['type']:
         return text+"[] #array of "+att['other']
+    elif "object" in att['type']:
+        return text+"{} #dict of "+att['other']
     elif "import" in att['type']:
         return text+att['other']+"() #import"
+    elif "enum" in att['type']:
+        return text+'0'
     else:
         return text+"None #FIXME: This parameter is not well defined"
 
@@ -328,7 +343,7 @@ def generateAttribute(att): #Initialization of different attributes
 def generateEnumClass(att):
     line="\n"
     index=0
-    out = line+tab(index)+'class '+ att['att']+ ':' +line
+    out = line+tab(index)+'class '+ att['att'].capitalize()+ ':' +line
     index+=1
     out+=tab(index)
     for enum in att['other']:
@@ -348,20 +363,26 @@ def generateClasses(data, restname, path):
     for klass in data:
         index=0
         name=klass['class']
+        imports=klass['imports']
         if 'extend_class' in klass:
             klass['imports'].append(klass['extend_class'])
-        imports=klass['imports']
+        else:
+            for klass2 in data:
+                if 'extend_class' in klass2 and klass2['extend_class'] in klass['imports']:
+                    imports.append(klass2['class'])
         atts=klass['atts']
         out=open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
+
         #Necessary imports
         for imp in imports:
             out.write("from "+imp[0].lower()+imp[1:]+" import "+imp+line)
         out.write(line)
+
         #Main class
         if 'extend_class' in klass:
             out.write("class "+name+"("+klass['extend_class']+"):"+line+line)
         else:
-            out.write("class "+name+":"+line+line)
+            out.write("class "+name+"(object):"+line+line)
         index+=1
         #Init function
 
@@ -382,20 +403,38 @@ def generateClasses(data, restname, path):
         out.write(tab(index)+"def json_serializer(self):"+line)
         index+=1
         out.write(tab(index)+"ret={}"+line)
+        if 'extend_class' in klass:
+            out.write(tab(index)+"ret = super("+name+",self).json_serializer()"+line)
+
         enum_class_string = {}
         for att in klass['atts']:
-            if ("array" in att['type']) and (att['other'] in imports):
+            if "array" in att['type']:
                 out.write(tab(index)+"ret['"+att['att']+"']=[]"+line)
                 out.write(tab(index)+"for a in self."+att['att']+":"+line)
                 index+=1
-                out.write(tab(index)+"ret['"+att['att']+"'].append(a.json_serializer())"+line)
+                if att['other'] in imports:
+                    out.write(tab(index)+"ret['"+att['att']+"'].append(a.json_serializer())"+line)
+                else:
+                    out.write(tab(index)+"ret['"+att['att']+"'].append(a)"+line)
                 index-=1
+
+            elif ("object" in att['type']):
+                out.write(tab(index)+"ret['"+att['att']+"']={}"+line)
+                out.write(tab(index)+"for a in self."+att['att']+".keys():"+line)
+                index+=1
+                if  att['other'] in imports:
+                    out.write(tab(index)+"ret['"+att['att']+"'][a] = self."+att['att']+"[a].json_serializer()"+line)
+                else:
+                    out.write(tab(index)+"ret['"+att['att']+"'][a] = self."+att['att']+"[a]"+line)
+                index-=1
+
             elif "enum" in att['type']:
                 enum_class_string[att['att']] = generateEnumClass(att)
                 out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
 
             elif "import" in att['type']:
                 out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+".json_serializer()"+line)
+
             else:
                 out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
 

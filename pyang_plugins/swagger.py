@@ -100,7 +100,6 @@ def print_header(module, fd):
 def emit_swagger_spec(modules, fd, path, yang_path = None):
     """ Emits the complete swagger specification for the yang file."""
     if yang_path is not None:
-        print yang_path
         repos = pyang.FileRepository(yang_path)
         ctx = pyang.Context(repos)
 
@@ -171,6 +170,8 @@ def gen_model(children, tree_structure):
                     elif attribute.arg[:3] == 'int':
                         node['type'] = 'integer'
                         node['format'] = attribute.arg
+                    elif attribute.arg == 'boolean':
+                        node['type'] = attribute.arg
                     elif attribute.arg == 'enumeration':
                         node['type'] = 'string'
                         node['enum'] = [e[0]
@@ -184,8 +185,8 @@ def gen_model(children, tree_structure):
                     ref = to_upper_camelcase(attribute.arg)
                     ref = '#/definitions/' + ref
                     if str(child.keyword) == 'list':
-                        node['items'] = {'$ref': ref}
-                        node['type'] = 'array'
+                        node['additionalProperties'] = {'$ref': ref}
+                        node['type'] = 'object'
                         referenced = True
                     elif str(child.keyword) == 'grouping':
                         ref = to_upper_camelcase(attribute.arg)
