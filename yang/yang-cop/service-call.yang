@@ -77,6 +77,24 @@ module service-call {
         }
     }
 
+    grouping label{
+        description "";
+        leaf label-type{
+            type enumeration{
+                enum GMPLS_FIXED {
+                    value 0;
+                }
+                enum GMPLS_FLEXI {
+                    value 1;
+                }
+            }
+        }
+
+        leaf label-value{
+            type int32;
+        }
+    }
+
     grouping path-type{
         description "The Path represents the individual routes of a Connection.";
         leaf id{
@@ -85,6 +103,15 @@ module service-call {
         list topo_components{
             key "endpoint_id";
             uses endpoint;
+        }
+        leaf no_path{
+            type boolean;
+        }
+        leaf multi_layer{
+            type boolean;
+        }
+        container label{
+            uses label;
         }
     }
 
@@ -284,6 +311,9 @@ module service-call {
         container traffic_params {
             config false;
             uses traffic_params;
+        }
+        leaf controller_domain_id{
+             type string;
         }
         container transport_layer{
             config false;

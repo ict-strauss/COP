@@ -117,9 +117,6 @@ module service-topology {
         leaf name{
             type string;
         }
-		leaf edge_type{
-			type edge_type_enumeration;		
-		}
 		leaf switching_cap{
 			type string;
 		}
@@ -172,6 +169,10 @@ module service-topology {
         container bitmap{
             uses bitmap;
         }
+        leaf edge_type{
+            default "dwdm";
+			type edge_type_enumeration;
+		}
         list channels{
             key "g694_id";
             uses dwdm_channel;
@@ -180,9 +181,10 @@ module service-topology {
     }
     
     grouping eth_edge{
-        leaf eth_edge_param{
-            type string;
-        }
+        leaf edge_type{
+            default "ethernet";
+			type edge_type_enumeration;
+		}
         uses edge;
         
     }

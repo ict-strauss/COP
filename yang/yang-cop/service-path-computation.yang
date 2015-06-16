@@ -41,8 +41,25 @@ module service-path-computation {
         }*/
     }
     
-    grouping path-type{
+    grouping label{
         description "";
+        leaf label-type{
+            type enumeration{
+                enum GMPLS_FIXED {
+                    value 0;
+                }
+                enum GMPLS_FLEXI {
+                    value 1;
+                }
+            }
+        }
+        leaf label-value{
+            type int32;
+        }
+    }
+
+    grouping path-type{
+        description "The Path represents the individual routes of a Connection.";
         leaf id{
             type string;
         }
@@ -50,13 +67,22 @@ module service-path-computation {
             key "endpoint_id";
             uses endpoint;
         }
+        leaf noPath{
+            type boolean;
+        }
+        leaf multiLayer{
+            type boolean;
+        }
+        container label{
+            uses label;
+        }
     }
 
 
 	grouping traffic_params{
 		description "";
 
-		leaf bandwidth {
+		leaf reservedBandwidth {
 			description "Bandwidth measured in bits/s";
             type int32;
         }
