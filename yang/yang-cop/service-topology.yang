@@ -2,7 +2,7 @@ module service-topology {
 
     yang-version 1;
 
-    namespace "http://ict-strauss.eu/cop/service-call";
+    namespace "http://ict-strauss.eu/cop/service-topology";
 
     prefix s-topology;
 
