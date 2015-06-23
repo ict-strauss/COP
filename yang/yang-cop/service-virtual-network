@@ -1,0 +1,97 @@
+module service-virtual-network {
+
+    yang-version 1;
+
+    namespace "http://ict-strauss.eu/cop/service-virtual-network";
+
+    prefix s-vnet;
+
+    organization "CTTC";
+
+    description "YANG version of the Common Orchestration Protocol (COP).";
+
+    revision "2015-06-23" {
+        description
+        "Service Virtual Network module for STRAUSS";
+    }
+
+    typedef virtual-network-ref {
+        type leafref {
+            path "/virtual-networks/virtual-network/virtual-network_id";
+        }
+        description
+            "A type for a virtual network instance.";
+    }
+
+
+    grouping virtual-network{
+        leaf virtual-network_id{
+            type string;
+        }
+        leaf tenant_ip{
+            type string;
+        }
+        list v-nodes{
+			      key "v-node_id";
+            uses v-node;
+        }
+        list v-edges{
+            key "v-edge_id";
+            uses v-edge;
+        }
+    }
+
+    grouping v-edge_end{
+        leaf v-edge_end_id{
+            type string;
+        }
+        container p-node{
+            uses node;
+        }
+        container p-edge-end{
+            uses edge-end;
+        }
+    }
+
+    grouping v-node{
+        leaf v-node_id{
+            type string;
+        }
+        list v-edge_ends{
+            key "v-edge_end_id";
+            uses v-edge_end;
+        }
+    }
+
+    grouping v-edge{
+        leaf v-edge_id{
+            type string;
+        }
+        
+        container source{
+			      config false;
+            uses v-node;
+        }
+        container target{
+			      config false;
+            uses v-node;
+        }
+        container local_ifid{
+			      config false;
+            uses v-edge_end;
+        }
+        container remote_ifid{
+			      config false;
+            uses v-edge_end;
+        }
+    }
+
+    container virtual-networks{
+        config false;
+        list virtual-network{
+            key "virtual-network_id";
+            uses virtual-network;
+        }
+    }
+
+}
