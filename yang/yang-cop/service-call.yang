@@ -5,11 +5,6 @@ module service-call {
     namespace "http://ict-strauss.eu/cop/service-call";
 
     prefix s-call;
-
-    /*import ietf-inet-types {prefix inet;}
-    import ietf-yang-types {prefix yang;}
-    import service-topology {prefix topo;}*/
-
     organization "CTTC";
 
     description  "YANG version of the Common Orchestration Protocol (COP).";
