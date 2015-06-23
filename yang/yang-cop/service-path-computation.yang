@@ -2,7 +2,7 @@ module service-path-computation {
 
     yang-version 1;
 
-    namespace "http://ict-strauss.eu/cop/service-call";
+    namespace "http://ict-strauss.eu/cop/service-path-computation";
 
     prefix s-path;
 
