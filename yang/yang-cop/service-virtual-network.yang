@@ -10,6 +10,10 @@ module service-virtual-network {
 
     description "YANG version of the Common Orchestration Protocol (COP).";
 
+    import service-topology{
+    	prefix s-topo;
+    }
+
     revision "2015-06-23" {
         description
         "Service Virtual Network module for STRAUSS";
@@ -46,10 +50,10 @@ module service-virtual-network {
             type string;
         }
         container p-node{
-            uses node;
+            uses s-topo:node;
         }
         container p-edge-end{
-            uses edge-end;
+            uses s-topo:edge-end;
         }
     }
 
