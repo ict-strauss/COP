@@ -63,7 +63,7 @@ module service-topology {
             type topology-ref;
 		}
         list nodes{
-			key "node_id";
+	    key "node_id";
             uses node;
         }
         list edges{
@@ -82,9 +82,9 @@ module service-topology {
         leaf name{
             type string;
         }
-		leaf peer_node_id{
-			type string;	
-		}
+	leaf peer_node_id{
+	    type string;	
+	}
     }
 
     grouping node{
@@ -98,12 +98,12 @@ module service-topology {
         leaf name{
             type string;
         }
-		leaf domain{
-			type string;
-		}
-		leaf nodetype{
-			type string;		
-		}
+	leaf domain{
+	    type string;
+	}
+	leaf nodetype{
+	    type string;		
+	}
         list edge_end{
             key "edge_end_id";
             uses edge_end;
@@ -117,32 +117,32 @@ module service-topology {
         leaf name{
             type string;
         }
-		leaf switching_cap{
-			type string;
-		}
-		leaf metric{
-			type string;		
-		}
-		leaf max_resv_bw{
-			type string;	
-		}
-		leaf unreserv_bw{
-			type string;	
-		}
+	leaf switching_cap{
+	    type string;
+	}
+	leaf metric{
+	    type string;		
+	}
+	leaf max_resv_bw{
+	    type string;	
+	}
+	leaf unreserv_bw{
+	    type string;	
+	}
         container source{
-			config false;
+	    config false;
             uses node;
         }
         container target{
-			config false;
+	    config false;
             uses node;
         }
         container local_ifid{
-			config false;
+	    config false;
             uses edge_end;
         }
         container remote_ifid{
-			config false;
+	    config false;
             uses edge_end;
         }
     }
@@ -171,8 +171,8 @@ module service-topology {
         }
         leaf edge_type{
             default "dwdm";
-			type edge_type_enumeration;
-		}
+	    type edge_type_enumeration;
+	}
         list channels{
             key "g694_id";
             uses dwdm_channel;
@@ -183,8 +183,8 @@ module service-topology {
     grouping eth_edge{
         leaf edge_type{
             default "ethernet";
-			type edge_type_enumeration;
-		}
+	    type edge_type_enumeration;
+	}
         uses edge;
         
     }
