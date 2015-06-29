@@ -36,7 +36,7 @@ module service-virtual-network {
             type string;
         }
         list v-nodes{
-			      key "v-node_id";
+	    key "v-node_id";
             uses v-node;
         }
         list v-edges{
@@ -73,19 +73,19 @@ module service-virtual-network {
         }
         
         container source{
-			      config false;
+	    config false;
             uses v-node;
         }
         container target{
-			      config false;
+	    config false;
             uses v-node;
         }
         container local_ifid{
-			      config false;
+	    config false;
             uses v-edge_end;
         }
         container remote_ifid{
-			      config false;
+	    config false;
             uses v-edge_end;
         }
     }
