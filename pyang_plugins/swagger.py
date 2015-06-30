@@ -45,11 +45,6 @@ class SwaggerPlugin(plugin.PyangPlugin):
                 default=5,
                 help='Number of levels to print'),
             optparse.make_option(
-                '--namespace',
-                dest='yangfile_path',
-                type='string',
-                help='Path to print'),
-            optparse.make_option(
                 '--swagger-path',
                 dest='swagger_path',
                 type='string',
@@ -71,12 +66,8 @@ class SwaggerPlugin(plugin.PyangPlugin):
                 path = path[1:]
         else:
             path = None
-        if ctx.opts.yangfile_path is not None:
-            yang_path = ctx.opts.yangfile_path
-        else:
-            yang_path = None
 
-        emit_swagger_spec(modules, fd, ctx.opts.path, yang_path)
+        emit_swagger_spec(ctx, modules, fd, ctx.opts.path)
 
 
 def print_header(module, fd):
@@ -97,11 +88,8 @@ def print_header(module, fd):
     return header
 
 
-def emit_swagger_spec(modules, fd, path, yang_path = None):
+def emit_swagger_spec(ctx, modules, fd, path):
     """ Emits the complete swagger specification for the yang file."""
-    if yang_path is not None:
-        repos = pyang.FileRepository(yang_path)
-        ctx = pyang.Context(repos)
 
     printed_header = False
     model = OrderedDict()
@@ -109,19 +97,26 @@ def emit_swagger_spec(modules, fd, path, yang_path = None):
     augments = list()
     # Go through all modules and extend the model.
     for module in modules:
-
         if not printed_header:
             model = print_header(module, fd)
             printed_header = True
             path = '/'
-        if module.search('import'):
-            imported_models = import_models(module, path)
+
+        typdefs = [module.i_typedefs[element] for element in module.i_typedefs]
+        models = list(module.i_groupings.values())
+        referenced_types = list()
+        referenced_types = findTypedefs(ctx, module, models, referenced_types)
+        for element in referenced_types:
+            typdefs.append(element)
 
         # The attribute definitions are processed and stored in the "typedefs" data structure for further use.
-        gen_typedefs(module)
+        gen_typedefs(typdefs)
 
         # list() needed for python 3 compatibility
-        models = list(module.i_groupings.values())
+        referenced_models = list()
+        referenced_models = findModels(ctx, module, models, referenced_models)
+        for element in referenced_models:
+            models.append(element)
         # Print the swagger definitions of the Yang groupings.
         definitions = gen_model(models, definitions)
 
@@ -141,25 +136,72 @@ def emit_swagger_spec(modules, fd, path, yang_path = None):
         model['definitions'] = definitions
         fd.write(json.dumps(model, indent=4, separators=(',', ': ')))
 
-pending_models = []
 
+def findModels(ctx, module, children, referenced_models):
+    for child in children:
+        if hasattr(child, 'substmts'):
+             for attribute in child.substmts:
+                if attribute.keyword == 'uses':
+                    if len(attribute.arg.split(':'))>1:
+                        for i in module.search('import'):
+                            subm = ctx.get_module(i.arg)
+                            models = [group for group in subm.i_groupings.values() if str(group.arg) == str(attribute.arg.split(':')[-1]) and group.arg not in [element.arg for element in referenced_models]]
+                            for element in models:
+                                referenced_models.append(element)
+                            referenced_models = findModels(ctx, subm, models, referenced_models)
+                    else:
+                        models = [group for group in module.i_groupings.values() if str(group.arg) == str(attribute.arg) and group.arg not in [element.arg for element in referenced_models]]
+                        for element in models:
+                            referenced_models.append(element)
+
+        if hasattr(child, 'i_children'):
+            findModels(ctx, module, child.i_children, referenced_models)
+
+    return referenced_models
+
+
+def findTypedefs(ctx, module, children, referenced_types):
+    for child in children:
+        if hasattr(child, 'substmts'):
+             for attribute in child.substmts:
+                if attribute.keyword == 'type':
+                    if len(attribute.arg.split(':'))>1:
+                        for i in module.search('import'):
+                            subm = ctx.get_module(i.arg)
+                            models = [type for type in subm.i_typedefs.values() if str(type.arg) == str(attribute.arg.split(':')[-1]) and type.arg not in [element.arg for element in referenced_types]]
+                            for element in models:
+                                referenced_types.append(element)
+                            referenced_types = findTypedefs(ctx, subm, models, referenced_types)
+                    else:
+                        models = [type for type in module.i_typedefs.values() if str(type.arg) == str(attribute.arg) and type.arg not in [element.arg for element in referenced_types]]
+                        for element in models:
+                            referenced_types.append(element)
+
+        if hasattr(child, 'i_children'):
+            findTypedefs(ctx, module, child.i_children, referenced_types)
+    return referenced_types
+
+pending_models = list()
 def gen_model(children, tree_structure):
     """ Generates the swagger definition tree."""
     referenced = False
     extended = False
     for child in children:
-        node = {}
+        #print child.arg
+        node = dict()
         extended = False
         if hasattr(child, 'substmts'):
             for attribute in child.substmts:
                 # process the 'type' attribute:
                 # Currently integer, enumeration and string are supported.
                 if attribute.keyword == 'type':
+                    if len(attribute.arg.split(':'))>1:
+                        attribute.arg = attribute.arg.split(':')[-1]
                     # Firstly, it is checked if the attribute type has been previously define in typedefs.
                     if attribute.arg in TYPEDEFS:
                         if TYPEDEFS[attribute.arg]['type'][:3] == 'int':
                             node['type'] = 'integer'
-                            node['format'] = attribute.arg
+                            node['format'] = TYPEDEFS[attribute.arg]['format']
                         elif TYPEDEFS[attribute.arg]['type'] == 'enumeration':
                             node['type'] = 'string'
                             node['enum'] = [e
@@ -182,6 +224,9 @@ def gen_model(children, tree_structure):
                 # Process the reference to another model.
                 # We differentiate between single and array references.
                 elif attribute.keyword == 'uses':
+                    if len(attribute.arg.split(':'))>1:
+                        attribute.arg = attribute.arg.split(':')[-1]
+
                     ref = to_upper_camelcase(attribute.arg)
                     ref = '#/definitions/' + ref
                     if str(child.keyword) == 'list':
@@ -208,7 +253,6 @@ def gen_model(children, tree_structure):
                     else:
                         node['$ref'] = ref
                         referenced = True
-
 
         # When a node contains a referenced model as an attribute the algorithm
         # does not go deeper into the sub-tree of the referenced model.
@@ -333,10 +377,10 @@ def gen_api_node(node, path, apis, definitions):
         gen_apis(node.i_children, path, apis, definitions)
 
 
-def gen_typedefs(module):
-    for typedef in module.i_typedefs:
-        type = {'name':typedef}
-        for attribute in module.i_typedefs[typedef].substmts:
+def gen_typedefs(typedefs):
+    for typedef in typedefs:
+        type = {'name':typedef.arg}
+        for attribute in typedef.substmts:
             if attribute.keyword == 'type':
                 if attribute.arg[:3] == 'int':
                     type['type'] = 'integer'
@@ -348,53 +392,7 @@ def gen_typedefs(module):
                 # map all other types to string
                 else:
                     type['type'] = 'string'
-        TYPEDEFS[typedef] = type
-
-
-def import_models(module, path):
-    if module.search('namespace'):
-        if module.search('namespace')[0].arg[:4] == 'http':
-            namespace = ""
-            ##TODO: implement a method to access to this repository.
-            pass
-        elif module.search('namespace')[0].arg[:4] == 'file':
-            namespace = module.search('namespace')[0].arg[7:]
-            repos = pyang.FileRepository(namespace)
-            ctx = pyang.Context(repos)
-        else:
-            raise Exception('The namespace is incorrect or is missing, impossible to import modules')
-
-    imported_models = OrderedDict()
-    for i in module.search('import'):
-        filename = "/".join([element for element in i.arg.split(":")]) + ".yang"
-        for ch in i.substmts:
-            if ch.keyword == "prefix":
-                prefix = ch.arg
-            elif ch.keyword == "revision-date":
-                rev = ch.arg
-        if namespace != "":
-            f = open(namespace+filename)
-        else:
-            raise Exception('Namespace not found')
-            return None
-
-        text = f.read()
-        imported_module = ctx.add_module(filename, text, format, i.arg, rev, expect_failure_error=False)
-        imported_groupings = list(imported_module.i_groupings.values())
-        imported_definitions = OrderedDict()
-        imported_definitions = gen_model(imported_groupings, imported_definitions)
-
-        imported_chs = [ch for ch in imported_module.i_children
-           if ch.keyword in (statements.data_definition_keywords + ['rpc','notifications'])]
-        imported_model = OrderedDict()
-        if len(imported_chs) > 0:
-            imported_model['paths'] = OrderedDict()
-            gen_apis(imported_chs, path, imported_model['paths'], imported_definitions)
-
-        imported_model['definitions'] = imported_definitions
-        imported_models[prefix] = imported_model
-    return imported_models
-
+        TYPEDEFS[typedef.arg    ] = type
 
 def print_rpc(node, schema_in, schema_out):
     operations = {}
@@ -579,3 +577,49 @@ def to_upper_camelcase(name):
     """
     return re.sub(r'(?:\B_|\b\-|^)([a-zA-Z0-9])', lambda l: l.group(1).upper(),
                   name)
+
+
+'''
+def import_models(module, path):
+    if module.search('namespace'):
+        if module.search('namespace')[0].arg[:4] == 'http':
+            namespace = ""
+            ##TODO: implement a method to access to this repository.
+            pass
+        elif module.search('namespace')[0].arg[:4] == 'file':
+            namespace = module.search('namespace')[0].arg[7:]
+            repos = pyang.FileRepository(namespace)
+            ctx = pyang.Context(repos)
+        else:
+            raise Exception('The namespace is incorrect or is missing, impossible to import modules')
+
+    imported_models = OrderedDict()
+    for i in module.search('import'):
+        filename = "/".join([element for element in i.arg.split(":")]) + ".yang"
+        for ch in i.substmts:
+            if ch.keyword == "prefix":
+                prefix = ch.arg
+            elif ch.keyword == "revision-date":
+                rev = ch.arg
+        if namespace != "":
+            f = open(namespace+filename)
+        else:
+            raise Exception('Namespace not found')
+            return None
+
+        text = f.read()
+        imported_module = ctx.add_module(filename, text, format, i.arg, rev, expect_failure_error=False)
+        imported_groupings = list(imported_module.i_groupings.values())
+        imported_definitions = OrderedDict()
+        imported_definitions = gen_model(imported_groupings, imported_definitions)
+
+        imported_chs = [ch for ch in imported_module.i_children
+           if ch.keyword in (statements.data_definition_keywords + ['rpc','notifications'])]
+        imported_model = OrderedDict()
+        if len(imported_chs) > 0:
+            imported_model['paths'] = OrderedDict()
+            gen_apis(imported_chs, path, imported_model['paths'], imported_definitions)
+
+        imported_model['definitions'] = imported_definitions
+        imported_models[prefix] = imported_model
+    return imported_models'''
