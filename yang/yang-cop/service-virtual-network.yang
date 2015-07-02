@@ -21,81 +21,97 @@ module service-virtual-network {
 
     typedef virtual-network-ref {
         type leafref {
-            path "/virtual-networks/virtual-network/virtual-network_id";
+            path "/virtual_networks/virtual_network/virtual_network_id";
         }
         description
             "A type for a virtual network instance.";
     }
 
 
-    grouping virtual-network{
-        leaf virtual-network_id{
+    grouping virtual_network{
+        leaf virtual_network_id{
             type string;
         }
         leaf tenant_ip{
             type string;
         }
-        list v-nodes{
-	    key "v-node_id";
-            uses v-node;
+        list vNodes{
+	    key "vNode_id";
+            uses vNode;
         }
-        list v-edges{
-            key "v-edge_id";
-            uses v-edge;
+        list vEdges{
+            key "vEdge_id";
+            uses vEdge;
         }
     }
 
-    grouping v-edge_end{
-        leaf v-edge_end_id{
+    grouping vEdge_end{
+        leaf vEdge_end_id{
             type string;
         }
-        container p-node{
+        container pNode{
             uses s-topo:node;
         }
-        container p-edge-end{
+        container pEdgeEnd{
             uses s-topo:edge_end;
         }
     }
 
-    grouping v-node{
-        leaf v-node_id{
+    grouping vNode{
+        leaf vNode_id{
             type string;
         }
-        list v-edge_ends{
-            key "v-edge_end_id";
-            uses v-edge_end;
+        list vEdge_ends{
+            key "vEdge_end_id";
+            uses vEdge_end;
         }
     }
 
-    grouping v-edge{
-        leaf v-edge_id{
+    grouping vEdge{
+        leaf vEdge_id{
             type string;
         }
         
         container source{
 	    config false;
-            uses v-node;
+            uses vNode;
         }
         container target{
 	    config false;
-            uses v-node;
+            uses vNode;
         }
         container local_ifid{
 	    config false;
-            uses v-edge_end;
+            uses vEdge_end;
         }
         container remote_ifid{
 	    config false;
-            uses v-edge_end;
+            uses vEdge_end;
         }
     }
 
-    container virtual-networks{
+    container virtual_networks{
         config false;
-        list virtual-network{
-            key "virtual-network_id";
-            uses virtual-network;
+        list virtual_network{
+            key "virtual_network_id";
+            uses virtual_network;
         }
     }
 
+    grouping port_translation_request{
+        description "";
+        leaf vEdge_end_id{
+            type string;
+        }
+    }
+
+    rpc port_translation{
+        input {
+            uses port_translation_request;
+        }
+        output{
+            uses vEdge_end;
+        }
+
+    }
 }

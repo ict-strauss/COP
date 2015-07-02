@@ -6,11 +6,6 @@ module service-topology {
 
     prefix s-topology;
 
-    /*import ietf-inet-types {
-            prefix inet;
-            revision-date 2013-07-15;
-      }*/
-
     organization "CTTC";
 
     description "YANG version of the Common Orchestration Protocol (COP).";
@@ -40,7 +35,7 @@ module service-topology {
             }
         }
     }
-    
+
     typedef switching_cap_enumeration {
         type enumeration {
             enum lsc {
@@ -82,9 +77,9 @@ module service-topology {
         leaf name{
             type string;
         }
-	leaf peer_node_id{
-	    type string;	
-	}
+        leaf peer_node_id{
+            type string;
+        }
     }
 
     grouping node{
@@ -98,12 +93,12 @@ module service-topology {
         leaf name{
             type string;
         }
-	leaf domain{
-	    type string;
-	}
-	leaf nodetype{
-	    type string;		
-	}
+        leaf domain{
+            type string;
+        }
+        leaf nodetype{
+            type string;
+        }
         list edge_end{
             key "edge_end_id";
             uses edge_end;
@@ -117,18 +112,18 @@ module service-topology {
         leaf name{
             type string;
         }
-	leaf switching_cap{
-	    type string;
-	}
-	leaf metric{
-	    type string;		
-	}
-	leaf max_resv_bw{
-	    type string;	
-	}
-	leaf unreserv_bw{
-	    type string;	
-	}
+        leaf switching_cap{
+            type string;
+        }
+        leaf metric{
+            type string;
+        }
+        leaf max_resv_bw{
+            type string;
+        }
+        leaf unreserv_bw{
+            type string;
+        }
         container source{
 	    config false;
             uses node;
@@ -183,10 +178,9 @@ module service-topology {
     grouping eth_edge{
         leaf edge_type{
             default "ethernet";
-	    type edge_type_enumeration;
-	}
+	        type edge_type_enumeration;
+	    }
         uses edge;
-        
     }
 
     container topologies{
