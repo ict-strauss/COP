@@ -304,7 +304,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path):
             index-=1
             out.write(line)
             index-=1
-        if (params.isCORS):
+        if params.isCORS:
             index+=1
             out.write(tab(index)+"def OPTIONS"+generateParameters(info[func]["inlineVars"])+line)
             index+=1
@@ -384,8 +384,8 @@ def generateClasses(data, restname, path):
         else:
             out.write("class "+name+"(object):"+line+line)
         index+=1
-        #Init function
 
+        #__INIT__ function
         out.write(tab(index)+"def __init__(self, json_string=None):"+line)
         index+=1
         if 'extend_class' in klass:
@@ -393,13 +393,15 @@ def generateClasses(data, restname, path):
 
         for att in klass['atts']:
             out.write(tab(index)+generateAttribute(att)+line)
+
         out.write(tab(index)+"if json_string:"+line)
         index+=1
         out.write(tab(index)+"self.load_json(json_string)"+line)
         index-=1
         out.write(line)
         index-=1
-        #optional functions -->toJson
+
+        ##OPTIONAL functions -->json_serializer
         out.write(tab(index)+"def json_serializer(self):"+line)
         index+=1
         out.write(tab(index)+"ret={}"+line)
@@ -418,7 +420,7 @@ def generateClasses(data, restname, path):
                     out.write(tab(index)+"ret['"+att['att']+"'].append(a)"+line)
                 index-=1
 
-            elif ("object" in att['type']):
+            elif "object" in att['type']:
                 out.write(tab(index)+"ret['"+att['att']+"']={}"+line)
                 out.write(tab(index)+"for a in self."+att['att']+".keys():"+line)
                 index+=1
@@ -439,27 +441,28 @@ def generateClasses(data, restname, path):
                 out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
 
         out.write(tab(index)+"ret['class'] = self.__class__.__name__"+line)
-
         out.write(tab(index)+"return ret"+line)
         index-=1
-        #optional function --> __str__
+
+        ##OPTIONAL function --> __STR__
         out.write(line+tab(index)+"def __str__(self):")
         index+=1
         out.write(line+tab(index)+"return str(self.json_serializer())"+line)
         index-=1
-        #optional function --> load_json
+
+        ##OPTIONAL function --> load_json
         out.write(line+tab(index)+"def load_json(self, json_string):"+line)
         index+=1
         # If is a child class the json decoder has to include the parent decoder as well
         if 'extend_class' in klass:
             out.write(tab(index)+"super("+klass['class']+",self).load_json(json_string)"+line)
-        out.write(tab(index)+"for key in ("+line)
+        out.write(tab(index)+"for key in ["+line)
         index+=1
         for i,att in enumerate(klass['atts']):
             out.write(tab(index)+"'"+att['att']+"'")
             if i != len(klass['atts'])-1:
                 out.write(","+line)
-        out.write(line+tab(index)+"):"+line)
+        out.write(line+tab(index)+"]:"+line)
         out.write(tab(index)+"if key in json_string:"+line)
         out.write(completeDecoder(index))
 
