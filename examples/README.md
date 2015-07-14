@@ -5,3 +5,9 @@
 ## Get Connection information
 
 ## Request topology
+
+## Notifications 
+
+### OSNR
+
+### PLR (Packet Loss Ratio)
