@@ -402,14 +402,47 @@ def generateClasses(data, restname, path):
         index-=1
 
         ##OPTIONAL functions -->json_serializer
-        out.write(tab(index)+"def json_serializer(self):"+line)
-        index+=1
-        out.write(tab(index)+"ret={}"+line)
-        if 'extend_class' in klass:
-            out.write(tab(index)+"ret = super("+name+",self).json_serializer()"+line)
-
         enum_class_string = {}
+        create_serializer(out, index, klass, enum_class_string)
+
+        ##OPTIONAL function --> __STR__
+        out.write(line+tab(index)+"def __str__(self):")
+        index+=1
+        out.write(line+tab(index)+"return str(self.json_serializer())"+line)
+        index-=1
+
+        ##OPTIONAL function --> load_json
+        out.write(create_deserializer(index, klass, data))
+
+        ## Finally if it were any enumeration define we create the corresponding classes
+        if enum_class_string:
+            for element in enum_class_string:
+                out.write(enum_class_string[element])
+
+        out.close()
+
+def create_serializer(out, index, klass, enum_class_string):
+    line="\n"
+    imports = klass['imports']
+    out.write(tab(index)+"def json_serializer(self):"+line)
+    index+=1
+    out.write(tab(index)+"ret={}"+line)
+
+    if 'extend_class' in klass:
+        out.write(tab(index)+"ret = super("+klass['class']+",self).json_serializer()"+line)
+    if len(klass['atts'])>0:
+        out.write(tab(index)+"for key in dir(self):"+line)
+        index+=1
+        out.write(tab(index)+"if not key.startswith('__') and key not in dir(self.__class__) and getattr(self,key) and (str(getattr(self,key)) not in ['{}','[]']):"+line)
+        index+=1
+        first = True
         for att in klass['atts']:
+            if first:
+                out.write(tab(index)+"if str(key) == '"+att['att']+"':"+line)
+                first = False
+            else:
+                out.write(tab(index)+"elif str(key) == '"+att['att']+"':"+line)
+            index +=1
             if "array" in att['type']:
                 out.write(tab(index)+"ret['"+att['att']+"']=[]"+line)
                 out.write(tab(index)+"for a in self."+att['att']+":"+line)
@@ -439,44 +472,31 @@ def generateClasses(data, restname, path):
 
             else:
                 out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
+            index-=1
+        index-=2
+    out.write(tab(index)+"return ret"+line)
+    index-=1
 
-        out.write(tab(index)+"return ret"+line)
-        index-=1
 
-        ##OPTIONAL function --> __STR__
-        out.write(line+tab(index)+"def __str__(self):")
-        index+=1
-        out.write(line+tab(index)+"return str(self.json_serializer())"+line)
-        index-=1
-
-        ##OPTIONAL function --> load_json
-        out.write(line+tab(index)+"def load_json(self, json_string):"+line)
-        index+=1
-        # If is a child class the json decoder has to include the parent decoder as well
-        if 'extend_class' in klass:
-            out.write(tab(index)+"super("+klass['class']+",self).load_json(json_string)"+line)
-        if klass['atts']:
-            out.write(tab(index)+"for key in ["+line)
-            index+=1
-            for i,att in enumerate(klass['atts']):
-                out.write(tab(index)+"'"+att['att']+"'")
-                if i != len(klass['atts'])-1:
-                    out.write(","+line)
-            out.write(line+tab(index)+"]:"+line)
-            out.write(tab(index)+"if key in json_string:"+line)
-            out.write(completeDecoder(index, klass, data))
-
-        ## Finally if it were any enumeration define we create the corresponding classes
-        if enum_class_string:
-            for element in enum_class_string:
-                out.write(enum_class_string[element])
-
-        out.close()
-
-def completeDecoder(index, klass, data):
+def create_deserializer(index, klass, data):
     line = "\n"
-    index+=1
     out = ''
+    out += line+tab(index)+"def load_json(self, json_string):"+line
+    index+=1
+    # If is a child class the json decoder has to include the parent decoder as well
+    if 'extend_class' in klass:
+        out += tab(index)+"super("+klass['class']+",self).load_json(json_string)"+line
+    if klass['atts']:
+        out += tab(index)+"for key in ["+line
+        index+=1
+        for i,att in enumerate(klass['atts']):
+            out += tab(index)+"'"+att['att']+"'"
+            if i != len(klass['atts'])-1:
+                out += ","+line
+        out+= line+tab(index)+"]:"+line
+        out+= tab(index)+"if key in json_string:"+line
+
+    index+=1
     first = True
     for i,att in enumerate(klass['atts']):
         if first:
@@ -512,7 +532,7 @@ def completeDecoder(index, klass, data):
         elif att['type'] == 'array':
             out += tab(index)+"self."+str(att['att'])+"=[]"+line
             out += tab(index)+str(att['att'])+" = json_string[key]"+line
-            out += tab(index)+"for O in "+str(att['att'])+":"+line
+            out += tab(index)+"for element in "+str(att['att'])+":"+line
             index +=1
             if att['other'] not in ['string','integer']:
                 if is_inheritted_class(data, att):
@@ -539,10 +559,11 @@ def completeDecoder(index, klass, data):
         else:
             out += tab(index)+"setattr(self, key, json_string[key])"+line
             index -=1
-    out += tab(index)+"else:"+line
-    index+=1
-    out += tab(index)+"setattr(self, key, json_string[key])"+line
-    index-=1
+    if len(klass['atts'])>0:
+        out += tab(index)+"else:"+line
+        index+=1
+        out += tab(index)+"setattr(self, key, json_string[key])"+line
+        index-=1
     return out
 
 
