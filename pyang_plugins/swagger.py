@@ -16,6 +16,7 @@ import sys
 
 
 TYPEDEFS = dict()
+PARENT_MODELS = dict()
 def pyang_plugin_init():
     """ Initialization function called by the plugin loader. """
     plugin.register_plugin(SwaggerPlugin())
@@ -124,6 +125,10 @@ def emit_swagger_spec(ctx, modules, fd, path):
         if pending_models:
             gen_model(pending_models, definitions)
 
+        if PARENT_MODELS:
+            for element in PARENT_MODELS:
+                if PARENT_MODELS[element]['models']:
+                    definitions[element]['discriminator'] = PARENT_MODELS[element]['discriminator']
         # extract children which contain data definition keywords
         chs = [ch for ch in module.i_children
                if ch.keyword in (statements.data_definition_keywords + ['rpc','notifications'])]
@@ -168,6 +173,7 @@ def findTypedefs(ctx, module, children, referenced_types):
                     if len(attribute.arg.split(':'))>1:
                         for i in module.search('import'):
                             subm = ctx.get_module(i.arg)
+                            print subm
                             models = [type for type in subm.i_typedefs.values() if str(type.arg) == str(attribute.arg.split(':')[-1]) and type.arg not in [element.arg for element in referenced_types]]
                             for element in models:
                                 referenced_types.append(element)
@@ -221,6 +227,10 @@ def gen_model(children, tree_structure):
                     # map all other types to string
                     else:
                         node['type'] = 'string'
+                elif attribute.keyword == 'mandatory':
+                    parent_model = to_upper_camelcase(child.parent.arg)
+                    if parent_model not in PARENT_MODELS.keys():
+                        PARENT_MODELS[parent_model] = {'models':[],'discriminator':to_lower_camelcase(child.arg)}
                 # Process the reference to another model.
                 # We differentiate between single and array references.
                 elif attribute.keyword == 'uses':
@@ -236,6 +246,7 @@ def gen_model(children, tree_structure):
                     elif str(child.keyword) == 'grouping':
                         ref = to_upper_camelcase(attribute.arg)
                         if ref in tree_structure:
+                            PARENT_MODELS[ref]['models'].append(child.arg)
                             list_properties = [item for item in tree_structure[ref]['properties']]
                             ref = '#/definitions/' + ref
                             node['allOf'] = []
