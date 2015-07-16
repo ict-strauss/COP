@@ -16,6 +16,8 @@
 import sys
 import json
 import os
+import re
+
 sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
 from CGConfiguration import CGConfiguration
 
@@ -341,12 +343,12 @@ def generateAttribute(att): #Initialization of different attributes
 
 def generateEnumClass(att):
     line="\n"
-    index=0
+    index=1
     out = line+tab(index)+'class '+ att['att'].capitalize()+ ':' +line
     index+=1
     out+=tab(index)
     for enum in att['other']:
-        out += enum+ ', '
+        out += to_upper_camelcase(enum)+ ', '
 
     out+= ' = range('+str(len(att['other']))+')'+line
     return out
@@ -517,10 +519,14 @@ def create_deserializer(index, klass, data):
                     first2 = True
                     for child_class in struc['child_classes']:
                         if first2:
-                            out += tab(index)+"if element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
+                            out += tab(index)+"if"
                             first2 = False
                         else:
-                            out += tab(index)+"elif element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
+                            out += tab(index)+"elif"
+                        if str(struc['type']) == 'enum':
+                            out+=" element2['"+struc['discriminator']+"'] == "+att['other']+"."+struc['discriminator'].capitalize()+"."+child_class+":"+line
+                        else:
+                            out+=" element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
                         index += 1
                         out += tab(index)+"self."+str(att['att'])+"[element] = "+child_class+"(json_string="+str(att['att'])+"[element])"+line
                         index -= 1
@@ -559,6 +565,7 @@ def create_deserializer(index, klass, data):
         else:
             out += tab(index)+"setattr(self, key, json_string[key])"+line
             index -=1
+
     if len(klass['atts'])>0:
         out += tab(index)+"else:"+line
         index+=1
@@ -635,11 +642,33 @@ def get_child_classes(data, att):
     for child_klass in data:
         if child_klass['class'] == att['other']:
             discriminator = child_klass['discriminator']
+            for att2 in child_klass['atts']:
+                if att2['att'] == discriminator:
+                    _type = att2['type']
+                    print _type
         if 'extend_class' in child_klass.keys():
             if child_klass['extend_class'] == att['other']:
                 child_classes.append(child_klass['class'])
 
-    return {'discriminator':discriminator, 'child_classes':child_classes}
+    return {'discriminator':discriminator, 'child_classes':child_classes, 'type':_type}
+
+
+def to_lower_camelcase(name):
+    """ Converts the name string to lower camelcase by using "-" and "_" as
+    markers.
+    """
+    return re.sub(r'(?:\B_|\b\-)([a-zA-Z0-9])', lambda l: l.group(1).upper(),
+                  name)
+
+
+def to_upper_camelcase(name):
+    """ Converts the name string to upper camelcase by using "-" and "_" as
+    markers.
+    """
+    return re.sub(r'(?:\B_|\b\-|^)([a-zA-Z0-9])', lambda l: l.group(1).upper(),
+                  name)
+
+
 
 if len(sys.argv)==1:
     print "Filename argument required"
@@ -690,6 +719,4 @@ else:
     servicefile.write(json.dumps(services))
     servicefile.close()
     print "Finished"
-
-
 
