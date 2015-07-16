@@ -108,6 +108,8 @@ def translateClasses(js):
         cl={}
         atts=[]
         cl['class']=klass
+        if 'discriminator' in js['definitions'][klass]:
+            cl["discriminator"] = js['definitions'][klass]['discriminator']
         # Special case where the model extending a father class
         if 'allOf' in js['definitions'][klass]:
             for item in js['definitions'][klass]['allOf']:
@@ -169,9 +171,6 @@ def generateServerStub(restname, data, services, path):
         out_server.write("import "+serv.replace("-","_")+line)
         urls += " "+serv.replace("-","_")+".urls +"
     urls=urls[:-1]+line
-    #out_server.write("#import service_call"+line)
-    #out_server.write("#import service_path_computation"+line)
-    #out_server.write("#import service_topology"+line+line)
 
     out_server.write(line*2)
     out_server.write("class MyApplication(web.application):"+line+tab(1)+"def run(self, port=8080, *middleware):"+line+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
@@ -361,6 +360,7 @@ def generateClasses(data, restname, path):
     out.write(" "+line)
     out.close()
     for klass in data:
+        #print klass
         index=0
         name=klass['class']
         imports=klass['imports']
@@ -440,7 +440,6 @@ def generateClasses(data, restname, path):
             else:
                 out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
 
-        out.write(tab(index)+"ret['class'] = self.__class__.__name__"+line)
         out.write(tab(index)+"return ret"+line)
         index-=1
 
@@ -456,15 +455,16 @@ def generateClasses(data, restname, path):
         # If is a child class the json decoder has to include the parent decoder as well
         if 'extend_class' in klass:
             out.write(tab(index)+"super("+klass['class']+",self).load_json(json_string)"+line)
-        out.write(tab(index)+"for key in ["+line)
-        index+=1
-        for i,att in enumerate(klass['atts']):
-            out.write(tab(index)+"'"+att['att']+"'")
-            if i != len(klass['atts'])-1:
-                out.write(","+line)
-        out.write(line+tab(index)+"]:"+line)
-        out.write(tab(index)+"if key in json_string:"+line)
-        out.write(completeDecoder(index))
+        if klass['atts']:
+            out.write(tab(index)+"for key in ["+line)
+            index+=1
+            for i,att in enumerate(klass['atts']):
+                out.write(tab(index)+"'"+att['att']+"'")
+                if i != len(klass['atts'])-1:
+                    out.write(","+line)
+            out.write(line+tab(index)+"]:"+line)
+            out.write(tab(index)+"if key in json_string:"+line)
+            out.write(completeDecoder(index, klass, data))
 
         ## Finally if it were any enumeration define we create the corresponding classes
         if enum_class_string:
@@ -473,58 +473,76 @@ def generateClasses(data, restname, path):
 
         out.close()
 
-def completeDecoder(index):
+def completeDecoder(index, klass, data):
     line = "\n"
     index+=1
-    out = tab(index)+"if type(json_string[key]) in [list,dict]:"+line
+    out = ''
+    first = True
+    for i,att in enumerate(klass['atts']):
+        if first:
+            out += tab(index)+"if key == '"+str(att['att'])+"':"+line
+            first = False
+        else:
+            out += tab(index)+"elif key == '"+str(att['att'])+"':"+line
+        index+=1
+        if att['type'] == 'object':
+            out += tab(index)+"self."+str(att['att'])+"={}"+line
+            out += tab(index)+str(att['att'])+" = json_string[key]"+line
+            out += tab(index)+"for element in "+str(att['att'])+":"+line
+            index +=1
+            if att['other'] not in ['string','integer']:
+                if is_inheritted_class(data, att):
+                    struc = get_child_classes(data, att)
+                    out += tab(index)+"element2 = "+str(att['att'])+"[element]"+line
+                    first2 = True
+                    for child_class in struc['child_classes']:
+                        if first2:
+                            out += tab(index)+"if element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
+                            first2 = False
+                        else:
+                            out += tab(index)+"elif element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
+                        index += 1
+                        out += tab(index)+"self."+str(att['att'])+"[element] = "+child_class+"(json_string="+str(att['att'])+"[element])"+line
+                        index -= 1
+                else:
+                    out += tab(index)+"self."+str(att['att'])+"[element] = "+att['other']+"(json_string="+str(att['att'])+"[element])"+line
+            else:
+                out += tab(index)+"self."+str(att['att'])+"[element] = "+str(att['att'])+"[element]"+line
+            index -=2
+        elif att['type'] == 'array':
+            out += tab(index)+"self."+str(att['att'])+"=[]"+line
+            out += tab(index)+str(att['att'])+" = json_string[key]"+line
+            out += tab(index)+"for O in "+str(att['att'])+":"+line
+            index +=1
+            if att['other'] not in ['string','integer']:
+                if is_inheritted_class(data, att):
+                    struc = get_child_classes(data, att)
+                    out += tab(index)+"element2 = "+str(att['att'])+"[element]"+line
+                    first2 = True
+                    for child_class in struc['child_classes']:
+                        if first2:
+                            out += tab(index)+"if element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
+                            first2 = False
+                        else:
+                            out += tab(index)+"elif element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
+                        index += 1
+                        out += tab(index)+"self."+str(att['att'])+"[element] = "+child_class+"(json_string="+str(att['att'])+"[element])"+line
+                        index -= 1
+                else:
+                    out += tab(index)+"self."+str(att['att'])+".append("+att['other']+"(json_string=element))"+line
+            else:
+                out += tab(index)+"self."+str(att['att'])+".append(element)"+line
+            index -=2
+        elif att['type'] == 'import':
+            out += tab(index)+"self."+str(att['att'])+"="+att['other']+"(json_string=json_string[key])"+line
+            index -=1
+        else:
+            out += tab(index)+"setattr(self, key, json_string[key])"+line
+            index -=1
+    out += tab(index)+"else:"+line
     index+=1
-    out += tab(index)+"if 'class' in json_string[key]:"+line
-    index+=1
-    out += tab(index)+"setattr(self, key, globals()[json_string[key]['class']](json_string=json_string[key]))"+line
+    out += tab(index)+"setattr(self, key, json_string[key])"+line
     index-=1
-    out += tab(index)+"else:"+line
-    index+=1
-    out += tab(index)+'if type(json_string[key]) is list:'+line
-    index+=1
-    out += tab(index)+'setattr(self, key, list())'+line
-    out += tab(index)+'for element in json_string[key]:'+line
-    index+=1
-    out += tab(index)+'if type(element) is dict:'+line
-    index+=1
-    out += tab(index)+'if \'class\' in element:'+line
-    index+=1
-    out += tab(index)+'getattr(self, key).append(globals()[element[\'class\']](json_string=element))'+line
-    index-=1
-    out += tab(index)+"else:"+line
-    index+=1
-    out += tab(index)+'getattr(self, key).append(element)'+line
-    index-=2
-    out += tab(index)+"else:"+line
-    index+=1
-    out += tab(index)+'getattr(self, key).append(element)'+line+line
-    index-=3
-    out += tab(index)+'elif type(json_string[key]) is dict:'+line
-    index+=1
-    out += tab(index)+'setattr(self, key, dict())'+line
-    out += tab(index)+'for element in json_string[key]:'+line
-    index+=1
-    out += tab(index)+'if type(json_string[key][element]) is dict:'+line
-    index+=1
-    out += tab(index)+'if \'class\' in json_string[key][element]:'+line
-    index+=1
-    out += tab(index)+'getattr(self, key)[element] =globals()[json_string[key][element][\'class\']](json_string=json_string[key][element])'+line+line
-    index-=1
-    out += tab(index)+"else:"+line
-    index+=1
-    out += tab(index)+'getattr(self, key)[element] = json_string[key][element]'+line
-    index-=2
-    out += tab(index)+"else:"+line
-    index+=1
-    out += tab(index)+'getattr(self, key)[element] = json_string[key][element]'+line
-    index-=5
-    out += tab(index)+"else:"+line
-    index+=1
-    out += tab(index)+'setattr(self, key, json_string[key])'+line
     return out
 
 
@@ -584,7 +602,25 @@ def generateCallableClasses(funcs, data, imp, restname, path):
             index-=1
             out.close()
 
-if (len(sys.argv)==1):
+def is_inheritted_class(data, att):
+    for child_klass in data:
+        if child_klass['class'] == att['other']:
+            if 'discriminator' in child_klass.keys():
+                return True
+    return False
+
+def get_child_classes(data, att):
+    child_classes = []
+    for child_klass in data:
+        if child_klass['class'] == att['other']:
+            discriminator = child_klass['discriminator']
+        if 'extend_class' in child_klass.keys():
+            if child_klass['extend_class'] == att['other']:
+                child_classes.append(child_klass['class'])
+
+    return {'discriminator':discriminator, 'child_classes':child_classes}
+
+if len(sys.argv)==1:
     print "Filename argument required"
 else:
     filename=sys.argv[1]
