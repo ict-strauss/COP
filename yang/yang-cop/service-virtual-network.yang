@@ -98,20 +98,4 @@ module service-virtual-network {
         }
     }
 
-    grouping port_translation_request{
-        description "";
-        leaf vEdge_end_id{
-            type string;
-        }
-    }
-
-    rpc port_translation{
-        input {
-            uses port_translation_request;
-        }
-        output{
-            uses vEdge_end;
-        }
-
-    }
 }
