@@ -350,7 +350,7 @@ def generateEnumClass(att):
     for enum in att['other']:
         out += to_upper_camelcase(enum)+ ', '
 
-    out+= ' = range('+str(len(att['other']))+')'+line
+    out+= ' = range( 1, '+str( len(att['other']) +1 )+')'+line
     return out
 
 
