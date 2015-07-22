@@ -25,11 +25,11 @@ module service-topology {
 
     typedef edge_type_enumeration {
         type enumeration {
-            enum dwdm {
+            enum dwdm_edge {
                 description "DWDM link";
                 value 1;
             }
-            enum ethernet {
+            enum eth_edge {
                 description "Ethernet link";
                 value 2;
             }
@@ -106,6 +106,10 @@ module service-topology {
     }
 
     grouping edge{
+        leaf edge_type{
+            mandatory true;
+	        type edge_type_enumeration;
+	    }
         leaf edge_id{
             type string;
         }
@@ -164,10 +168,6 @@ module service-topology {
         container bitmap{
             uses bitmap;
         }
-        leaf edge_type{
-            default "dwdm";
-	    type edge_type_enumeration;
-	}
         list channels{
             key "g694_id";
             uses dwdm_channel;
@@ -176,10 +176,6 @@ module service-topology {
     }
     
     grouping eth_edge{
-        leaf edge_type{
-            default "ethernet";
-	        type edge_type_enumeration;
-	    }
         uses edge;
     }
 
