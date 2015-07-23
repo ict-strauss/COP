@@ -22,6 +22,9 @@ import shutil
 sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
 from CGConfiguration import CGConfiguration
 
+# The regular expression inserted in the url array.
+regex_string='(\\w+)'
+
 def decomposeUrl(string):
     slices=string.split("{")
     varlist=[]
@@ -34,11 +37,11 @@ def decomposeUrl(string):
         else:
             url.append(auxslice[0])
 
-    defurl=""
-    for st in url:
-        defurl+=st+"(.*)"
+    defurl=url[0]
+    for st in url[1:]:
+        defurl+=regex_string+st
 
-    return defurl[:-4],varlist
+    return defurl, varlist
 
 def translateRequest(js):
     ret={}
@@ -202,9 +205,9 @@ def generateRESTapi(data, name, imp, restname, params, services, path):
     for func in info.keys():
         # Here we generate the name of the class and its related callback to the backend program based on the API syntax of each function.
         list_element_url = info[func]['url'].split('/')
-        indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
-        name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
-        params_callback[func] = ",".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)'])
+        indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == regex_string]
+        name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == regex_string else element.title() for i,element in enumerate(list_element_url[3:-1])])
+        params_callback[func] = ",".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == regex_string])
 
         urls+="\""+info[func]['url']+"\" , \""+restname+"."+name_classes[func]+"\" , \n\t"
 
@@ -443,9 +446,9 @@ def generateCallableClasses(funcs, data, imp, restname, path):
     for func in info.keys():
         # Here we generate the name of the class_name and its related callback_name to the backend program based on the API syntax of each function.
         list_element_url = info[func]['url'].split('/')
-        indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
-        name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == '(.*)' else element.title() for i,element in enumerate(list_element_url[3:-1])])
-        params_callback[func]= [info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
+        indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == regex_string]
+        name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == regex_string else element.title() for i,element in enumerate(list_element_url[3:-1])])
+        params_callback[func]= [info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == regex_string]
 
         if os.path.isfile(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+""+name_classes[func][1:]+"Impl.py"): #if exists, don't create
             print "funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py already exists, not overwrite"
