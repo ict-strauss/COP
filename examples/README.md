@@ -11,10 +11,6 @@ curl -X POST -H "Content-type:application/json" -u admin:pswd1 http://localhost:
 
 curl -X GET -H "Content-type:application/json" -u admin:pswd1 http://localhost:8080/restconf/config/connections/connection/conn_1/
 
-## Get Connection list of a call
-
-curl -X GET -H "Content-type:application/json" -u admin:pswd1 http://localhost:8080/restconf/config/calls/call/call_1/connections/
-
 ## Request topology
 
 curl -X GET -H "Content-type:application/json" -u admin:pswd1 http://localhost:8080/restconf/config/topologies/topology/topo_1/
