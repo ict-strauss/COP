@@ -17,6 +17,7 @@ import sys
 import json
 import os
 import re
+import shutil
 
 sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
 from CGConfiguration import CGConfiguration
@@ -149,14 +150,14 @@ def generateParameters(inlineVars):
 
 def handleResponse(ident,description,schema=None):
     #ret=""
-    if "200" in id:
+    if "200" in ident:
         if schema!=None:
             return 'raise Successful("'+description+'",json.dumps(js))'
         else:
             return 'raise Successful("'+description+'",json.dumps(js))'
-    elif "404" in id:
+    elif "404" in ident:
         return 'raise NotFoundError("'+description+'")'
-    elif "400" in id:
+    elif "400" in ident:
         return 'raise BadRequestError("'+description+'")'
     else:
         return 'print "There is something wrong with responses"'
@@ -189,7 +190,6 @@ def generateRESTapi(data, name, imp, restname, params, services, path):
     #if not os.path.isfile("server.py"):
     generateServerStub("server", data, services, path)
 
-    #line="\n"
     index=0
     line="\n"
     out=open(path + restname+".py","w+")
@@ -330,7 +330,8 @@ def generateAttribute(att): #Initialization of different attributes
     elif "boolean" in att['type']:
         return text + 'False'
     elif "array" in att['type']:
-        return text+"[] #array of "+att['other']
+        return text + "ArrayType(" + att['other'] + ")"
+        #return text+"[] #array of "+att['other']
     elif "object" in att['type']:
         return text+"{} #dict of "+att['other']
     elif "import" in att['type']:
@@ -343,12 +344,13 @@ def generateAttribute(att): #Initialization of different attributes
 
 def generateEnumClass(att):
     line="\n"
-    index=1
+    index=0
     out = line+tab(index)+'class '+ att['att'].capitalize()+ ':' +line
     index+=1
     out+=tab(index)
     for enum in att['other']:
-        out += to_upper_camelcase(enum)+ ', '
+        #out += to_upper_camelcase(enum)+ ', '
+        out += enum + ', '
 
     out+= ' = range( 1, '+str( len(att['other']) +1 )+')'+line
     return out
@@ -358,221 +360,74 @@ def generateClasses(data, restname, path):
     line="\n"
     if not os.path.exists(path+"objects_"+restname+"/"):
         os.makedirs(path+"objects_"+restname+"/")
+    # Create __init__.py file
     out=open(path+"objects_"+restname+"/__init__.py","w+")
     out.write(" "+line)
     out.close()
+    # Create class.py files
     for klass in data:
         #print klass
         index=0
         name=klass['class']
         imports=klass['imports']
+        """
         if 'extend_class' in klass:
             klass['imports'].append(klass['extend_class'])
         else:
-            for klass2 in data:
-                if 'extend_class' in klass2 and klass2['extend_class'] in klass['imports']:
-                    imports.append(klass2['class'])
+        """
+        for klass2 in data:
+            if 'extend_class' in klass2 and klass2['extend_class'] in klass['imports']:
+                imports.append(klass2['class'])
         #atts=klass['atts']
         out=open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
 
         #Necessary imports
         for imp in imports:
             out.write("from "+imp[0].lower()+imp[1:]+" import "+imp+line)
+
+        imports = []
+        #import the JsonObject base class
+        imports.append('JsonObject')
+        #import the ArrayType class
+        #TODO make this optional
+        imports.append('ArrayType')
+        for imp in imports:
+            out.write("from "+'objects_common.'+imp[0].lower()+imp[1:]+" import "+imp+line)
         out.write(line)
 
         #Main class
-        if 'extend_class' in klass:
-            out.write("class "+name+"("+klass['extend_class']+"):"+line+line)
-        else:
-            out.write("class "+name+"(object):"+line+line)
+        #if 'extend_class' in klass:
+        #    out.write("class "+name+"("+klass['extend_class']+"):"+line+line)
+        #else:
+        out.write("class "+name+"(JsonObject):"+line+line)
         index+=1
 
         #__INIT__ function
         out.write(tab(index)+"def __init__(self, json_string=None):"+line)
         index+=1
+        """
         if 'extend_class' in klass:
             out.write(tab(index)+"super("+name+", self).__init__()"+line)
-
+        """
+        # self.xy = 123
         for att in klass['atts']:
             out.write(tab(index)+generateAttribute(att)+line)
 
-        out.write(tab(index)+"if json_string:"+line)
-        index+=1
-        out.write(tab(index)+"self.load_json(json_string)"+line)
-        index-=1
+        # Call __init__() of superclass JsonObject
+        out.write(tab(index) + "super("+name+", self).__init__(json_string)")
+
         out.write(line)
-        index-=1
-
-        ##OPTIONAL functions -->json_serializer
-        enum_class_string = {}
-        create_serializer(out, index, klass, enum_class_string)
-
-        ##OPTIONAL function --> __STR__
-        out.write(line+tab(index)+"def __str__(self):")
-        index+=1
-        out.write(line+tab(index)+"return str(self.json_serializer())"+line)
-        index-=1
-
-        ##OPTIONAL function --> load_json
-        out.write(create_deserializer(index, klass, data))
+        index-=2
 
         ## Finally if it were any enumeration define we create the corresponding classes
-        if enum_class_string:
-            for element in enum_class_string:
-                out.write(enum_class_string[element])
+        enum_class_string = {}
+        for att in klass['atts']:
+            if "enum" in att['type']:
+                enum_class_string[att['att']] = generateEnumClass(att)
+        for element in enum_class_string:
+            out.write(enum_class_string[element])
 
         out.close()
-
-def create_serializer(out, index, klass, enum_class_string):
-    line="\n"
-    imports = klass['imports']
-    out.write(tab(index)+"def json_serializer(self):"+line)
-    index+=1
-    out.write(tab(index)+"ret={}"+line)
-
-    if 'extend_class' in klass:
-        out.write(tab(index)+"ret = super("+klass['class']+",self).json_serializer()"+line)
-    if len(klass['atts'])>0:
-        out.write(tab(index)+"for key in dir(self):"+line)
-        index+=1
-        out.write(tab(index)+"if not key.startswith('__') and key not in dir(self.__class__) and getattr(self,key) and (str(getattr(self,key)) not in ['{}','[]']):"+line)
-        index+=1
-        first = True
-        for att in klass['atts']:
-            if first:
-                out.write(tab(index)+"if str(key) == '"+att['att']+"':"+line)
-                first = False
-            else:
-                out.write(tab(index)+"elif str(key) == '"+att['att']+"':"+line)
-            index +=1
-            if "array" in att['type']:
-                out.write(tab(index)+"ret['"+att['att']+"']=[]"+line)
-                out.write(tab(index)+"for a in self."+att['att']+":"+line)
-                index+=1
-                if att['other'] in imports:
-                    out.write(tab(index)+"ret['"+att['att']+"'].append(a.json_serializer())"+line)
-                else:
-                    out.write(tab(index)+"ret['"+att['att']+"'].append(a)"+line)
-                index-=1
-
-            elif "object" in att['type']:
-                out.write(tab(index)+"ret['"+att['att']+"']={}"+line)
-                out.write(tab(index)+"for a in self."+att['att']+".keys():"+line)
-                index+=1
-                if  att['other'] in imports:
-                    out.write(tab(index)+"ret['"+att['att']+"'][a] = self."+att['att']+"[a].json_serializer()"+line)
-                else:
-                    out.write(tab(index)+"ret['"+att['att']+"'][a] = self."+att['att']+"[a]"+line)
-                index-=1
-
-            elif "enum" in att['type']:
-                enum_class_string[att['att']] = generateEnumClass(att)
-                out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
-
-            elif "import" in att['type']:
-                out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+".json_serializer()"+line)
-
-            else:
-                out.write(tab(index)+"ret['"+att['att']+"']=self."+att['att']+line)
-            index-=1
-        index-=2
-    out.write(tab(index)+"return ret"+line)
-    index-=1
-
-
-def create_deserializer(index, klass, data):
-    line = "\n"
-    out = ''
-    out += line+tab(index)+"def load_json(self, json_string):"+line
-    index+=1
-    # If is a child class the json decoder has to include the parent decoder as well
-    if 'extend_class' in klass:
-        out += tab(index)+"super("+klass['class']+",self).load_json(json_string)"+line
-    if klass['atts']:
-        out += tab(index)+"for key in ["+line
-        index+=1
-        for i,att in enumerate(klass['atts']):
-            out += tab(index)+"'"+att['att']+"'"
-            if i != len(klass['atts'])-1:
-                out += ","+line
-        out+= line+tab(index)+"]:"+line
-        out+= tab(index)+"if key in json_string:"+line
-
-    index+=1
-    first = True
-    for i,att in enumerate(klass['atts']):
-        if first:
-            out += tab(index)+"if key == '"+str(att['att'])+"':"+line
-            first = False
-        else:
-            out += tab(index)+"elif key == '"+str(att['att'])+"':"+line
-        index+=1
-        if att['type'] == 'object':
-            out += tab(index)+"self."+str(att['att'])+"={}"+line
-            out += tab(index)+str(att['att'])+" = json_string[key]"+line
-            out += tab(index)+"for element in "+str(att['att'])+":"+line
-            index +=1
-            if att['other'] not in ['string','integer']:
-                if is_inheritted_class(data, att):
-                    struc = get_child_classes(data, att)
-                    out += tab(index)+"element2 = "+str(att['att'])+"[element]"+line
-                    first2 = True
-                    for child_class in struc['child_classes']:
-                        if first2:
-                            out += tab(index)+"if"
-                            first2 = False
-                        else:
-                            out += tab(index)+"elif"
-                        if str(struc['type']) == 'enum':
-                            out+=" element2['"+struc['discriminator']+"'] == "+att['other']+"."+struc['discriminator'].capitalize()+"."+child_class+":"+line
-                        else:
-                            out+=" element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
-                        index += 1
-                        out += tab(index)+"self."+str(att['att'])+"[element] = "+child_class+"(json_string="+str(att['att'])+"[element])"+line
-                        index -= 1
-                else:
-                    out += tab(index)+"self."+str(att['att'])+"[element] = "+att['other']+"(json_string="+str(att['att'])+"[element])"+line
-            else:
-                out += tab(index)+"self."+str(att['att'])+"[element] = "+str(att['att'])+"[element]"+line
-            index -=2
-        elif att['type'] == 'array':
-            out += tab(index)+"self."+str(att['att'])+"=[]"+line
-            out += tab(index)+str(att['att'])+" = json_string[key]"+line
-            out += tab(index)+"for element in "+str(att['att'])+":"+line
-            index +=1
-            if att['other'] not in ['string','integer']:
-                if is_inheritted_class(data, att):
-                    struc = get_child_classes(data, att)
-                    out += tab(index)+"element2 = "+str(att['att'])+"[element]"+line
-                    first2 = True
-                    for child_class in struc['child_classes']:
-                        if first2:
-                            out += tab(index)+"if element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
-                            first2 = False
-                        else:
-                            out += tab(index)+"elif element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
-                        index += 1
-                        out += tab(index)+"self."+str(att['att'])+"[element] = "+child_class+"(json_string="+str(att['att'])+"[element])"+line
-                        index -= 1
-                else:
-                    out += tab(index)+"self."+str(att['att'])+".append("+att['other']+"(json_string=element))"+line
-            else:
-                out += tab(index)+"self."+str(att['att'])+".append(element)"+line
-            index -=2
-        elif att['type'] == 'import':
-            out += tab(index)+"self."+str(att['att'])+"="+att['other']+"(json_string=json_string[key])"+line
-            index -=1
-        else:
-            out += tab(index)+"setattr(self, key, json_string[key])"+line
-            index -=1
-
-    if len(klass['atts'])>0:
-        out += tab(index)+"else:"+line
-        index+=1
-        out += tab(index)+"setattr(self, key, json_string[key])"+line
-        index-=1
-    return out
-
 
 def generateCallableClasses(funcs, data, imp, restname, path):
     line="\n"
@@ -704,6 +559,11 @@ else:
         servicefile=open(path+".cop/services.json", 'rb')
         services=json.loads(servicefile.read())
         servicefile.close()
+
+    #copy common objects
+    srcdir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'objects_common')
+    dstdir = os.path.join(path, 'objects_common')
+    shutil.copytree(srcdir, dstdir)
 
     #create imports for the main class (in case the user needs to use them)
     for klass in jsret:
