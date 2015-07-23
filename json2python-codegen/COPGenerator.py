@@ -21,12 +21,12 @@ import re
 sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
 from CGConfiguration import CGConfiguration
 
-def decomposeUrl(str):
-    slices=str.split("{")
+def decomposeUrl(string):
+    slices=string.split("{")
     varlist=[]
     url=[]
-    for slice in slices:
-        auxslice=slice.split("}")
+    for sl in slices:
+        auxslice=sl.split("}")
         if len(auxslice)!=1:
             varlist.append(auxslice[0])
             url.append(auxslice[1])
@@ -48,7 +48,7 @@ def translateRequest(js):
     ret['port']=port
     for path in js['paths'].keys():
         ids={}
-        url,vars=decomposeUrl(path)
+        url,variables=decomposeUrl(path)
         msgs=js['paths'][path].keys()
         for method in msgs:
             ids[method]={}
@@ -67,7 +67,7 @@ def translateRequest(js):
 
             if "application/json" in js["paths"][path][method]['consumes']:
                 ids[method]['json']=True
-        res["func"+str(i)]={"url":bp+url,"inlineVars":vars, "methods":ids}
+        res["func"+str(i)]={"url":bp+url,"inlineVars":variables, "methods":ids}
         i+=1;
     ret['paths']=res
     return ret
@@ -143,12 +143,12 @@ def tab(n):
 
 def generateParameters(inlineVars):
     ret="(self,"
-    for var in inlineVars:
-        ret+=var+","
+    for variable in inlineVars:
+        ret+=variable+","
     return ret[:-1]+"):"
 
-def handleResponse(id,description,schema=None):
-    ret=""
+def handleResponse(ident,description,schema=None):
+    #ret=""
     if "200" in id:
         if schema!=None:
             return 'raise Successful("'+description+'",json.dumps(js))'
@@ -189,7 +189,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path):
     #if not os.path.isfile("server.py"):
     generateServerStub("server", data, services, path)
 
-    line="\n"
+    #line="\n"
     index=0
     line="\n"
     out=open(path + restname+".py","w+")
@@ -372,7 +372,7 @@ def generateClasses(data, restname, path):
             for klass2 in data:
                 if 'extend_class' in klass2 and klass2['extend_class'] in klass['imports']:
                     imports.append(klass2['class'])
-        atts=klass['atts']
+        #atts=klass['atts']
         out=open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
 
         #Necessary imports
@@ -391,7 +391,7 @@ def generateClasses(data, restname, path):
         out.write(tab(index)+"def __init__(self, json_string=None):"+line)
         index+=1
         if 'extend_class' in klass:
-             out.write(tab(index)+"super("+name+", self).__init__()"+line)
+            out.write(tab(index)+"super("+name+", self).__init__()"+line)
 
         for att in klass['atts']:
             out.write(tab(index)+generateAttribute(att)+line)
@@ -682,12 +682,12 @@ else:
     if  len(path)>0 and path[-1]!="/":
         path+="/"
 
-    file=open(filename, 'rb')
+    f=open(filename, 'rb')
     service=filename.split("/")[-1].split(".")[0]
     name=service+".py"
     restname=service.replace("-","_")
 
-    stri=file.read()
+    stri=f.read()
     js=json.loads(stri)
     #Translate json into a more manageable structure
     jsret=translateClasses(js)
