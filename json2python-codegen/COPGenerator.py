@@ -178,7 +178,7 @@ def generateServerStub(restname, data, services, path):
     urls_list = []
     for serv in services:
         import_list.append(ImportObject('',serv.replace("-","_")))
-        urls_list.append(serv.replace("-","_"))
+        urls_list.append(serv.replace("-","_") + '.urls')
 
     # use jinja
     template = jinja_env.get_template('server.py')
