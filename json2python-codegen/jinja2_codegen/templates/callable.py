@@ -6,7 +6,7 @@ class {{class_name}}Impl:
 
     {% for method in method_list -%}
     @classmethod
-    def {{method.name}}(cls, {% for argument in method.arguments %}{{argument}}{% if not loop.last %}, {% endif %}{% endfor %}):
+    def {{method.name}}(cls, {{method.arguments|join(', ')}}):
         {% if method.printstr -%}
         print str({{method.printstr}})
         {% endif -%}

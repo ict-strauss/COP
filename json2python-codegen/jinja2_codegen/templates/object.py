@@ -12,5 +12,5 @@ class {{class_name}}({{superclass_name}}):
 
 {% for enum_object in enum_list -%}
 class {{enum_object.name}}:
-    {% for item in enum_object.values %}{{item}}, {% endfor %} = range(1, {{enum_object.range_end}})
+    {{enum_object.values|join(', ')}} = range(1, {{enum_object.range_end}})
 {% endfor -%}

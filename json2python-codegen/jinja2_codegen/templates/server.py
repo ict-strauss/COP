@@ -10,7 +10,7 @@ class MyApplication(web.application):
         return web.httpserver.runsimple(func, ('0.0.0.0', port))
 
 ##EXAMPLE import urls in the server
-urls = {% for url in urls_list %}{{url}}.urls{% if not loop.last %} + {% endif %}{% endfor %}
+urls = {{urls_list|join(' + ')}}
 app = MyApplication(urls, globals())
 
 if __name__ == "__main__":
