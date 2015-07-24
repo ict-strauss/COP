@@ -24,7 +24,7 @@ from CGConfiguration import CGConfiguration
 
 # jinja code generator
 from jinja2 import Environment, PackageLoader
-from jinja2_codegen.jinja_classes import ImportObject, AttributeObject, EnumObject
+from jinja2_codegen.jinja_classes import ImportObject, AttributeObject, EnumObject, MethodObject
 jinja_env = Environment(loader=PackageLoader('jinja2_codegen', 'templates'))
 
 # The regular expression inserted in the url array.
@@ -394,16 +394,21 @@ def generateClasses(data, restname, path):
 
 
 def generateCallableClasses(funcs, data, imp, restname, path):
-    line="\n"
+
+    # create folder funcs_
     if not os.path.exists(path+"funcs_"+restname+"/"):
         os.makedirs(path+"funcs_"+restname+"/")
         out=open(path+"funcs_"+restname+"/__init__.py","w+")
-        out.write(line)
+        out.write(" ")
         out.close()
-    index=0
+
+
     info=data['paths']
     name_classes = {}
     params_callback = {}
+
+    template = jinja_env.get_template('callable.py')
+
     for func in info.keys():
         # Here we generate the name of the class_name and its related callback_name to the backend program based on the API syntax of each function.
         list_element_url = info[func]['url'].split('/')
@@ -411,43 +416,36 @@ def generateCallableClasses(funcs, data, imp, restname, path):
         name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == regex_string else element.title() for i,element in enumerate(list_element_url[3:-1])])
         params_callback[func]= [info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == regex_string]
 
-        if os.path.isfile(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+""+name_classes[func][1:]+"Impl.py"): #if exists, don't create
-            print "funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py already exists, not overwrite"
-        else:
-            out=open(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
-
-            out.write("import os.path, sys"+line)
-            out.write("sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))"+line+line)
-
-            out.write(line+line+"class "+name_classes[func]+"Impl :"+line+line)
-            index+=1
-
-            for method in info[func]['methods'].keys():
-                out.write(tab(index)+"@classmethod"+line)
-                if len (params_callback[func]) > 0:
-                    ## Input body parameters are included into the class headers if so.
-                    if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
-                        in_params = [element.lower() for element in info[func]['methods'][method]['in_params']]
-                        body_inputs = params_callback[func] + in_params
-                        body_inputs = ", ".join([element for element in body_inputs])
-                    else:
-                        body_inputs = ", ".join([element for element in params_callback[func]])
-
-                    out.write(tab(index)+"def "+method+"(cls, "+body_inputs+"):"+line)
+        class_name = name_classes[func]
+        method_list = []
+        for method in info[func]['methods'].keys():
+            if len (params_callback[func]) > 0:
+                ## Input body parameters are included into the class headers if so.
+                if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
+                    in_params = [element.lower() for element in info[func]['methods'][method]['in_params']]
+                    arguments = params_callback[func] + in_params
                 else:
-                    body_inputs = ' '
-                    if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
-                        body_inputs += ", ".join([element.lower() for element in info[func]['methods'][method]['in_params']])
+                    arguments = params_callback[func]
+            else:
+                if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
+                    arguments = [element.lower() for element in info[func]['methods'][method]['in_params']]
+                else:
+                    arguments = []
+            if 'in_params' in info[func]['methods'][method]:
+                printstr = info[func]['methods'][method]['in_params'][0].lower()
+            else:
+                printstr = ''
+            method_list.append(MethodObject(method, arguments, printstr))
 
-                    out.write(tab(index)+"def "+method+"(cls, "+body_inputs+"):"+line)
+        # use jinja
+        rendered_string = template.render(class_name=class_name,
+                                          method_list=method_list)
 
-                index+=1
-                if 'in_params' in info[func]['methods'][method]:
-                    out.write(tab(index)+"print str("+info[func]['methods'][method]['in_params'][0].lower()+")"+line)
-                out.write(tab(index)+"print 'handling "+method+"'"+line+line)
-                index-=1
-            index-=1
-            out.close()
+        # write callable file
+        out=open(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
+        out.write(rendered_string)
+        out.close()
+
 
 def is_inheritted_class(data, att):
     for child_klass in data:

@@ -16,3 +16,10 @@ class EnumObject(object):
         self.name = name
         self.values = values
         self.range_end = str(len(values)+1)
+
+class MethodObject(object):
+
+    def __init__(self, name, arguments, printstr):
+        self.name = name
+        self.arguments = arguments
+        self.printstr = printstr
