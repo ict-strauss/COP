@@ -22,6 +22,11 @@ import shutil
 sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
 from CGConfiguration import CGConfiguration
 
+# jinja code generator
+from jinja2 import Environment, PackageLoader
+from jinja2_codegen.jinja_classes import ImportObject, AttributeObject, EnumObject
+jinja_env = Environment(loader=PackageLoader('jinja2_codegen', 'templates'))
+
 # The regular expression inserted in the url array.
 regex_string='(\\w+)'
 
@@ -168,25 +173,22 @@ def handleResponse(ident,description,schema=None):
 
 ## This function generates a HTTP Server which will serve as a unique access point to our COP server implementation.
 def generateServerStub(restname, data, services, path):
-    line="\n"
-    out_server = open(path+restname+".py","w+")
-    out_server.write("import web"+line)
-    out_server.write("## EXAMPLE IMPORT SERVER MODELS"+line)
-    urls="urls = "
+
+    import_list = []
+    urls_list = []
     for serv in services:
-        out_server.write("import "+serv.replace("-","_")+line)
-        urls += " "+serv.replace("-","_")+".urls +"
-    urls=urls[:-1]+line
+        import_list.append(ImportObject('',serv.replace("-","_")))
+        urls_list.append(serv.replace("-","_"))
 
-    out_server.write(line*2)
-    out_server.write("class MyApplication(web.application):"+line+tab(1)+"def run(self, port=8080, *middleware):"+line+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
-    out_server.write("##EXAMPLE import urls in the server "+line)
-    out_server.write(urls)
-    out_server.write("app = MyApplication(urls, globals())"+line+line)
+    # use jinja
+    template = jinja_env.get_template('server.py')
+    rendered_string = template.render(import_list=import_list, urls_list=urls_list,
+                                      port=data['port'])
 
-    out_server.write("if __name__ == \"__main__\":"+line)
-    out_server.write(tab(1)+"app.run("+str(data['port'])+")"+line)
-    out_server.close()
+    # write server file
+    out = open(path+restname+".py","w+")
+    out.write(rendered_string)
+    out.close()
 
 
 def generateRESTapi(data, name, imp, restname, params, services, path):
@@ -324,113 +326,72 @@ def generateRESTapi(data, name, imp, restname, params, services, path):
     out.close()
     return ret
 
-def generateAttribute(att): #Initialization of different attributes
-    text="self."+att['att']+"="
+def generateAttributeValue(att): #Initialization of different attributes
     if "string" in att['type']:
-        return text+'""'
+        return '""'
     elif "int" in att['type']:
-        return text+'0'
+        return '0'
     elif "boolean" in att['type']:
-        return text + 'False'
+        return 'False'
     elif "array" in att['type']:
-        return text + "ArrayType(" + att['other'] + ")"
-        #return text+"[] #array of "+att['other']
+        return "ArrayType(" + att['other'] + ")"
     elif "object" in att['type']:
-        return text+"{} #dict of "+att['other']
+        return "{} #dict of " + att['other']
     elif "import" in att['type']:
-        return text+att['other']+"() #import"
+        return att['other']+"() #import"
     elif "enum" in att['type']:
-        return text+'0'
+        return '0'
     else:
         return text+"None #FIXME: This parameter is not well defined"
 
 
-def generateEnumClass(att):
-    line="\n"
-    index=0
-    out = line+tab(index)+'class '+ att['att'].capitalize()+ ':' +line
-    index+=1
-    out+=tab(index)
-    for enum in att['other']:
-        #out += to_upper_camelcase(enum)+ ', '
-        out += enum + ', '
-
-    out+= ' = range( 1, '+str( len(att['other']) +1 )+')'+line
-    return out
-
-
 def generateClasses(data, restname, path):
-    line="\n"
+    # Create folder objects_
     if not os.path.exists(path+"objects_"+restname+"/"):
         os.makedirs(path+"objects_"+restname+"/")
+
     # Create __init__.py file
     out=open(path+"objects_"+restname+"/__init__.py","w+")
-    out.write(" "+line)
+    out.write(" ")
     out.close()
+
     # Create class.py files
     for klass in data:
-        #print klass
-        index=0
         name=klass['class']
-        imports=klass['imports']
-        """
-        if 'extend_class' in klass:
-            klass['imports'].append(klass['extend_class'])
-        else:
-        """
-        for klass2 in data:
-            if 'extend_class' in klass2 and klass2['extend_class'] in klass['imports']:
-                imports.append(klass2['class'])
-        #atts=klass['atts']
-        out=open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
 
-        #Necessary imports
-        for imp in imports:
-            out.write("from "+imp[0].lower()+imp[1:]+" import "+imp+line)
+        import_list = []
+        attribute_list = []
+        enum_list = []
 
-        imports = []
-        #import the JsonObject base class
-        imports.append('JsonObject')
-        #import the ArrayType class
-        #TODO make this optional
-        imports.append('ArrayType')
-        for imp in imports:
-            out.write("from "+'objects_common.'+imp[0].lower()+imp[1:]+" import "+imp+line)
-        out.write(line)
+        # imports
+        for imp in klass['imports']:
+            imp_file = imp[0].lower()+imp[1:]
+            import_list.append(ImportObject(imp_file, imp))
+        import_list.append(ImportObject('objects_common.jsonObject', 'JsonObject'))
+        import_list.append(ImportObject('objects_common.arrayType', 'ArrayType'))
 
-        #Main class
-        #if 'extend_class' in klass:
-        #    out.write("class "+name+"("+klass['extend_class']+"):"+line+line)
-        #else:
-        out.write("class "+name+"(JsonObject):"+line+line)
-        index+=1
-
-        #__INIT__ function
-        out.write(tab(index)+"def __init__(self, json_string=None):"+line)
-        index+=1
-        """
-        if 'extend_class' in klass:
-            out.write(tab(index)+"super("+name+", self).__init__()"+line)
-        """
-        # self.xy = 123
+        # attributes
         for att in klass['atts']:
-            out.write(tab(index)+generateAttribute(att)+line)
+            attribute_list.append(AttributeObject(att['att'], generateAttributeValue(att)))
 
-        # Call __init__() of superclass JsonObject
-        out.write(tab(index) + "super("+name+", self).__init__(json_string)")
-
-        out.write(line)
-        index-=2
-
-        ## Finally if it were any enumeration define we create the corresponding classes
-        enum_class_string = {}
+        # enums
         for att in klass['atts']:
             if "enum" in att['type']:
-                enum_class_string[att['att']] = generateEnumClass(att)
-        for element in enum_class_string:
-            out.write(enum_class_string[element])
+                enum_list.append(EnumObject(att['att'].capitalize(), att['other']))
 
+        # use jinja
+        template = jinja_env.get_template('object.py')
+        rendered_string = template.render(import_list=import_list,
+                                          attribute_list=attribute_list,
+                                          enum_list=enum_list,
+                                          class_name=name,
+                                          superclass_name='JsonObject')
+
+        #write class file
+        out=open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
+        out.write(rendered_string)
         out.close()
+
 
 def generateCallableClasses(funcs, data, imp, restname, path):
     line="\n"
