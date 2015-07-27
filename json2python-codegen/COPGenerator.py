@@ -24,8 +24,8 @@ from CGConfiguration import CGConfiguration
 
 # jinja code generator
 from jinja2 import Environment, PackageLoader
-from jinja2_codegen.jinja_classes import ImportObject, AttributeObject, EnumObject, MethodObject
-jinja_env = Environment(loader=PackageLoader('jinja2_codegen', 'templates'))
+from jinja2_codegen.jinja_classes import *
+jinja_env = Environment(loader=PackageLoader('jinja2_codegen', 'templates'), trim_blocks=True, lstrip_blocks=True)
 
 # The regular expression inserted in the url array.
 regex_string='(\\w+)'
@@ -47,6 +47,7 @@ def decomposeUrl(string):
         defurl+=regex_string+st
 
     return defurl, varlist
+
 
 def translateRequest(js):
     ret={}
@@ -81,6 +82,7 @@ def translateRequest(js):
     ret['paths']=res
     return ret
 
+
 def getType(js):
     if "type" in js.keys():
         if "enum" in js.keys():
@@ -111,6 +113,7 @@ def getType(js):
         return "import",js['$ref'].split("/")[-1],True
     else:
         return "none","none", False
+
 
 def translateClasses(js):
     res=[]
@@ -150,14 +153,7 @@ def tab(n):
     return "    "*n
 
 
-def generateParameters(inlineVars):
-    ret="(self,"
-    for variable in inlineVars:
-        ret+=variable+","
-    return ret[:-1]+"):"
-
-def handleResponse(ident,description,schema=None):
-    #ret=""
+def handleResponse(ident, description, schema=None):
     if "200" in ident:
         if schema!=None:
             return 'raise Successful("'+description+'",json.dumps(js))'
@@ -173,7 +169,6 @@ def handleResponse(ident,description,schema=None):
 
 ## This function generates a HTTP Server which will serve as a unique access point to our COP server implementation.
 def generateServerStub(restname, data, services, path):
-
     import_list = []
     urls_list = []
     for serv in services:
@@ -192,51 +187,137 @@ def generateServerStub(restname, data, services, path):
 
 
 def generateRESTapi(data, name, imp, restname, params, services, path):
-    #if not os.path.isfile("server.py"):
     generateServerStub("server", data, services, path)
 
-    index=0
-    line="\n"
-    out=open(path + restname+".py","w+")
-
-    urls="( "
     info=data['paths']
-
     name_classes = {}
     params_callback = {}
+
+    url_object_list = []
+    
     for func in info.keys():
         # Here we generate the name of the class and its related callback to the backend program based on the API syntax of each function.
         list_element_url = info[func]['url'].split('/')
         indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == regex_string]
         name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == regex_string else element.title() for i,element in enumerate(list_element_url[3:-1])])
         params_callback[func] = ",".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == regex_string])
+        url = info[func]['url']
+        callback = restname + "." + name_classes[func]
+        url_object_list.append(UrlObject(url, callback))
 
-        urls+="\""+info[func]['url']+"\" , \""+restname+"."+name_classes[func]+"\" , \n\t"
-
-    #imports
-    out.write("import web\nimport json"+line)
-    if params.isAuth:
-        out.write("import base64\nimport re"+line)
-    out.write(line+"# BACKEND FUNCTIONS"+line)
+    # imports of functions
+    functions_import_list = []
     for func in info.keys():
-        out.write("from funcs_"+restname+"."+name_classes[func][0].lower()+name_classes[func][1:]+"Impl import "+name_classes[func]+"Impl"+line)
-
-    out.write(line+"# CALLABLE OBJECTS"+line)
+        file = "funcs_" + restname + "." + name_classes[func][0].lower() + name_classes[func][1:] + "Impl"
+        name = name_classes[func] + "Impl"
+        functions_import_list.append(ImportObject(file, name))
+    
+    # imports of objects
+    objects_import_list = []
     for im in imp:
-        out.write("from objects_"+restname+"."+im[0].lower()+im[1:]+" import "+im+line)
+        file = "objects_" + restname + "." + im[0].lower() + im[1:]
+        name = im
+        objects_import_list.append(ImportObject(file, name))
 
-    out.write(line)
-    urls=urls[:-2]+")"
+    ret={}
+    callback_list = []
+    for func in info.keys():
+        # Create funcs with inlineVars
+        ret[func+"Handle"]=[]
+        method_list = []
+        for method in info[func]['methods'].keys():
+            ret[func+"Handle"].append(method)
+            """
+            if params.isAuth:
+                out.write(tab(index)+'if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):'+line)
 
-    #urls and app initialization
-    out.write("urls = "+urls+line+line)
+                out.write(tab(index)+"web.header('WWW-Authenticate','Basic realm=")
+                out.write('"Auth example"')
+                out.write("')"+line)
+                out.write(tab(index)+"web.ctx.status = '401 Unauthorized'"+line)
+                out.write(tab(index)+"return 'Unauthorized'"+line)
+            """
+
+            """
+            if params.isCORS:
+                out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)
+            """
+            # TODO
+            arguments = info[func]["inlineVars"]
+            name = method.upper()
+            printstr = info[func]['methods'][method]['desc']
+            new_object = None
+            impl_arguments = None
+            json_parser = None
+            response = None
+            if info[func]['methods'][method]['body']:
+                web_data_body = True
+                if info[func]['methods'][method]['json']:
+                    json_parser = True
+                    new_object = info[func]['methods'][method]['in_params'][0]
+                    if len(params_callback[func]) > 0:
+                        response = True
+                        impl_arguments = params_callback[func]
+                    else:
+                        response = False
+                else:
+                    json_parser = False
+            else:
+                web_data_body = False
+                impl_arguments = params_callback[func]
+            response_list = []
+            for resp in info[func]['methods'][method]["resp"].keys():
+                if "schema" in info[func]['methods'][method]["resp"][resp].keys():
+                    handleResp = handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'], info[func]['methods'][method]["resp"][resp]["schema"])
+                    jotason = True
+                else:
+                    handleResp = handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'])
+                    jotason = False
+                response_list.append(ResponseObject(jotason, handleResp))
+            method_list.append(CallbackMethodObject(name, arguments, printstr, web_data_body,
+                                                    json_parser, new_object, response, impl_arguments,
+                                                    response_list))
+        url = info[func]['url']
+        name = name_classes[func]
+        callback_list.append(CallbackObject(name, url, method_list))
+        """
+        if params.isCORS:
+            index+=1
+            out.write(tab(index)+"def OPTIONS"+generateParameters(info[func]["inlineVars"])+line)
+            index+=1
+            out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)
+            out.write(tab(index)+"web.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, Authorization')"+line)
+            text="raise Successful('Successful operation','{"
+            text+='"description":"Options called CORS"}'
+            text+="')"
+            out.write(tab(index)+text+line+line)
+            index-=1
+            index-=1
+        """
+
+    # use jinja
+    template = jinja_env.get_template('api.py')
+    rendered_string = template.render(auth=params.isAuth,
+                                      web_data_body=web_data_body,
+                                      functions_import_list=functions_import_list,
+                                      objects_import_list=objects_import_list,
+                                      url_object_list=url_object_list,
+                                      callback_list=callback_list,
+                                      )
+
+    # write API file
+    out=open(path + restname+".py","w+")
+    out.write(rendered_string)
+    out.close()
+
+    return ret
+
+    """
     if (params.isAuth):
         out.write("users = "+json.dumps(params.users)+line+line)
-    #error functions
-    out.write("class NotFoundError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '404 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
-    out.write("class BadRequestError(web.HTTPError):\n"+tab(1)+"def __init__(self,message):\n"+tab(2)+"status = '400 '+message\n"+tab(2)+"headers = {'Content-Type': 'text/html'}\n"+tab(2)+"data = '<h1>'+message+'</h1>'\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
-    out.write("class Successful(web.HTTPError):\n"+tab(1)+"def __init__(self,message,info=''):\n"+tab(2)+"status = '200 '+message\n"+tab(2)+"headers = {'Content-Type': 'application/json'}\n"+tab(2)+"data = info\n"+tab(2)+"web.HTTPError.__init__(self, status, headers, data)"+line+line)
-    ret={}
+    """
+
+    """
     if (params.isAuth):
         out.write("class basicauth:"+line+line)
         index+=1
@@ -259,72 +340,8 @@ def generateRESTapi(data, name, imp, restname, params, services, path):
         index+=1
         out.write(tab(index)+"return False"+line+line)
         index-=3
-    for func in info.keys():
-        # Create class
-        out.write("#"+info[func]['url']+line)
-        out.write("class "+name_classes[func]+":"+line+line)
-        # Create funcs with inlineVars
-        ret[func+"Handle"]=[]
-        for method in info[func]['methods'].keys():
-            index+=1
-            out.write(tab(index)+"def "+method.upper()+generateParameters(info[func]["inlineVars"])+line)
-            index+=1
-            ret[func+"Handle"].append(method)
-            if params.isAuth:
-                out.write(tab(index)+'if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):'+line)
-                index+=1
-                out.write(tab(index)+"web.header('WWW-Authenticate','Basic realm=")
-                out.write('"Auth example"')
-                out.write("')"+line)
-                out.write(tab(index)+"web.ctx.status = '401 Unauthorized'"+line)
-                out.write(tab(index)+"return 'Unauthorized'"+line)
-                index-=1
-            out.write(tab(index)+"print \""+info[func]['methods'][method]['desc']+"\""+line)
-            if params.isCORS:
-                out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)
+    """
 
-            if info[func]['methods'][method]['body']:
-                out.write(tab(index)+"data=web.data() #data in body"+line)
-                if info[func]['methods'][method]['json']:
-                    out.write(tab(index)+"input_json=json.loads(data) #json parser."+line)
-                    out.write(tab(index)+"input="+info[func]['methods'][method]['in_params'][0]+"(input_json) #It creates an object instance from the json_input data."+line)
-
-                    if len(params_callback[func])>0:
-                        out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+"("+params_callback[func]+", input)"+line)
-                    else:
-                        out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+"(input)"+line)
-            else:
-                out.write(tab(index)+"response = "+name_classes[func]+"Impl."+method+"("+params_callback[func]+")"+line)
-
-            for resp in info[func]['methods'][method]["resp"].keys():
-                jotason=False
-                if "schema" in info[func]['methods'][method]["resp"][resp].keys():
-                    handleResp=handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'],info[func]['methods'][method]["resp"][resp]["schema"])
-                    jotason=True
-                else:
-                    handleResp=handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'])
-                if jotason:
-                    out.write(tab(index)+"#js={} #Uncomment to create json response"+line)
-                out.write(tab(index)+"#"+handleResp+" #Uncomment to handle responses"+line)
-            out.write(tab(index)+"raise Successful('Successful operation','{\"description\":\""+info[func]['methods'][method]['desc']+"\"}')"+line)
-            index-=1
-            out.write(line)
-            index-=1
-        if params.isCORS:
-            index+=1
-            out.write(tab(index)+"def OPTIONS"+generateParameters(info[func]["inlineVars"])+line)
-            index+=1
-            out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)
-            out.write(tab(index)+"web.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, Authorization')"+line)
-            text="raise Successful('Successful operation','{"
-            text+='"description":"Options called CORS"}'
-            text+="')"
-            out.write(tab(index)+text+line+line)
-            index-=1
-            index-=1
-
-    out.close()
-    return ret
 
 def generateAttributeValue(att): #Initialization of different attributes
     if "string" in att['type']:
@@ -394,7 +411,6 @@ def generateClasses(data, restname, path):
 
 
 def generateCallableClasses(funcs, data, imp, restname, path):
-
     # create folder funcs_
     if not os.path.exists(path+"funcs_"+restname+"/"):
         os.makedirs(path+"funcs_"+restname+"/")
@@ -402,12 +418,9 @@ def generateCallableClasses(funcs, data, imp, restname, path):
         out.write(" ")
         out.close()
 
-
     info=data['paths']
     name_classes = {}
     params_callback = {}
-
-    template = jinja_env.get_template('callable.py')
 
     for func in info.keys():
         # Here we generate the name of the class_name and its related callback_name to the backend program based on the API syntax of each function.
@@ -438,6 +451,7 @@ def generateCallableClasses(funcs, data, imp, restname, path):
             method_list.append(MethodObject(method, arguments, printstr))
 
         # use jinja
+        template = jinja_env.get_template('callable.py')
         rendered_string = template.render(class_name=class_name,
                                           method_list=method_list)
 
@@ -445,29 +459,6 @@ def generateCallableClasses(funcs, data, imp, restname, path):
         out=open(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
         out.write(rendered_string)
         out.close()
-
-
-def is_inheritted_class(data, att):
-    for child_klass in data:
-        if child_klass['class'] == att['other']:
-            if 'discriminator' in child_klass.keys():
-                return True
-    return False
-
-def get_child_classes(data, att):
-    child_classes = []
-    for child_klass in data:
-        if child_klass['class'] == att['other']:
-            discriminator = child_klass['discriminator']
-            for att2 in child_klass['atts']:
-                if att2['att'] == discriminator:
-                    _type = att2['type']
-                    print _type
-        if 'extend_class' in child_klass.keys():
-            if child_klass['extend_class'] == att['other']:
-                child_classes.append(child_klass['class'])
-
-    return {'discriminator':discriminator, 'child_classes':child_classes, 'type':_type}
 
 
 def to_lower_camelcase(name):
@@ -484,7 +475,6 @@ def to_upper_camelcase(name):
     """
     return re.sub(r'(?:\B_|\b\-|^)([a-zA-Z0-9])', lambda l: l.group(1).upper(),
                   name)
-
 
 
 if len(sys.argv)==1:

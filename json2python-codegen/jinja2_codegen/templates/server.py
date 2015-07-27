@@ -1,6 +1,6 @@
 import web
 ## EXAMPLE IMPORT SERVER MODELS
-{% for import_object in import_list -%}
+{% for import_object in import_list %}
 import {{import_object.name}}
 {% endfor %}
 
