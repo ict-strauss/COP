@@ -1,6 +1,6 @@
 import web
 import json
-{% if auth -%}
+{% if auth %}
 import base64
 import re
 {% endif %}
@@ -20,6 +20,10 @@ urls = (
     "{{url_object.path}}" , "{{url_object.callback}}" ,
 {% endfor -%}
 )
+
+{% if auth %}
+users = {{users}}
+{% endif %}
 
 class NotFoundError(web.HTTPError):
     def __init__(self,message):
@@ -41,15 +45,40 @@ class Successful(web.HTTPError):
         headers = {'Content-Type': 'application/json'}
         data = info
         web.HTTPError.__init__(self, status, headers, data)
-        
+
+{% if auth %}
+class basicauth:
+
+    @classmethod
+    def check(self,auth):
+        if auth is not None:
+            auth2 = re.sub("^Basic ","", auth)
+            user,pswd = base64.decodestring(auth2).split(':')
+            if user in users.keys() and pswd == users[user]:
+                return True
+            else:
+                return False
+        else:
+            return False
+{% endif %}
+
 {% for callback in callback_list %}
 
 #{{callback.path}}
 class {{callback.name}}:
     {% for method in callback.method_list %}
     
-    def {{method.name}}(self, {{method.arguments|join(', ')}}):
+    def {% filter upper %}{{method.name}}{% endfilter %}({{callback.arguments|join(', ')}}):
+        {% if auth %}
+        if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
+            web.header('WWW-Authenticate','Basic realm="Auth example"')
+            web.ctx.status = '401 Unauthorized'
+            return 'Unauthorized'
+        {% endif %}
         print "{{method.printstr}}"
+        {% if cors %}
+        web.header('Access-Control-Allow-Origin','{{url}}')
+        {% endif %}
         {% if method.web_data_body %}
         data=web.data() #data in body
             {% if method.json_parser %}
@@ -71,6 +100,14 @@ class {{callback.name}}:
             {% endif %}
         #{{resp.handleResp}} #Uncomment to handle responses
         {% endfor %}
-        #raise Successful('Successful operation','{"description":"{{method.printstr}}"}')
+        raise Successful('Successful operation','{"description":"{{method.printstr}}"}')
     {% endfor %}
+    {% if cors %}
+
+    def OPTIONS({{callback.arguments|join(', ')}}):
+        web.header('Access-Control-Allow-Origin','{{url}}')
+        web.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, Authorization')
+        raise Successful('Successful operation','{"description":"Options called CORS"}')
+    {% endif %}
+
 {% endfor %}

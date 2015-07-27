@@ -225,26 +225,10 @@ def generateRESTapi(data, name, imp, restname, params, services, path):
         # Create funcs with inlineVars
         ret[func+"Handle"]=[]
         method_list = []
+        arguments = ['self'] + info[func]["inlineVars"]
         for method in info[func]['methods'].keys():
             ret[func+"Handle"].append(method)
-            """
-            if params.isAuth:
-                out.write(tab(index)+'if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):'+line)
-
-                out.write(tab(index)+"web.header('WWW-Authenticate','Basic realm=")
-                out.write('"Auth example"')
-                out.write("')"+line)
-                out.write(tab(index)+"web.ctx.status = '401 Unauthorized'"+line)
-                out.write(tab(index)+"return 'Unauthorized'"+line)
-            """
-
-            """
-            if params.isCORS:
-                out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)
-            """
-            # TODO
-            arguments = info[func]["inlineVars"]
-            name = method.upper()
+            name = method
             printstr = info[func]['methods'][method]['desc']
             new_object = None
             impl_arguments = None
@@ -274,30 +258,32 @@ def generateRESTapi(data, name, imp, restname, params, services, path):
                     handleResp = handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'])
                     jotason = False
                 response_list.append(ResponseObject(jotason, handleResp))
-            method_list.append(CallbackMethodObject(name, arguments, printstr, web_data_body,
+            method_list.append(CallbackMethodObject(name, printstr, web_data_body,
                                                     json_parser, new_object, response, impl_arguments,
                                                     response_list))
         url = info[func]['url']
         name = name_classes[func]
-        callback_list.append(CallbackObject(name, url, method_list))
-        """
-        if params.isCORS:
-            index+=1
-            out.write(tab(index)+"def OPTIONS"+generateParameters(info[func]["inlineVars"])+line)
-            index+=1
-            out.write(tab(index)+"web.header('Access-Control-Allow-Origin','"+params.url+"')"+line)
-            out.write(tab(index)+"web.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, Authorization')"+line)
-            text="raise Successful('Successful operation','{"
-            text+='"description":"Options called CORS"}'
-            text+="')"
-            out.write(tab(index)+text+line+line)
-            index-=1
-            index-=1
-        """
+        callback_list.append(CallbackObject(name, url, method_list, arguments))
+
+    if params.isAuth:
+        auth=True
+        users=json.dumps(params.users)
+    else:
+        auth=False
+        users=None
+    if params.isCORS:
+        cors = True
+        url = params.url
+    else:
+        cors = False
+        url = None
 
     # use jinja
     template = jinja_env.get_template('api.py')
-    rendered_string = template.render(auth=params.isAuth,
+    rendered_string = template.render(auth=auth,
+                                      users=users,
+                                      cors=cors,
+                                      url=url,
                                       web_data_body=web_data_body,
                                       functions_import_list=functions_import_list,
                                       objects_import_list=objects_import_list,
@@ -309,38 +295,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path):
     out=open(path + restname+".py","w+")
     out.write(rendered_string)
     out.close()
-
     return ret
-
-    """
-    if (params.isAuth):
-        out.write("users = "+json.dumps(params.users)+line+line)
-    """
-
-    """
-    if (params.isAuth):
-        out.write("class basicauth:"+line+line)
-        index+=1
-        out.write(tab(index)+"@classmethod"+line)
-        out.write(tab(index)+"def check(self,auth):"+line)
-        index+=1
-        out.write(tab(index)+"if auth is not None:"+line)
-        index+=1
-        out.write(tab(index)+'auth2 = re.sub("^Basic ","", auth)'+line)
-        out.write(tab(index)+"user,pswd = base64.decodestring(auth2).split(':')"+line)
-        out.write(tab(index)+"if user in users.keys() and pswd == users[user]:"+line)
-        index+=1
-        out.write(tab(index)+"return True"+line)
-        index-=1
-        out.write(tab(index)+"else:"+line)
-        index+=1
-        out.write(tab(index)+"return False"+line)
-        index-=2
-        out.write(tab(index)+"else:"+line)
-        index+=1
-        out.write(tab(index)+"return False"+line+line)
-        index-=3
-    """
 
 
 def generateAttributeValue(att): #Initialization of different attributes

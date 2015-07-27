@@ -37,17 +37,17 @@ class UrlObject(object):
 
 class CallbackObject(object):
 
-    def __init__(self, name, path, method_list):
+    def __init__(self, name, path, method_list, arguments):
         self.path = path
         self.name = name
         self.method_list = method_list
+        self.arguments = arguments
 
 class CallbackMethodObject(object):
     
-    def __init__(self, name, arguments, printstr, web_data_body, json_parser, new_object, response,
+    def __init__(self, name, printstr, web_data_body, json_parser, new_object, response,
                  impl_arguments, response_list):
         self.name = name
-        self.arguments = arguments
         self.printstr = printstr
         self.web_data_body = web_data_body
         self.json_parser = json_parser
