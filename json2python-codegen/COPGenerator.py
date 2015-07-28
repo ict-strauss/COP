@@ -343,12 +343,27 @@ def generateClasses(data, restname, path):
         attribute_list = []
         enum_list = []
 
+        imports = klass['imports']
+        if 'extend_class' in klass:
+            klass['imports'].append(klass['extend_class'])
+        else:
+            for klass2 in data:
+                if 'extend_class' in klass2 and klass2['extend_class'] in klass['imports']:
+                    imports.append(klass2['class'])
+
         # imports
-        for imp in klass['imports']:
+        for imp in imports:
             imp_file = imp[0].lower()+imp[1:]
             import_list.append(ImportObject(imp_file, imp))
+
         import_list.append(ImportObject('objects_common.jsonObject', 'JsonObject'))
         import_list.append(ImportObject('objects_common.arrayType', 'ArrayType'))
+
+        # determine superclass
+        if 'extend_class' in klass:
+            superclass_name = klass['extend_class']
+        else:
+            superclass_name = 'JsonObject'
 
         # attributes
         for att in klass['atts']:
@@ -365,7 +380,7 @@ def generateClasses(data, restname, path):
                                           attribute_list=attribute_list,
                                           enum_list=enum_list,
                                           class_name=name,
-                                          superclass_name='JsonObject')
+                                          superclass_name=superclass_name)
 
         #write class file
         out=open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
