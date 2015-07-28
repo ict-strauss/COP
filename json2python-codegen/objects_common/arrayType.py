@@ -12,4 +12,9 @@ class ArrayType(list):
         for a in self:
             if hasattr(a, 'serialize_json'):
                 ret.append(a.serialize_json())
+            else:
+                ret.append(a)
         return ret
+
+    def __str__(self):
+        return str(self.serialize_json())

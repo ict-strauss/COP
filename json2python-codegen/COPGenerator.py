@@ -30,6 +30,9 @@ jinja_env = Environment(loader=PackageLoader('jinja2_codegen', 'templates'), tri
 # The regular expression inserted in the url array.
 regex_string='(\\w+)'
 
+# Map from JSON types to python types
+type_map = {'string' : 'str', 'integer' : 'int'}
+
 def decomposeUrl(string):
     slices=string.split("{")
     varlist=[]
@@ -297,6 +300,11 @@ def generateRESTapi(data, name, imp, restname, params, services, path):
     out.close()
     return ret
 
+def translate_type_json2python(typename):
+    if typename in type_map:
+        return type_map[typename]
+    else:
+        return typename
 
 def generateAttributeValue(att): #Initialization of different attributes
     if "string" in att['type']:
@@ -306,7 +314,7 @@ def generateAttributeValue(att): #Initialization of different attributes
     elif "boolean" in att['type']:
         return 'False'
     elif "array" in att['type']:
-        return "ArrayType(" + att['other'] + ")"
+        return "ArrayType(" + translate_type_json2python(att['other']) + ")"
     elif "object" in att['type']:
         return "{} #dict of " + att['other']
     elif "import" in att['type']:
