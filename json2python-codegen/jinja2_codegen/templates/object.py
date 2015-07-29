@@ -4,11 +4,11 @@ from {{import_object.file}} import {{import_object.name}}
 
 class {{class_name}}({{superclass_name}}):
 
-    def __init__(self, json_string=None):
+    def __init__(self, json_struct=None):
         {% for attribute_object in attribute_list %}
         self.{{attribute_object.name}}={{attribute_object.value}}
         {% endfor %}
-        super({{class_name}}, self).__init__(json_string)
+        super({{class_name}}, self).__init__(json_struct)
 
 {% for enum_object in enum_list %}
 class {{enum_object.name}}:

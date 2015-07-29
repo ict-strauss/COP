@@ -80,10 +80,10 @@ class {{callback.name}}:
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
         {% if method.web_data_body %}
-        data=web.data() #data in body
+        json_string=web.data() #data in body
             {% if method.json_parser %}
-        input_json=json.loads(data) #json parser.
-        input={{method.new_object}}(input_json) #It creates an object instance from the json_input data."
+        json_struct=json.loads(json_string) #json parser.
+        input={{method.new_object}}(json_struct) #It creates an object instance from the json_struct data."
                 {% if method.response %}
         response={{callback.name}}Impl.{{method.name}}({{method.impl_arguments}}, input)
                 {% else %}
