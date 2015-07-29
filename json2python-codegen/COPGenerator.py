@@ -202,29 +202,7 @@ def generateServerStub(restname, data, services, path):
 
 
 def generateNotificationServer(name, data, notfy_urls, path):
-    line="\n"
-    index = 1
-    out_server = open(path+name+".py","w+")
-    out_server.write("from twisted.internet import reactor"+line)
-    out_server.write("from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS"+line)
-    out_server.write("from autobahn.websocket.http import HttpException"+line+line+line)
-    out_server.write("class BaseService:"+line+line)
-    out_server.write(tab(index)+"def __init__(self, proto):"+line)
-    index+=1
-    out_server.write(tab(index)+"self.proto = proto"+line+line)
-    index-=1
-    out_server.write(tab(index)+"def onOpen(self):"+line)
-    index+=1
-    out_server.write(tab(index)+"pass"+line+line)
-    index-=1
-    out_server.write(tab(index)+"def onClose(self, wasClean, code, reason):"+line)
-    index+=1
-    out_server.write(tab(index)+"pass"+line+line)
-    index-=1
-    out_server.write(tab(index)+"def onMessage(self, payload, isBinary):"+line)
-    index+=1
-    out_server.write(tab(index)+"pass"+line+line+line)
-    index-=2
+    class_list=[]
     dictio = {}
     base_url = ''
     for element in notfy_urls:
@@ -232,69 +210,20 @@ def generateNotificationServer(name, data, notfy_urls, path):
         url = to_upper_camelcase(element['url'].split('/')[-2])+"Service"
         lower_url = "/"+to_lower_camelcase(element['url'].split('/')[-2])+"Service"
         dictio[str(base_url)+str(lower_url)] = str(url)
-        out_server.write(tab(index)+"class "+url+" (BaseService):"+line+line)
-        index+=1
-        out_server.write(tab(index)+"def onMessage(self, payload, isBinary):"+line)
-        index+=1
-        out_server.write(tab(index)+"pass"+line+line+line)
-        index-=2
+        class_list.append(url)
 
-    out_server.write(tab(index)+"class ServiceServerProtocol(WebSocketServerProtocol):"+line+line)
-    index+=1
-    out_server.write(tab(index)+"SERVICEMAP = {")
+    servicemap = []
     for element in dictio:
-        out_server.write("\'"+str(element)+"\' : "+str(dictio[element])+",")
-    out_server.write("}"+line+line)
-    out_server.write(tab(index)+"def __init__(self):"+line)
-    index+=1
-    out_server.write(tab(index)+"self.service = None"+line+line)
-    index-=1
-    out_server.write(tab(index)+"def onConnect(self, request):"+line)
-    index+=1
-    out_server.write(tab(index)+"if request.path in self.SERVICEMAP:"+line)
-    index+=1
-    out_server.write(tab(index)+"cls = self.SERVICEMAP[request.path]"+line)
-    out_server.write(tab(index)+"self.service = cls(self)"+line)
-    index-=1
-    out_server.write(tab(index)+"else:"+line)
-    index+=1
-    out_server.write(tab(index)+"err = \"No service under %s\" % request.path"+line)
-    out_server.write(tab(index)+"print(err)"+line)
-    out_server.write(tab(index)+"raise HttpException(404, err)"+line+line)
-    index-=2
-    out_server.write(tab(index)+"def onOpen(self):"+line)
-    index+=1
-    out_server.write(tab(index)+"if self.service:"+line)
-    index+=1
-    out_server.write(tab(index)+"self.service.onOpen()"+line+line)
-    index-=2
-    out_server.write(tab(index)+"def onMessage(self, payload, isBinary):"+line)
-    index+=1
-    out_server.write(tab(index)+"if self.service:"+line)
-    index+=1
-    out_server.write(tab(index)+"self.service.onMessage(payload, isBinary)"+line+line)
-    index-=2
-    out_server.write(tab(index)+"def onClose(self, wasClean, code, reason):"+line)
-    index+=1
-    out_server.write(tab(index)+"if self.service:"+line)
-    index+=1
-    out_server.write(tab(index)+"self.service.onClose(wasClean, code, reason)"+line+line+line)
-    index-=3
-    out_server.write(tab(index)+"class NotificationServerFactory():"+line+line)
-    index+=1
-    out_server.write(tab(index)+"def __init__(self):"+line)
-    index+=1
-    out_server.write(tab(index)+"factory = WebSocketServerFactory(\'ws://localhost:8181\')"+line)
-    out_server.write(tab(index)+"factory.protocol = ServiceServerProtocol"+line)
-    out_server.write(tab(index)+"listenWS(factory)"+line)
-    out_server.write(tab(index)+"try:"+line)
-    index +=1
-    out_server.write(tab(index)+"reactor.run()"+line)
-    index -=1
-    out_server.write(tab(index)+"except KeyboardInterrupt:"+line)
-    index +=1
-    out_server.write(tab(index)+"reactor.stop()"+line)
-    out_server.close()
+        servicemap.append("\'"+str(element)+"\' : "+str(dictio[element]))
+
+    # use jinja
+    template = jinja_env.get_template('notification_server.py')
+    rendered_string = template.render(servicemap=servicemap, class_list=class_list)
+
+    # write notifiction server file
+    out = open(path+name+".py","w+")
+    out.write(rendered_string)
+    out.close()
 
 
 def generateRESTapi(data, name, imp, restname, params, services, path, notfy_urls):
