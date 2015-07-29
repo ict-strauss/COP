@@ -17,7 +17,7 @@ class EnumObject(object):
     def __init__(self, name, values):
         self.name = name
         self.values = values
-        self.range_end = str(len(values)+1)
+        self.range_end = str(len(values))
 
 
 class MethodObject(object):

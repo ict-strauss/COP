@@ -11,6 +11,10 @@ class {{class_name}}({{superclass_name}}):
         super({{class_name}}, self).__init__(json_struct)
 
 {% for enum_object in enum_list %}
-class {{enum_object.name}}:
-    {{enum_object.values|join(', ')}} = range(1, {{enum_object.range_end}})
+class {{enum_object.name}}(EnumType):
+    possible_values = [{{enum_object.values|join(', ')}}]
+    range_end = {{enum_object.range_end}}
+
+    def __init__(self, initial_value):
+        super({{enum_object.name}}, self).__init__(initial_value)
 {% endfor %}

@@ -360,7 +360,7 @@ def generateAttributeValue(att): #Initialization of different attributes
     elif "import" in att['type']:
         return att['other']+"() #import"
     elif "enum" in att['type']:
-        return '0'
+        return att['att'].capitalize() + '(1)'
     else:
         return text+"None #FIXME: This parameter is not well defined"
 
@@ -398,6 +398,7 @@ def generateClasses(data, restname, path):
 
         import_list.append(ImportObject('objects_common.jsonObject', 'JsonObject'))
         import_list.append(ImportObject('objects_common.arrayType', 'ArrayType'))
+        import_list.append(ImportObject('objects_common.enumType', 'EnumType'))
 
         # determine superclass
         if 'extend_class' in klass:
@@ -412,7 +413,8 @@ def generateClasses(data, restname, path):
         # enums
         for att in klass['atts']:
             if "enum" in att['type']:
-                enum_list.append(EnumObject(att['att'].capitalize(), att['other']))
+                enum_values = [ '\'' + x + '\'' for x in att['other'] ]
+                enum_list.append(EnumObject(att['att'].capitalize(), enum_values))
 
         # use jinja
         template = jinja_env.get_template('object.py')
