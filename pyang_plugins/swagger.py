@@ -131,7 +131,7 @@ def emit_swagger_spec(ctx, modules, fd, path):
                     definitions[element]['discriminator'] = PARENT_MODELS[element]['discriminator']
         # extract children which contain data definition keywords
         chs = [ch for ch in module.i_children
-               if ch.keyword in (statements.data_definition_keywords + ['rpc','notifications'])]
+               if ch.keyword in (statements.data_definition_keywords + ['rpc','notification'])]
 
         # generate the APIs for all children
         if len(chs) > 0:
@@ -329,13 +329,14 @@ def gen_api_node(node, path, apis, definitions):
         elif sub.keyword == 'uses':
             # Set the reference to a model, previously defined by a grouping.
             schema = {'$ref': '#/definitions/' + to_upper_camelcase(sub.arg)}
+
     # API entries are only generated from container and list nodes.
     if node.keyword == 'list' or node.keyword == 'container':
         if schema:
             if node.keyword == 'list':
                 path += '{' + to_lower_camelcase(key) + '}/'
                 apis['/config'+str(path)] = print_api(node, config, schema, path)
-            elif node.keyword == 'container':
+            else:
                 apis['/config'+str(path)] = print_api(node, config, schema, path)
         else:
             # If the container has not a referenced model it is necessary
@@ -378,9 +379,16 @@ def gen_api_node(node, path, apis, definitions):
                                  if ch.keyword == 'uses']
                 schema_out = {'$ref':'#/definitions/' + to_upper_camelcase(
                             ref_model[0].arg)}
-
-
         apis['/operations'+str(path)] = print_rpc(node, schema, schema_out)
+        return apis
+
+    elif node.keyword == 'notification':
+        ref_model = [ch for ch in node.substmts
+                         if ch.keyword == 'uses']
+        schema_out = {'$ref':'#/definitions/' + to_upper_camelcase(
+                    ref_model[0].arg)}
+
+        apis['/streams'+str(path)] = print_notification(node, schema_out)
         return apis
 
     # Generate APIs for children.
@@ -404,6 +412,13 @@ def gen_typedefs(typedefs):
                 else:
                     type['type'] = 'string'
         TYPEDEFS[typedef.arg    ] = type
+
+def print_notification(node, schema_out):
+    operations = {}
+    operations['get'] = generate_retrieve(node, schema_out, None)
+    operations['get']['schemes'] = ['ws']
+
+    return operations
 
 def print_rpc(node, schema_in, schema_out):
     operations = {}
@@ -450,7 +465,8 @@ def get_input_path_parameters(path):
 
 def generate_create(stmt, schema, path):
     """ Generates the create function definitions."""
-    path_params = get_input_path_parameters(path)
+    if path:
+        path_params = get_input_path_parameters(path)
     put = {}
     generate_api_header(stmt, put, 'Create')
     # Input parameters
@@ -469,13 +485,16 @@ def generate_create(stmt, schema, path):
 
 def generate_retrieve(stmt, schema, path):
     """ Generates the retrieve function definitions."""
-    path_params = get_input_path_parameters(path)
+    if path:
+        path_params = get_input_path_parameters(path)
     get = {}
     generate_api_header(stmt, get, 'Retrieve', stmt.keyword == 'container'
                         and not path_params)
-    if path_params:
-        # Input parameters
+    if path:
         get['parameters'] = create_parameter_list(path_params)
+    else:
+        get['parameters'] = []
+
     # Responses
     response = create_responses(stmt.arg, schema)
     get['responses'] = response
