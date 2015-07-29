@@ -56,6 +56,8 @@ def translateRequest(js):
             ids[method]['resp']=js["paths"][path][method]['responses']
             ids[method]['body']=False
             ids[method]['json']=False
+            if 'schemes' in js["paths"][path][method].keys():
+                ids[method]['schemes'] = js["paths"][path][method]['schemes']
             if "parameters" in js["paths"][path][method].keys():
                 for param in js["paths"][path][method]['parameters']:
                     if "body" in param['in']:
@@ -141,6 +143,16 @@ def tab(n):
     return "    "*n
 
 
+def getNotificationAPIs(data):
+    notification_urls = []
+    for element in data['paths']:
+        methods = data['paths'][element]['methods']
+        for method in methods:
+            if 'schemes' in methods[method].keys():
+                if 'ws' in methods[method]['schemes']:
+                    notification_urls.append(data['paths'][element])
+    return notification_urls
+
 def generateParameters(inlineVars):
     ret="(self,"
     for var in inlineVars:
@@ -185,9 +197,108 @@ def generateServerStub(restname, data, services, path):
     out_server.close()
 
 
-def generateRESTapi(data, name, imp, restname, params, services, path):
+def generateNotificationServer(name, data, notfy_urls, path):
+    line="\n"
+    index = 1
+    out_server = open(path+name+".py","w+")
+    out_server.write("from twisted.internet import reactor"+line)
+    out_server.write("from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS"+line)
+    out_server.write("from autobahn.websocket.http import HttpException"+line+line+line)
+    out_server.write("class BaseService:"+line+line)
+    out_server.write(tab(index)+"def __init__(self, proto):"+line)
+    index+=1
+    out_server.write(tab(index)+"self.proto = proto"+line+line)
+    index-=1
+    out_server.write(tab(index)+"def onOpen(self):"+line)
+    index+=1
+    out_server.write(tab(index)+"pass"+line+line)
+    index-=1
+    out_server.write(tab(index)+"def onClose(self, wasClean, code, reason):"+line)
+    index+=1
+    out_server.write(tab(index)+"pass"+line+line)
+    index-=1
+    out_server.write(tab(index)+"def onMessage(self, payload, isBinary):"+line)
+    index+=1
+    out_server.write(tab(index)+"pass"+line+line+line)
+    index-=2
+    dictio = {}
+    base_url = ''
+    for element in notfy_urls:
+        base_url = '/'.join(element['url'].split('/')[:-2])
+        url = to_upper_camelcase(element['url'].split('/')[-2])+"Service"
+        lower_url = "/"+to_lower_camelcase(element['url'].split('/')[-2])+"Service"
+        dictio[str(base_url)+str(lower_url)] = str(url)
+        out_server.write(tab(index)+"class "+url+" (BaseService):"+line+line)
+        index+=1
+        out_server.write(tab(index)+"def onMessage(self, payload, isBinary):"+line)
+        index+=1
+        out_server.write(tab(index)+"pass"+line+line+line)
+        index-=2
+
+    out_server.write(tab(index)+"class ServiceServerProtocol(WebSocketServerProtocol):"+line+line)
+    index+=1
+    out_server.write(tab(index)+"SERVICEMAP = {")
+    for element in dictio:
+        out_server.write("\'"+str(element)+"\' : "+str(dictio[element])+",")
+    out_server.write("}"+line+line)
+    out_server.write(tab(index)+"def __init__(self):"+line)
+    index+=1
+    out_server.write(tab(index)+"self.service = None"+line+line)
+    index-=1
+    out_server.write(tab(index)+"def onConnect(self, request):"+line)
+    index+=1
+    out_server.write(tab(index)+"if request.path in self.SERVICEMAP:"+line)
+    index+=1
+    out_server.write(tab(index)+"cls = self.SERVICEMAP[request.path]"+line)
+    out_server.write(tab(index)+"self.service = cls(self)"+line)
+    index-=1
+    out_server.write(tab(index)+"else:"+line)
+    index+=1
+    out_server.write(tab(index)+"err = \"No service under %s\" % request.path"+line)
+    out_server.write(tab(index)+"print(err)"+line)
+    out_server.write(tab(index)+"raise HttpException(404, err)"+line+line)
+    index-=2
+    out_server.write(tab(index)+"def onOpen(self):"+line)
+    index+=1
+    out_server.write(tab(index)+"if self.service:"+line)
+    index+=1
+    out_server.write(tab(index)+"self.service.onOpen()"+line+line)
+    index-=2
+    out_server.write(tab(index)+"def onMessage(self, payload, isBinary):"+line)
+    index+=1
+    out_server.write(tab(index)+"if self.service:"+line)
+    index+=1
+    out_server.write(tab(index)+"self.service.onMessage(payload, isBinary)"+line+line)
+    index-=2
+    out_server.write(tab(index)+"def onClose(self, wasClean, code, reason):"+line)
+    index+=1
+    out_server.write(tab(index)+"if self.service:"+line)
+    index+=1
+    out_server.write(tab(index)+"self.service.onClose(wasClean, code, reason)"+line+line+line)
+    index-=3
+    out_server.write(tab(index)+"class NotificationServerFactory():"+line+line)
+    index+=1
+    out_server.write(tab(index)+"def __init__(self):"+line)
+    index+=1
+    out_server.write(tab(index)+"factory = WebSocketServerFactory(\'ws://localhost:8181\')"+line)
+    out_server.write(tab(index)+"factory.protocol = ServiceServerProtocol"+line)
+    out_server.write(tab(index)+"listenWS(factory)"+line)
+    out_server.write(tab(index)+"try:"+line)
+    index +=1
+    out_server.write(tab(index)+"reactor.run()"+line)
+    index -=1
+    out_server.write(tab(index)+"except KeyboardInterrupt:"+line)
+    index +=1
+    out_server.write(tab(index)+"reactor.stop()"+line)
+    out_server.close()
+
+
+
+def generateRESTapi(data, name, imp, restname, params, services, path, notfy_urls):
     #if not os.path.isfile("server.py"):
     generateServerStub("server", data, services, path)
+    if notfy_urls:
+        generateNotificationServer("notification_factory", data, notfy_urls, path)
 
     line="\n"
     index=0
@@ -713,7 +824,8 @@ else:
         if service not in services:
             services.append(service)
         jsret2=translateRequest(js)
-        ret=generateRESTapi(jsret2,name,imp, restname,params, services, path)
+        notfy_urls = getNotificationAPIs(jsret2)
+        ret=generateRESTapi(jsret2,name,imp, restname,params, services, path, notfy_urls)
         generateCallableClasses(ret,jsret2, imp, restname, path)
     servicefile=open(path+".cop/services.json", 'w+')
     servicefile.write(json.dumps(services))
