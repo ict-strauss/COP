@@ -14,22 +14,6 @@ module service-call {
         "Service call module for STRAUSS";
     }
 
-    typedef qos_class_enumeration {
-        type enumeration {
-            enum premium {
-                description "Premium QoS Class";
-                value 1;
-            }
-            enum gold {
-                description "Gold QoS Class";
-                value 2;
-            }
-            enum silver {
-                description "Silver QoS Class";
-                value 3;
-            }
-        }
-    }
 
     typedef transport_layer_type_enumeration {
         type enumeration {
@@ -284,22 +268,18 @@ module service-call {
         }*/
     }
 
-    grouping traffic_params{
-        description "Basic Traffic Parameters to be offered within a Call";
+	grouping traffic_params{
+		description "Basic Traffic Parameters to be offered within a Call";
 
-        leaf reserved_bandwidth {
-            description "Reserved Bandwidth measured in Mb/s i.e. 10, 100, 1000 Mb/s";
+		leaf reserved_bandwidth {
+			description "Reserved Bandwidth measured in Mb/s i.e. 10, 100, 1000 Mb/s";
             type int32;
         }
-        leaf latency {
-            description "Connection latency measured in ms";
+		leaf latency {
+			description "Connection latency measured in ms";
             type int32;
         }
-        leaf qos_class {
-            description "QoS Service class";
-            type qos_class_enumeration;
-        }
-    }
+	}
 
     grouping connection {
         description "The Connection represents an enabled potential for forwarding (including all circuit and packet forms) between two or more endpoints";
@@ -397,6 +377,14 @@ module service-call {
         }
     }
 
+    notification update_call{
+        uses call;
+    }
+
+    notification remove_call{
+        uses call;
+    }
+
     container calls{
         config false;
         list call {
@@ -404,7 +392,6 @@ module service-call {
             uses call;
         }
     }
-    
     container connections{
         config false;
         list connection {
