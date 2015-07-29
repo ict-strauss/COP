@@ -240,8 +240,8 @@ def gen_model(children, tree_structure):
                     ref = to_upper_camelcase(attribute.arg)
                     ref = '#/definitions/' + ref
                     if str(child.keyword) == 'list':
-                        node['additionalProperties'] = {'$ref': ref}
-                        node['type'] = 'object'
+                        node['items'] = {'$ref': ref}
+                        node['type'] = 'array'
                         referenced = True
                     elif str(child.keyword) == 'grouping':
                         ref = to_upper_camelcase(attribute.arg)
