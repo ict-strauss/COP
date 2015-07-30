@@ -385,8 +385,11 @@ def generateClasses(data, restname, path):
 
         imports = klass['imports']
         if 'extend_class' in klass:
+            superclass_name = klass['extend_class']
             klass['imports'].append(klass['extend_class'])
         else:
+            superclass_name = 'JsonObject'
+            import_list.append(ImportObject('objects_common.jsonObject', 'JsonObject'))
             for klass2 in data:
                 if 'extend_class' in klass2 and klass2['extend_class'] in klass['imports']:
                     imports.append(klass2['class'])
@@ -396,25 +399,24 @@ def generateClasses(data, restname, path):
             imp_file = imp[0].lower()+imp[1:]
             import_list.append(ImportObject(imp_file, imp))
 
-        import_list.append(ImportObject('objects_common.jsonObject', 'JsonObject'))
-        import_list.append(ImportObject('objects_common.arrayType', 'ArrayType'))
-        import_list.append(ImportObject('objects_common.enumType', 'EnumType'))
-
-        # determine superclass
-        if 'extend_class' in klass:
-            superclass_name = klass['extend_class']
-        else:
-            superclass_name = 'JsonObject'
-
         # attributes
+        import_array = False
         for att in klass['atts']:
             attribute_list.append(AttributeObject(att['att'], generateAttributeValue(att)))
+            if "array" in att['type']:
+                import_array = True
+        if import_array:
+            import_list.append(ImportObject('objects_common.arrayType', 'ArrayType'))
 
         # enums
+        import_enum = False
         for att in klass['atts']:
             if "enum" in att['type']:
                 enum_values = [ '\'' + x + '\'' for x in att['other'] ]
                 enum_list.append(EnumObject(att['att'].capitalize(), enum_values))
+                import_enum = True
+        if import_enum:
+            import_list.append(ImportObject('objects_common.enumType', 'EnumType'))
 
         # use jinja
         template = jinja_env.get_template('object.py')
