@@ -25,6 +25,20 @@ urls = (
 users = {{users}}
 {% endif %}
 
+def byteify(input):
+    # Convert JSON unicode strings to python byte strings
+    if isinstance(input, dict):
+        return {byteify(key):byteify(value) for key,value in input.iteritems()}
+    elif isinstance(input, list):
+        return [byteify(element) for element in input]
+    elif isinstance(input, unicode):
+        return input.encode('utf-8')
+    else:
+        return input
+
+def json_loads(input):
+    return byteify(json.loads(input))
+
 class NotFoundError(web.HTTPError):
     def __init__(self,message):
         status = '404 '+message
@@ -82,7 +96,7 @@ class {{callback.name}}:
         {% if method.web_data_body %}
         json_string=web.data() #data in body
             {% if method.json_parser %}
-        json_struct=json.loads(json_string) #json parser.
+        json_struct=json_loads(json_string) #json parser.
         input={{method.new_object}}(json_struct) #It creates an object instance from the json_struct data."
                 {% if method.response %}
         response={{callback.name}}Impl.{{method.name}}({{method.impl_arguments}}, input)

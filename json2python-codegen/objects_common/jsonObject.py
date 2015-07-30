@@ -41,7 +41,8 @@ class JsonObject(object):
                         raise TypeError
                 elif type(json_struct[key]) is dict:
                     # object
-                    if type(getattr(self, key)) == JsonObject:
+                    #if superclass type(getattr(self, key)) == JsonObject:
+                    if hasattr(getattr(self, key), 'load_json'):
                         getattr(self, key).load_json(json_struct[key])
                     else:
                         raise TypeError
