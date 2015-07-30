@@ -22,13 +22,16 @@ class EnumType(object):
         # The value to set can be either a string or an integer
         if type(value) is str:
             # This will raise ValueError for wrong assignments
-            self.value = type(self).possible_values.index(value)
+            try:
+                self.value = type(self).possible_values.index(value)
+            except ValueError:
+                raise ValueError(value, type(self).possible_values)
         elif type(value) is int:
             if value >= 1 and value <= type(self).range_end:
                 # External representation of Enum starts at 1, internal at 0
                 value = value - 1
                 self.value = value
             else:
-                raise ValueError
+                raise ValueError(value, type(self).range_end)
         else:
             raise TypeError

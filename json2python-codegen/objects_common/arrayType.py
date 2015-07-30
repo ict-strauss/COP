@@ -4,8 +4,25 @@ class ArrayType(list):
         super(ArrayType, self).__init__()
         self.klass = klass
 
-    def append_new(self, *args, **kwargs):
-        self.append(self.klass(*args, **kwargs))
+    def append_new(self, json_struct):
+        if hasattr(self.klass, 'load_json'):
+            # object
+            if type(json_struct) != dict:
+                raise TypeError(json_struct, 'object')
+            else:
+                self.append(self.klass(json_struct))
+        elif hasattr(self.klass, 'set'):
+            # enum
+            if type(json_struct) not in [str, int]:
+                raise TypeError(json_struct, 'enum (integer or string)')
+            else:
+                self.append(self.klass(json_struct))
+        else:
+            # basic type
+            if type(json_struct) != self.klass:
+                raise TypeError(json_struct, str(self.klass)[7:-2])
+            else:
+                self.append(self.klass(json_struct))
 
     def serialize_json(self):
         ret = []

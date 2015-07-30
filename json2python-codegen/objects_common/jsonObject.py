@@ -26,35 +26,46 @@ class JsonObject(object):
         for key in json_struct:
             # Check if there is an attribute in this object that has the name of the key
             if key in self._child_objects:
-                # Execute different actions depending on the type of the key,
+                # Execute different actions depending on the type of the attribute,
                 # always check if the type of the key matches the type of the attribute
-                if type(json_struct[key]) is list:
+                #if type(getattr(self, key)) is ArrayType:
+                if hasattr(getattr(self, key), 'append_new'):
                     # array
-                    #if type(getattr(self, key)) is ArrayType:
-                    if hasattr(getattr(self, key), 'append_new'):
+                    if type(json_struct[key]) is list:
                         for element in json_struct[key]:
                             # Instantiate new object of the class
                             # Initialize from json
                             # Append to the list
-                            getattr(self, key).append_new(json_struct=element)
+                            try:
+                                getattr(self, key).append_new(json_struct=element)
+                            except TypeError as inst:
+                                raise TypeError(key + '[...]', inst.args[0], inst.args[1])
+                            except ValueError as inst:
+                                raise ValueError(key + '[...]', inst.args[0], inst.args[1])
                     else:
-                        raise TypeError
-                elif type(json_struct[key]) is dict:
+                        raise TypeError(key, json_struct[key], 'array')
+                #if superclass type(getattr(self, key)) == JsonObject:
+                elif hasattr(getattr(self, key), 'load_json'):
                     # object
-                    #if superclass type(getattr(self, key)) == JsonObject:
-                    if hasattr(getattr(self, key), 'load_json'):
+                    if type(json_struct[key]) is dict:
                         getattr(self, key).load_json(json_struct[key])
                     else:
-                        raise TypeError
+                        raise TypeError(key, json_struct[key], 'object')
                 #elif type(getattr(self, key)) is EnumType:
                 elif hasattr(getattr(self, key), 'set'):
                     # enum
-                    getattr(self, key).set(json_struct[key])
+                    if type(json_struct[key]) in [str, int]:
+                        try:
+                            getattr(self, key).set(json_struct[key])
+                        except ValueError as inst:
+                            raise ValueError(key, inst.args[0], inst.args[1])
+                    else:
+                        raise TypeError(key, json_struct[key], 'enum (integer or string)')
                 else:
                     # basic type
                     if type(json_struct[key]) == type(getattr(self, key)):
                         setattr(self, key, json_struct[key])
                     else:
-                        raise TypeError
+                        raise TypeError(key, json_struct[key], str(type(getattr(self, key)))[7:-2])
             else:
-                raise KeyError
+                raise KeyError(key)

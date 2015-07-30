@@ -39,6 +39,35 @@ def byteify(input):
 def json_loads(input):
     return byteify(json.loads(input))
 
+def create_instance(klass, json_struct):
+    try:
+        new_object=klass(json_struct) #It creates an object instance from the json_struct data.
+    except KeyError as inst:
+        raise BadRequestError("Unknown entity name in JSON:" + "<br>" + inst.args[0])
+    except TypeError as inst:
+        key = inst.args[0]
+        value = json.dumps(inst.args[1])
+        raise BadRequestError("Incorrect type in JSON:" + "<br>" +
+                              key + " was:" + "<br>" +
+                              value + "<br>" +
+                              "Allowed type:" + "<br>" +
+                              inst.args[2])
+    except ValueError as inst:
+        if type(inst.args[1]) == str:
+            raise BadRequestError("Incorrect value in JSON:" + "<br>" +
+                                  "Enum " + inst.args[0] + " was:" + "<br>" +
+                                  inst.args[1] + "<br>" +
+                                  "Allowed values:" + "<br>" +
+                                  "[" + ", ".join(inst.args[2]) + "]")
+        elif type(inst.args[1]) == int:
+            raise BadRequestError("Incorrect value in JSON:" + "<br>" +
+                                  "Enum " + inst.args[0] + " was:" + "<br>" +
+                                  str(inst.args[1]) + "<br>" +
+                                  "Allowed range:" + "<br>" +
+                                  "1 - " + str(inst.args[2]))
+    else:
+        return new_object
+
 class NotFoundError(web.HTTPError):
     def __init__(self,message):
         status = '404 '+message
