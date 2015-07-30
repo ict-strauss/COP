@@ -39,6 +39,9 @@ def byteify(input):
 def json_loads(input):
     return byteify(json.loads(input))
 
+def json_dumps(js):
+    return json.dumps(js, sort_keys=True, indent=4, separators=(',', ': '))
+
 def create_instance(klass, json_struct):
     try:
         new_object=klass(json_struct) #It creates an object instance from the json_struct data.

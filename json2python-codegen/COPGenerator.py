@@ -161,9 +161,9 @@ def tab(n):
 def handleResponse(ident, description, schema=None):
     if "200" in ident:
         if schema!=None:
-            return 'raise Successful("'+description+'",json.dumps(js))'
+            return 'raise Successful("'+description+'",json_dumps(js))'
         else:
-            return 'raise Successful("'+description+'",json.dumps(js))'
+            return 'raise Successful("'+description+'",json_dumps(js))'
     elif "404" in ident:
         return 'raise NotFoundError("'+description+'")'
     elif "400" in ident:
