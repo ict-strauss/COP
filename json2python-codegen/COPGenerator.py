@@ -179,6 +179,8 @@ def generateServerStub(restname, data, services, path):
     line="\n"
     out_server = open(path+restname+".py","w+")
     out_server.write("import web"+line)
+    out_server.write("import thread"+line)
+    out_server.write("from notification_factory import NotificationServerFactory"+line)
     out_server.write("## EXAMPLE IMPORT SERVER MODELS"+line)
     urls="urls = "
     for serv in services:
@@ -191,6 +193,7 @@ def generateServerStub(restname, data, services, path):
     out_server.write("##EXAMPLE import urls in the server "+line)
     out_server.write(urls)
     out_server.write("app = MyApplication(urls, globals())"+line+line)
+    out_server.write("nf = thread.start_new_thread(NotificationServerFactory,())"+line+line)
 
     out_server.write("if __name__ == \"__main__\":"+line)
     out_server.write(tab(1)+"app.run("+str(data['port'])+")"+line)
@@ -211,7 +214,7 @@ def generateNotificationServer(name, data, notfy_urls, path):
     index-=1
     out_server.write(tab(index)+"def onOpen(self):"+line)
     index+=1
-    out_server.write(tab(index)+"pass"+line+line)
+    out_server.write(tab(index)+"pass"+line+line+line)
     index-=1
     out_server.write(tab(index)+"def onClose(self, wasClean, code, reason):"+line)
     index+=1
@@ -230,9 +233,20 @@ def generateNotificationServer(name, data, notfy_urls, path):
         dictio[str(base_url)+str(lower_url)] = str(url)
         out_server.write(tab(index)+"class "+url+" (BaseService):"+line+line)
         index+=1
+    	out_server.write(tab(index)+"def onOpen(self):"+line)
+		index+=1
+		out_server.write(tab(index)+"backend = "+name_classes[element['url']]+"Impl(self.proto)"+line)
+		out_server.write(tab(index)+"backend.start()"+line)
+		out_server.write(tab(index)+"thread.start_new_thread(self.onAsyncronousEvent,(backend,5))"+line+line)
+		index-=1
         out_server.write(tab(index)+"def onMessage(self, payload, isBinary):"+line)
         index+=1
         out_server.write(tab(index)+"pass"+line+line+line)
+		index-=1
+		out_server.write(tab(index)+"def onAsyncronousEvent(self, backend, timer):"+line)
+		index+=1
+		out_server.write(tab(index)+"time.sleep(timer)"+line)
+		out_server.write(tab(index)+"backend.set_event(False)"+line+line+line)
         index-=2
 
     out_server.write(tab(index)+"class ServiceServerProtocol(WebSocketServerProtocol):"+line+line)
@@ -243,6 +257,7 @@ def generateNotificationServer(name, data, notfy_urls, path):
     out_server.write("}"+line+line)
     out_server.write(tab(index)+"def __init__(self):"+line)
     index+=1
+    out_server.write(tab(index)+"super(ServiceServerProtocol, self).__init__()"+line)
     out_server.write(tab(index)+"self.service = None"+line+line)
     index-=1
     out_server.write(tab(index)+"def onConnect(self, request):"+line)
@@ -285,7 +300,7 @@ def generateNotificationServer(name, data, notfy_urls, path):
     out_server.write(tab(index)+"listenWS(factory)"+line)
     out_server.write(tab(index)+"try:"+line)
     index +=1
-    out_server.write(tab(index)+"reactor.run()"+line)
+    out_server.write(tab(index)+"reactor.run(installSignalHandlers=0)"+line)
     index -=1
     out_server.write(tab(index)+"except KeyboardInterrupt:"+line)
     index +=1
@@ -299,6 +314,13 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
     generateServerStub("server", data, services, path)
     if notfy_urls:
         generateNotificationServer("notification_factory", data, notfy_urls, path)
+        urls = [element['url'] for element in notfy_urls]
+        data_prov={}
+        for entry in data['paths']:
+            if data['paths'][entry]['url'] not in urls:
+                data_prov[entry] = data['paths'][entry]
+
+        data['paths'] = data_prov
 
     line="\n"
     index=0
@@ -692,10 +714,57 @@ def generateCallableClasses(funcs, data, imp, restname, path):
         out=open(path+"funcs_"+restname+"/__init__.py","w+")
         out.write(line)
         out.close()
+
+	if notfy_urls:
+        name_classes = {}
+        params_callback = {}
+        for func in notfy_urls:
+            index=0
+            resp_model = func['methods']['get']['resp']['200']['schema']['$ref'].split('/')[-1]
+            list_element_url = func['url'].split('/')
+            indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
+            name_classes[func['url']] = "".join([element.title() for i,element in enumerate(list_element_url[3:-1])])
+            if os.path.isfile(path+"funcs_"+restname+"/"+name_classes[func['url']][0].lower()+""+name_classes[func['url']][1:]+"Impl.py"): #if exists, don't create
+                print "funcs_"+restname+"/"+name_classes[func['url']][0].lower()+name_classes[func['url']][1:]+"Impl.py already exists, not overwrite"
+            else:
+                out=open(path+"funcs_"+restname+"/"+name_classes[func['url']][0].lower()+name_classes[func['url']][1:]+"Impl.py","w+")
+
+                out.write("import os.path, sys"+line)
+                out.write("import threading"+line)
+                out.write("import json"+line)
+                out.write("import time"+line)
+                out.write("sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))"+line+line)
+                for im in imp:
+                    if im == resp_model:
+                        out.write("from objects_"+restname+"."+im[0].lower()+im[1:]+" import "+im+line)
+
+                out.write(line+line+"class "+name_classes[func['url']]+"Impl (threading.Thread):"+line)
+                index+=1
+                out.write(tab(index)+"def __init__(self, handler):"+line)
+                index+=1
+                out.write(tab(index)+"threading.Thread.__init__(self)"+line)
+                out.write(tab(index)+"self.event = True"+line)
+                out.write(tab(index)+"self.handler = handler"+line+line)
+                index-=1
+                out.write(tab(index)+"def set_event(self, event):"+line)
+                index+=1
+                out.write(tab(index)+"print 'Event received'"+line)
+                out.write(tab(index)+"self.event = event"+line+line)
+                index-=1
+                out.write(tab(index)+"def run(self):"+line)
+                index+=1
+                out.write(tab(index)+"while self.event:"+line)
+                index+=1
+                out.write(tab(index)+"time.sleep(1)"+line+line)
+                index-=1
+                out.write(tab(index)+"payload = json.dumps("+resp_model+"(json_string={'callId':'Example_"+name_classes[func['url']]+"'}).json_serializer(), ensure_ascii = False).encode('utf8')"+line)
+                out.write(tab(index)+"self.handler.sendMessage(payload, False)"+line)
+
     index=0
     info=data['paths']
     name_classes = {}
     params_callback = {}
+
     for func in info.keys():
         # Here we generate the name of the class_name and its related callback_name to the backend program based on the API syntax of each function.
         list_element_url = info[func]['url'].split('/')
