@@ -12,3 +12,7 @@ a main example where two separated websocket clients are generated and connected
   * ws://localhost:8181/restconf/streams/updateServiceCall
 
 The clients connect to the websocket server and wait for a notification_stream arrives.
+
+This example can be easily launch as a python script as:
+
+ >> python notificationClientFactory.py
