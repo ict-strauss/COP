@@ -268,8 +268,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         # Create funcs with inlineVars
         ret[func+"Handle"]=[]
 
-        arguments = ['self'] + info[func]["inlineVars"]
-        impl_arguments = info[func]["inlineVars"]
+        arguments = info[func]["inlineVars"]
 
         methods = {}
         for method in info[func]['methods'].keys():
@@ -295,7 +294,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         url = info[func]['url']
         name = name_classes[func]
         thing = 'Thing'
-        callback_list.append(CallbackObject(name, url, methods, arguments, impl_arguments, thing))
+        callback_list.append(CallbackObject(name, url, methods, arguments, thing))
 
     if params.isAuth:
         auth=True

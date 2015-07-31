@@ -126,7 +126,7 @@ class basicauth:
 class {{callback.name}}:
     {% if callback.methods.put %}
 
-    def PUT({{callback.arguments|join(', ')}}):
+    def PUT(self, {{callback.arguments|join(', ')}}):
         {% if auth %}
         if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
             web.header('WWW-Authenticate','Basic realm="Auth example"')
@@ -144,13 +144,13 @@ class {{callback.name}}:
         {% else %}
         new_object=create_instance({{callback.methods.put.new_object}}, json_struct)
         {% endif %}
-        {{callback.name}}Impl.put({{callback.impl_arguments|join(', ')}}, new_object)
+        {{callback.name}}Impl.put({{callback.arguments|join(', ')}}, new_object)
         js=new_object.serialize_json()
         raise Successful("Successful operation",json_dumps(js))
     {% endif %}
     {% if callback.methods.post %}
 
-    def POST({{callback.arguments|join(', ')}}):
+    def POST(self, {{callback.arguments|join(', ')}}):
         {% if auth %}
         if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
             web.header('WWW-Authenticate','Basic realm="Auth example"')
@@ -168,13 +168,13 @@ class {{callback.name}}:
         {% else %}
         new_object=create_instance({{callback.methods.post.new_object}}, json_struct)
         {% endif %}
-        {{callback.name}}Impl.post({{callback.impl_arguments|join(', ')}}, new_object)
+        {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, new_object)
         js=new_object.serialize_json()
         raise Successful("Successful operation",json_dumps(js))
     {% endif %}
     {% if callback.methods.delete %}
 
-    def DELETE({{callback.arguments|join(', ')}}):
+    def DELETE(self, {{callback.arguments|join(', ')}}):
         {% if auth %}
         if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
             web.header('WWW-Authenticate','Basic realm="Auth example"')
@@ -185,7 +185,7 @@ class {{callback.name}}:
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
-        response={{callback.name}}Impl.delete({{callback.impl_arguments|join(', ')}})
+        response={{callback.name}}Impl.delete({{callback.arguments|join(', ')}})
         if response:
             raise Successful('Successful operation')
         else:
@@ -193,7 +193,7 @@ class {{callback.name}}:
     {% endif %}
     {% if callback.methods.get %}
 
-    def GET({{callback.arguments|join(', ')}}):
+    def GET(self, {{callback.arguments|join(', ')}}):
         {% if auth %}
         if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
             web.header('WWW-Authenticate','Basic realm="Auth example"')
@@ -204,7 +204,7 @@ class {{callback.name}}:
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
-        response = {{callback.name}}Impl.get({{callback.impl_arguments|join(', ')}})
+        response = {{callback.name}}Impl.get({{callback.arguments|join(', ')}})
         if response is not None:
             js = response.serialize_json()
             raise Successful("Successful operation",json_dumps(js))
@@ -213,7 +213,7 @@ class {{callback.name}}:
     {% endif %}
     {% if cors %}
 
-    def OPTIONS({{callback.arguments|join(', ')}}):
+    def OPTIONS(self, {{callback.arguments|join(', ')}}):
         web.header('Access-Control-Allow-Origin','{{url}}')
         web.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, Authorization')
         raise Successful('Successful operation','{"description":"Options called CORS"}')
