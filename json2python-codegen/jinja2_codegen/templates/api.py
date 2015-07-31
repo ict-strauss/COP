@@ -124,50 +124,93 @@ class basicauth:
 
 #{{callback.path}}
 class {{callback.name}}:
-    {% for method in callback.method_list %}
-    
-    def {% filter upper %}{{method.name}}{% endfilter %}({{callback.arguments|join(', ')}}):
+    {% if callback.methods.put %}
+
+    def PUT({{callback.arguments|join(', ')}}):
         {% if auth %}
         if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
             web.header('WWW-Authenticate','Basic realm="Auth example"')
             web.ctx.status = '401 Unauthorized'
             return 'Unauthorized'
         {% endif %}
-        print "{{method.printstr}}"
+        print "{{callback.methods.put.printstr}}"
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
-        {% if method.web_data_body %}
-        json_string=web.data()
-            {% if method.json_parser %}
-        json_struct=json_loads(json_string)
-                {% if method.check_id %}
-        new_object=create_instance({{method.new_object}}, json_struct, ({{callback.arguments|last()}},'{{callback.arguments|last()}}'))
-                {% else %}
-        new_object=create_instance({{method.new_object}}, json_struct)
-                {% endif %}
-                {% if method.response %}
-        response={{callback.name}}Impl.{{method.name}}({{method.impl_arguments}}, new_object)
-                {% else %}
-        response={{callback.name}}Impl.{{method.name}}(new_object)
-                {% endif %}
-            {% else %}
-            {% endif %}
+        json_string = web.data()
+        json_struct = json_loads(json_string)
+        {% if callback.methods.put.check_id %}
+        new_object = create_instance({{callback.methods.put.new_object}}, json_struct, ({{callback.arguments|last()}},'{{callback.arguments|last()}}'))
         {% else %}
-        response={{callback.name}}Impl.{{method.name}}({{method.impl_arguments}})
+        new_object=create_instance({{callback.methods.put.new_object}}, json_struct)
         {% endif %}
-        {% if method.web_data_body and method.json_parser%}
-        js = new_object.serialize_json()
+        {{callback.name}}Impl.put({{callback.impl_arguments}}, new_object)
+        js=new_object.serialize_json()
         raise Successful("Successful operation",json_dumps(js))
+    {% endif %}
+    {% if callback.methods.post %}
+
+    def POST({{callback.arguments|join(', ')}}):
+        {% if auth %}
+        if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
+            web.header('WWW-Authenticate','Basic realm="Auth example"')
+            web.ctx.status = '401 Unauthorized'
+            return 'Unauthorized'
         {% endif %}
-        {% for resp in method.responses %}
-            {% if resp.jotason %}
-        #js={} #Uncomment to create json response
-            {% endif %}
-        #{{resp.handleResp}} #Uncomment to handle responses
-        {% endfor %}
-        #raise Successful('Successful operation','{"description":"{{method.printstr}}"}')
-    {% endfor %}
+        print "{{callback.methods.post.printstr}}"
+        {% if cors %}
+        web.header('Access-Control-Allow-Origin','{{url}}')
+        {% endif %}
+        json_string=web.data()
+        json_struct=json_loads(json_string)
+        {% if callback.methods.post.check_id %}
+        new_object=create_instance({{callback.methods.post.new_object}}, json_struct, ({{callback.arguments|last()}},'{{callback.arguments|last()}}'))
+        {% else %}
+        new_object=create_instance({{callback.methods.post.new_object}}, json_struct)
+        {% endif %}
+        {{callback.name}}Impl.post({{callback.impl_arguments}}, new_object)
+        js=new_object.serialize_json()
+        raise Successful("Successful operation",json_dumps(js))
+    {% endif %}
+    {% if callback.methods.delete %}
+
+    def DELETE({{callback.arguments|join(', ')}}):
+        {% if auth %}
+        if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
+            web.header('WWW-Authenticate','Basic realm="Auth example"')
+            web.ctx.status = '401 Unauthorized'
+            return 'Unauthorized'
+        {% endif %}
+        print "{{callback.methods.delete.printstr}}"
+        {% if cors %}
+        web.header('Access-Control-Allow-Origin','{{url}}')
+        {% endif %}
+        response={{callback.name}}Impl.delete({{callback.impl_arguments}})
+        if response:
+            raise Successful('Successful operation')
+        else:
+            raise NotFoundError("{{callback.thing}} not found")
+    {% endif %}
+    {% if callback.methods.get %}
+
+    def GET({{callback.arguments|join(', ')}}):
+        {% if auth %}
+        if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
+            web.header('WWW-Authenticate','Basic realm="Auth example"')
+            web.ctx.status = '401 Unauthorized'
+            return 'Unauthorized'
+        {% endif %}
+        print "{{callback.methods.get.printstr}}"
+        {% if cors %}
+        web.header('Access-Control-Allow-Origin','{{url}}')
+        {% endif %}
+        response = {{callback.name}}Impl.get({{callback.impl_arguments}})
+        if response is not None:
+            js = response.serialize_json()
+            raise Successful("Successful operation",json_dumps(js))
+        else:
+            raise NotFoundError("{{callback.thing}} not found")
+    {% endif %}
     {% if cors %}
 
     def OPTIONS({{callback.arguments|join(', ')}}):

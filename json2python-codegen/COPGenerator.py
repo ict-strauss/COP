@@ -267,50 +267,34 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
     for func in info.keys():
         # Create funcs with inlineVars
         ret[func+"Handle"]=[]
-        method_list = []
+        if len(params_callback[func]) > 0:
+            impl_arguments = params_callback[func]
         arguments = ['self'] + info[func]["inlineVars"]
+        methods = {}
         for method in info[func]['methods'].keys():
             ret[func+"Handle"].append(method)
-            name = method
-            printstr = info[func]['methods'][method]['desc']
-            new_object = None
-            impl_arguments = None
-            json_parser = None
-            response = None
-            check_id = False
-            if info[func]['methods'][method]['body']:
-                web_data_body = True
-                if info[func]['methods'][method]['json']:
-                    json_parser = True
-                    new_object = info[func]['methods'][method]['in_params'][0]
-                    # Find out if the last element in the url is an id that must be checked.
-                    if [regex_string] == info[func]['url'].split('/')[-2:-1]:
-                        check_id = True
-                    if len(params_callback[func]) > 0:
-                        response = True
-                        impl_arguments = params_callback[func]
-                    else:
-                        response = False
-                else:
-                    json_parser = False
+            methods[str(method)] = {}
+            methods[str(method)]['printstr'] = info[func]['methods'][method]['desc']
+            if method == 'put':
+                methods['put']['new_object'] = info[func]['methods'][method]['in_params'][0]
+                # Find out if the last element in the url is an id that must be checked.
+                if [regex_string] == info[func]['url'].split('/')[-2:-1]:
+                    methods['put']['check_id'] = True
+            elif method == 'post':
+                methods['post']['new_object'] = info[func]['methods'][method]['in_params'][0]
+                # Find out if the last element in the url is an id that must be checked.
+                if [regex_string] == info[func]['url'].split('/')[-2:-1]:
+                    methods['post']['check_id'] = True
+            elif method == 'delete':
+                pass
+            elif method == 'get':
+                pass
             else:
-                web_data_body = False
-                impl_arguments = params_callback[func]
-            response_list = []
-            for resp in info[func]['methods'][method]["resp"].keys():
-                if "schema" in info[func]['methods'][method]["resp"][resp].keys():
-                    handleResp = handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'], info[func]['methods'][method]["resp"][resp]["schema"])
-                    jotason = True
-                else:
-                    handleResp = handleResponse(resp, info[func]['methods'][method]["resp"][resp]['description'])
-                    jotason = False
-                response_list.append(ResponseObject(jotason, handleResp))
-            method_list.append(CallbackMethodObject(name, printstr, web_data_body,
-                                                    json_parser, new_object, response, impl_arguments,
-                                                    response_list, check_id))
+                raise NotImplementedError
         url = info[func]['url']
         name = name_classes[func]
-        callback_list.append(CallbackObject(name, url, method_list, arguments))
+        thing = 'Thing'
+        callback_list.append(CallbackObject(name, url, methods, arguments, impl_arguments, thing))
 
     if params.isAuth:
         auth=True
@@ -331,7 +315,6 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
                                       users=users,
                                       cors=cors,
                                       url=url,
-                                      web_data_body=web_data_body,
                                       functions_import_list=functions_import_list,
                                       objects_import_list=objects_import_list,
                                       url_object_list=url_object_list,
