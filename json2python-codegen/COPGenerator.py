@@ -63,9 +63,15 @@ def translateRequest(js):
                     if "body" in param['in']:
                         ids[method]['body']=True
                         if 'in_params' not in ids[method]:
-                            ids[method]['in_params'] = [param['schema']['$ref'].split('/')[-1]]
+                            if 'items' in param['schema']:
+                                ids[method]['in_params'] = [param['schema']['items']['$ref'].split('/')[-1]]
+                            else:
+                                ids[method]['in_params'] = [param['schema']['$ref'].split('/')[-1]]
                         else:
-                            ids[method]['in_params'].append(param['schema']['$ref'].split('/')[-1])
+                            if 'items' in param['schema']:
+                                ids[method]['in_params'].append(param['schema']['items']['$ref'].split('/')[-1])
+                            else:
+                                ids[method]['in_params'].append(param['schema']['$ref'].split('/')[-1])
 
             if "application/json" in js["paths"][path][method]['consumes']:
                 ids[method]['json']=True
@@ -192,10 +198,12 @@ def generateServerStub(restname, data, services, path):
     out_server.write("class MyApplication(web.application):"+line+tab(1)+"def run(self, port=8080, *middleware):"+line+tab(2)+"func = self.wsgifunc(*middleware)\n"+tab(2)+"return web.httpserver.runsimple(func, ('0.0.0.0', port))"+line+line)
     out_server.write("##EXAMPLE import urls in the server "+line)
     out_server.write(urls)
+    out_server.write("def launch_notification_server():"+line)
+    out_server.write(tab(1)+"return thread.start_new_thread(NotificationServerFactory,())"+line+line)
     out_server.write("app = MyApplication(urls, globals())"+line+line)
-    out_server.write("nf = thread.start_new_thread(NotificationServerFactory,())"+line+line)
 
     out_server.write("if __name__ == \"__main__\":"+line)
+    out_server.write(tab(1)+"nf = launch_notification_server()"+line+line)
     out_server.write(tab(1)+"app.run("+str(data['port'])+")"+line)
     out_server.close()
 
