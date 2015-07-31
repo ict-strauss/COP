@@ -207,6 +207,16 @@ def generateNotificationServer(name, data, notfy_urls, path):
     out_server.write("from twisted.internet import reactor"+line)
     out_server.write("from autobahn.twisted.websocket import WebSocketServerFactory, WebSocketServerProtocol, listenWS"+line)
     out_server.write("from autobahn.websocket.http import HttpException"+line+line+line)
+    out_server.write("import time"+line)
+    out_server.write("import thread"+line+line+line)
+
+    name_classes = {}
+    for func in notfy_urls:
+        list_element_url = func['url'].split('/')
+        indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
+        name_classes[func['url']] = "".join([element.title() for i,element in enumerate(list_element_url[3:-1])])
+        out_server.write("from funcs_"+restname+"."+name_classes[func['url']][0].lower()+name_classes[func['url']][1:]+"Impl import "+name_classes[func['url']]+"Impl"+line)
+
     out_server.write("class BaseService:"+line+line)
     out_server.write(tab(index)+"def __init__(self, proto):"+line)
     index+=1
@@ -218,7 +228,7 @@ def generateNotificationServer(name, data, notfy_urls, path):
     index-=1
     out_server.write(tab(index)+"def onClose(self, wasClean, code, reason):"+line)
     index+=1
-    out_server.write(tab(index)+"pass"+line+line)
+    out_server.write(tab(index)+"self.proto.sendClose(code=1000)"+line+line)
     index-=1
     out_server.write(tab(index)+"def onMessage(self, payload, isBinary):"+line)
     index+=1
@@ -233,20 +243,20 @@ def generateNotificationServer(name, data, notfy_urls, path):
         dictio[str(base_url)+str(lower_url)] = str(url)
         out_server.write(tab(index)+"class "+url+" (BaseService):"+line+line)
         index+=1
-    	out_server.write(tab(index)+"def onOpen(self):"+line)
-		index+=1
-		out_server.write(tab(index)+"backend = "+name_classes[element['url']]+"Impl(self.proto)"+line)
-		out_server.write(tab(index)+"backend.start()"+line)
-		out_server.write(tab(index)+"thread.start_new_thread(self.onAsyncronousEvent,(backend,5))"+line+line)
-		index-=1
+        out_server.write(tab(index)+"def onOpen(self):"+line)
+        index+=1
+        out_server.write(tab(index)+"backend = "+name_classes[element['url']]+"Impl(self.proto)"+line)
+        out_server.write(tab(index)+"backend.start()"+line)
+        out_server.write(tab(index)+"thread.start_new_thread(self.onAsyncronousEvent,(backend,5))"+line+line)
+        index-=1
         out_server.write(tab(index)+"def onMessage(self, payload, isBinary):"+line)
         index+=1
         out_server.write(tab(index)+"pass"+line+line+line)
-		index-=1
-		out_server.write(tab(index)+"def onAsyncronousEvent(self, backend, timer):"+line)
-		index+=1
-		out_server.write(tab(index)+"time.sleep(timer)"+line)
-		out_server.write(tab(index)+"backend.set_event(False)"+line+line+line)
+        index-=1
+        out_server.write(tab(index)+"def onAsyncronousEvent(self, backend, timer):"+line)
+        index+=1
+        out_server.write(tab(index)+"time.sleep(timer)"+line)
+        out_server.write(tab(index)+"backend.set_event(False)"+line+line+line)
         index-=2
 
     out_server.write(tab(index)+"class ServiceServerProtocol(WebSocketServerProtocol):"+line+line)
@@ -262,6 +272,7 @@ def generateNotificationServer(name, data, notfy_urls, path):
     index-=1
     out_server.write(tab(index)+"def onConnect(self, request):"+line)
     index+=1
+    out_server.write(tab(index)+"print(\"Client connecting: {0}\".format(request.peer))"+line)
     out_server.write(tab(index)+"if request.path in self.SERVICEMAP:"+line)
     index+=1
     out_server.write(tab(index)+"cls = self.SERVICEMAP[request.path]"+line)
@@ -295,6 +306,7 @@ def generateNotificationServer(name, data, notfy_urls, path):
     index+=1
     out_server.write(tab(index)+"def __init__(self):"+line)
     index+=1
+    out_server.write(tab(index)+"print '\\nRunning notification server in port 8181'"+line)
     out_server.write(tab(index)+"factory = WebSocketServerFactory(\'ws://localhost:8181\')"+line)
     out_server.write(tab(index)+"factory.protocol = ServiceServerProtocol"+line)
     out_server.write(tab(index)+"listenWS(factory)"+line)
@@ -715,7 +727,7 @@ def generateCallableClasses(funcs, data, imp, restname, path):
         out.write(line)
         out.close()
 
-	if notfy_urls:
+    if notfy_urls:
         name_classes = {}
         params_callback = {}
         for func in notfy_urls:
