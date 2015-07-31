@@ -46,7 +46,7 @@ class CallbackObject(object):
 class CallbackMethodObject(object):
     
     def __init__(self, name, printstr, web_data_body, json_parser, new_object, response,
-                 impl_arguments, response_list):
+                 impl_arguments, response_list, check_id):
         self.name = name
         self.printstr = printstr
         self.web_data_body = web_data_body
@@ -55,6 +55,7 @@ class CallbackMethodObject(object):
         self.response = response
         self.impl_arguments = impl_arguments
         self.responses = response_list
+        self.check_id = check_id
 
 class ResponseObject(object):
     

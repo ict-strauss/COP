@@ -26,7 +26,7 @@ users = {{users}}
 {% endif %}
 
 def byteify(input):
-    # Convert JSON unicode strings to python byte strings
+    # Convert JSON unicode strings to python byte strings, recursively on a json_struct
     if isinstance(input, dict):
         return {byteify(key):byteify(value) for key,value in input.iteritems()}
     elif isinstance(input, list):
@@ -36,15 +36,23 @@ def byteify(input):
     else:
         return input
 
-def json_loads(input):
-    return byteify(json.loads(input))
+def json_loads(json_string):
+    # Try to use json.loads and raise HTTP Error
+    try:
+        json_struct = json.loads(json_string) #json parser.
+    except ValueError:
+        raise BadRequestError("Malformed JSON")
+    else:
+        return byteify(json_struct)
 
 def json_dumps(js):
+    # Pretty-print version of json.dumps
     return json.dumps(js, sort_keys=True, indent=4, separators=(',', ': '))
 
-def create_instance(klass, json_struct):
+def create_instance(klass, json_struct, id=None):
+    # Try to create an object instance and raise HTTP Errors
     try:
-        new_object=klass(json_struct) #It creates an object instance from the json_struct data.
+        new_object = klass(json_struct) # Creates an object instance of type klass from the json_struct data
     except KeyError as inst:
         raise BadRequestError("Unknown entity name in JSON:" + "<br>" + inst.args[0])
     except TypeError as inst:
@@ -69,7 +77,11 @@ def create_instance(klass, json_struct):
                                   "Allowed range:" + "<br>" +
                                   "1 - " + str(inst.args[2]))
     else:
-        return new_object
+        # Check if the id given in the URL matches the id given in the body
+        if id != None and id[0] != getattr(new_object, id[1]):
+            raise BadRequestError(id[1] + " in body not matching " + id[1] + " in URL")
+        else:
+            return new_object
 
 class NotFoundError(web.HTTPError):
     def __init__(self,message):
@@ -126,19 +138,27 @@ class {{callback.name}}:
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
         {% if method.web_data_body %}
-        json_string=web.data() #data in body
+        json_string=web.data()
             {% if method.json_parser %}
-        json_struct=json_loads(json_string) #json parser.
-        input={{method.new_object}}(json_struct) #It creates an object instance from the json_struct data."
-                {% if method.response %}
-        response={{callback.name}}Impl.{{method.name}}({{method.impl_arguments}}, input)
+        json_struct=json_loads(json_string)
+                {% if method.check_id %}
+        new_object=create_instance({{method.new_object}}, json_struct, ({{callback.arguments|last()}},'{{callback.arguments|last()}}'))
                 {% else %}
-        response={{callback.name}}Impl.{{method.name}}(input)
+        new_object=create_instance({{method.new_object}}, json_struct)
+                {% endif %}
+                {% if method.response %}
+        response={{callback.name}}Impl.{{method.name}}({{method.impl_arguments}}, new_object)
+                {% else %}
+        response={{callback.name}}Impl.{{method.name}}(new_object)
                 {% endif %}
             {% else %}
             {% endif %}
         {% else %}
         response={{callback.name}}Impl.{{method.name}}({{method.impl_arguments}})
+        {% endif %}
+        {% if method.web_data_body and method.json_parser%}
+        js = new_object.serialize_json()
+        raise Successful("Successful operation",json_dumps(js))
         {% endif %}
         {% for resp in method.responses %}
             {% if resp.jotason %}
@@ -146,7 +166,7 @@ class {{callback.name}}:
             {% endif %}
         #{{resp.handleResp}} #Uncomment to handle responses
         {% endfor %}
-        raise Successful('Successful operation','{"description":"{{method.printstr}}"}')
+        #raise Successful('Successful operation','{"description":"{{method.printstr}}"}')
     {% endfor %}
     {% if cors %}
 

@@ -277,11 +277,15 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
             impl_arguments = None
             json_parser = None
             response = None
+            check_id = False
             if info[func]['methods'][method]['body']:
                 web_data_body = True
                 if info[func]['methods'][method]['json']:
                     json_parser = True
                     new_object = info[func]['methods'][method]['in_params'][0]
+                    # Find out if the last element in the url is an id that must be checked.
+                    if [regex_string] == info[func]['url'].split('/')[-2:-1]:
+                        check_id = True
                     if len(params_callback[func]) > 0:
                         response = True
                         impl_arguments = params_callback[func]
@@ -303,7 +307,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
                 response_list.append(ResponseObject(jotason, handleResp))
             method_list.append(CallbackMethodObject(name, printstr, web_data_body,
                                                     json_parser, new_object, response, impl_arguments,
-                                                    response_list))
+                                                    response_list, check_id))
         url = info[func]['url']
         name = name_classes[func]
         callback_list.append(CallbackObject(name, url, method_list, arguments))
