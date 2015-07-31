@@ -144,7 +144,7 @@ class {{callback.name}}:
         {% else %}
         new_object=create_instance({{callback.methods.put.new_object}}, json_struct)
         {% endif %}
-        {{callback.name}}Impl.put({{callback.impl_arguments}}, new_object)
+        {{callback.name}}Impl.put({{callback.impl_arguments|join(', ')}}, new_object)
         js=new_object.serialize_json()
         raise Successful("Successful operation",json_dumps(js))
     {% endif %}
@@ -168,7 +168,7 @@ class {{callback.name}}:
         {% else %}
         new_object=create_instance({{callback.methods.post.new_object}}, json_struct)
         {% endif %}
-        {{callback.name}}Impl.post({{callback.impl_arguments}}, new_object)
+        {{callback.name}}Impl.post({{callback.impl_arguments|join(', ')}}, new_object)
         js=new_object.serialize_json()
         raise Successful("Successful operation",json_dumps(js))
     {% endif %}
@@ -185,7 +185,7 @@ class {{callback.name}}:
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
-        response={{callback.name}}Impl.delete({{callback.impl_arguments}})
+        response={{callback.name}}Impl.delete({{callback.impl_arguments|join(', ')}})
         if response:
             raise Successful('Successful operation')
         else:
@@ -200,11 +200,11 @@ class {{callback.name}}:
             web.ctx.status = '401 Unauthorized'
             return 'Unauthorized'
         {% endif %}
-        print "{{callback.methods.get.printstr}}"
+        print "{{callback.methods['get']['printstr']}}"
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
-        response = {{callback.name}}Impl.get({{callback.impl_arguments}})
+        response = {{callback.name}}Impl.get({{callback.impl_arguments|join(', ')}})
         if response is not None:
             js = response.serialize_json()
             raise Successful("Successful operation",json_dumps(js))

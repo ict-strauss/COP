@@ -267,21 +267,22 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
     for func in info.keys():
         # Create funcs with inlineVars
         ret[func+"Handle"]=[]
-        if len(params_callback[func]) > 0:
-            impl_arguments = params_callback[func]
+
         arguments = ['self'] + info[func]["inlineVars"]
+        impl_arguments = info[func]["inlineVars"]
+
         methods = {}
         for method in info[func]['methods'].keys():
             ret[func+"Handle"].append(method)
             methods[str(method)] = {}
-            methods[str(method)]['printstr'] = info[func]['methods'][method]['desc']
+            methods[str(method)]['printstr'] = str(info[func]['methods'][method]['desc'])
             if method == 'put':
-                methods['put']['new_object'] = info[func]['methods'][method]['in_params'][0]
+                methods['put']['new_object'] = str(info[func]['methods'][method]['in_params'][0])
                 # Find out if the last element in the url is an id that must be checked.
                 if [regex_string] == info[func]['url'].split('/')[-2:-1]:
                     methods['put']['check_id'] = True
             elif method == 'post':
-                methods['post']['new_object'] = info[func]['methods'][method]['in_params'][0]
+                methods['post']['new_object'] = str(info[func]['methods'][method]['in_params'][0])
                 # Find out if the last element in the url is an id that must be checked.
                 if [regex_string] == info[func]['url'].split('/')[-2:-1]:
                     methods['post']['check_id'] = True
