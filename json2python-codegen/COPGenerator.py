@@ -154,23 +154,6 @@ def translateClasses(js):
     return res
 
 
-def tab(n):
-    return "    "*n
-
-
-def handleResponse(ident, description, schema=None):
-    if "200" in ident:
-        if schema!=None:
-            return 'raise Successful("'+description+'",json_dumps(js))'
-        else:
-            return 'raise Successful("'+description+'",json_dumps(js))'
-    elif "404" in ident:
-        return 'raise NotFoundError("'+description+'")'
-    elif "400" in ident:
-        return 'raise BadRequestError("'+description+'")'
-    else:
-        return 'print "There is something wrong with responses"'
-
 def getNotificationAPIs(data):
     notification_urls = []
     for element in data['paths']:
@@ -271,30 +254,19 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         arguments = info[func]["inlineVars"]
 
         methods = {}
+        check_id = False
+        thing = ''
         for method in info[func]['methods'].keys():
             ret[func+"Handle"].append(method)
             methods[str(method)] = {}
             methods[str(method)]['printstr'] = str(info[func]['methods'][method]['desc'])
             if method == 'put':
-                methods['put']['new_object'] = str(info[func]['methods'][method]['in_params'][0])
-                # Find out if the last element in the url is an id that must be checked.
+                thing = info[func]['methods'][method]['in_params'][0]
                 if [regex_string] == info[func]['url'].split('/')[-2:-1]:
-                    methods['put']['check_id'] = True
-            elif method == 'post':
-                methods['post']['new_object'] = str(info[func]['methods'][method]['in_params'][0])
-                # Find out if the last element in the url is an id that must be checked.
-                if [regex_string] == info[func]['url'].split('/')[-2:-1]:
-                    methods['post']['check_id'] = True
-            elif method == 'delete':
-                pass
-            elif method == 'get':
-                pass
-            else:
-                raise NotImplementedError
+                    check_id = True
         url = info[func]['url']
         name = name_classes[func]
-        thing = 'Thing'
-        callback_list.append(CallbackObject(name, url, methods, arguments, thing))
+        callback_list.append(CallbackObject(name, url, methods, arguments, thing, check_id))
 
     if params.isAuth:
         auth=True
@@ -536,7 +508,7 @@ else:
         jsret2=translateRequest(js)
         notfy_urls = getNotificationAPIs(jsret2)
         ret=generateRESTapi(jsret2,name,imp, restname,params, services, path, notfy_urls)
-        generateCallableClasses(ret,jsret2, imp, restname, path)
+        #generateCallableClasses(ret,jsret2, imp, restname, path)
     servicefile=open(path+".cop/services.json", 'w+')
     servicefile.write(json.dumps(services))
     servicefile.close()

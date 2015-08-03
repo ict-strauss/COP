@@ -1,3 +1,5 @@
+from arrayType import ArrayTypeError
+
 class JsonObject(object):
 
     def __init__(self, json_struct=None):
@@ -32,16 +34,16 @@ class JsonObject(object):
                 if hasattr(getattr(self, key), 'append_new'):
                     # array
                     if type(json_struct[key]) is list:
+                        # clear list
+                        getattr(self, key).delete_all()
                         for element in json_struct[key]:
                             # Instantiate new object of the class
                             # Initialize from json
                             # Append to the list
                             try:
                                 getattr(self, key).append_new(json_struct=element)
-                            except TypeError as inst:
+                            except ArrayTypeError as inst:
                                 raise TypeError(key + '[...]', inst.args[0], inst.args[1])
-                            except ValueError as inst:
-                                raise ValueError(key + '[...]', inst.args[0], inst.args[1])
                     else:
                         raise TypeError(key, json_struct[key], 'array')
                 #if superclass type(getattr(self, key)) == JsonObject:

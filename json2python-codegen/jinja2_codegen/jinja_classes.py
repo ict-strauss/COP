@@ -37,12 +37,13 @@ class UrlObject(object):
 
 class CallbackObject(object):
 
-    def __init__(self, name, path, methods, arguments, thing):
+    def __init__(self, name, path, methods, arguments, thing, check_id):
         self.name = name
         self.path = path
         self.methods = methods
         self.arguments = arguments
         self.thing = thing
+        self.check_id = check_id
 
 
 class ResponseObject(object):
