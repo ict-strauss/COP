@@ -508,7 +508,7 @@ else:
         jsret2=translateRequest(js)
         notfy_urls = getNotificationAPIs(jsret2)
         ret=generateRESTapi(jsret2,name,imp, restname,params, services, path, notfy_urls)
-        #generateCallableClasses(ret,jsret2, imp, restname, path)
+        generateCallableClasses(ret,jsret2, imp, restname, path)
     servicefile=open(path+".cop/services.json", 'w+')
     servicefile.write(json.dumps(services))
     servicefile.close()

@@ -3,10 +3,9 @@ class ArrayTypeError(Exception):
 
 class ArrayType(list):
 
-    def __init__(self, klass, key=None):
+    def __init__(self, klass):
         super(ArrayType, self).__init__()
         self.klass = klass
-        self.key = key
 
     def delete_all(self):
         del self[:]
