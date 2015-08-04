@@ -262,8 +262,8 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         thing = ''
         for method in info[func]['methods'].keys():
             ret[func+"Handle"].append(method)
-            methods[str(method)] = {}
-            methods[str(method)]['printstr'] = str(info[func]['methods'][method]['desc'])
+            methods[method.upper()] = {}
+            methods[method.upper()]['printstr'] = str(info[func]['methods'][method]['desc'])
             if method == 'put':
                 thing = info[func]['methods'][method]['in_params'][0]
                 if [regex_string] == info[func]['url'].split('/')[-2:-1]:
@@ -428,6 +428,7 @@ def generateCallableClasses(funcs, data, imp, restname, path):
                 relevant_list.append(str(x))
         if len(params_callback[func]) == 0:
             object_path = relevant_list
+            ending = ''
         else:
             object_path_parts = []
             object_path = []
@@ -475,6 +476,7 @@ def generateCallableClasses(funcs, data, imp, restname, path):
                 printstr = info[func]['methods'][method]['in_params'][0].lower()
             else:
                 printstr = ''
+            method = method.upper()
             methods[method] = {}
             methods[method]['arguments'] = arguments
             methods[method]['printstr'] = printstr

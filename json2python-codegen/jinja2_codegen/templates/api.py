@@ -153,7 +153,7 @@ class basicauth:
 
 #{{callback.path}}
 class {{callback.name}}:
-    {% if callback.methods.put %}
+    {% if callback.methods['PUT'] %}
 
     def PUT(self, {{callback.arguments|join(', ')}}):
         {% if auth %}
@@ -162,7 +162,7 @@ class {{callback.name}}:
             web.ctx.status = '401 Unauthorized'
             return 'Unauthorized'
         {% endif %}
-        print "{{callback.methods.put.printstr}}"
+        print "{{callback.methods['PUT'].printstr}}"
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
@@ -184,7 +184,7 @@ class {{callback.name}}:
         else:
             raise BadRequestError("Object already exists. For updates use POST.")
     {% endif %}
-    {% if callback.methods.post %}
+    {% if callback.methods['POST'] %}
 
     def POST(self, {{callback.arguments|join(', ')}}):
         {% if auth %}
@@ -193,7 +193,7 @@ class {{callback.name}}:
             web.ctx.status = '401 Unauthorized'
             return 'Unauthorized'
         {% endif %}
-        print "{{callback.methods.post.printstr}}"
+        print "{{callback.methods['POST'].printstr}}"
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
@@ -218,7 +218,7 @@ class {{callback.name}}:
             js=existing_object.serialize_json()
             raise Successful("Successful operation",json_dumps(js))
     {% endif %}
-    {% if callback.methods.delete %}
+    {% if callback.methods['DELETE'] %}
 
     def DELETE(self, {{callback.arguments|join(', ')}}):
         {% if auth %}
@@ -227,7 +227,7 @@ class {{callback.name}}:
             web.ctx.status = '401 Unauthorized'
             return 'Unauthorized'
         {% endif %}
-        print "{{callback.methods.delete.printstr}}"
+        print "{{callback.methods['DELETE'].printstr}}"
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
@@ -238,7 +238,7 @@ class {{callback.name}}:
         else:
             raise Successful('Successful operation')
     {% endif %}
-    {% if callback.methods.get %}
+    {% if callback.methods['GET'] %}
 
     def GET(self, {{callback.arguments|join(', ')}}):
         {% if auth %}
@@ -247,7 +247,7 @@ class {{callback.name}}:
             web.ctx.status = '401 Unauthorized'
             return 'Unauthorized'
         {% endif %}
-        print "{{callback.methods['get']['printstr']}}"
+        print "{{callback.methods['GET']['printstr']}}"
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
