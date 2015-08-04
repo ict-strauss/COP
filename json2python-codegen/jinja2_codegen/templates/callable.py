@@ -23,7 +23,14 @@ class {{class_name}}Impl:
         print 'handling post'
         {% if methods['post'].arguments | length > 2 %}
         if {{methods['post'].arguments[0]}} in {{methods['post'].object_path[0]}}:
+            {% if methods['post'].arguments | length > 3 %}
+            if {{methods['post'].arguments[1]}} in {{methods['post'].object_path[1]}}:
+                {{methods['post'].object_path[2]}}[{{methods['post'].arguments[2]}}]{{methods['post'].ending}} = {{methods['post'].arguments[3]}}
+            else:
+                raise KeyError('{{methods['post'].arguments[1]}}')
+            {% else %}
             {{methods['post'].object_path[1]}}[{{methods['post'].arguments[1]}}]{{methods['post'].ending}} = {{methods['post'].arguments[2]}}
+            {% endif %}
         else:
             raise KeyError('{{methods['post'].arguments[0]}}')
         {% else %}
@@ -41,7 +48,14 @@ class {{class_name}}Impl:
         if {{methods['delete'].arguments[0]}} in {{methods['delete'].object_path[0]}}:
             {% if methods['delete'].arguments | length > 1 %}
             if {{methods['delete'].arguments[1]}} in {{methods['delete'].object_path[1]}}:
+                {% if methods['delete'].arguments | length > 2 %}
+                if {{methods['delete'].arguments[2]}} in {{methods['delete'].object_path[2]}}:
+                    del({{methods['delete'].object_path[2]}}[{{methods['delete'].arguments[2]}}]{{methods['delete'].ending}})
+                else:
+                    raise KeyError('{{methods['get'].arguments[2]}}')
+                {% else %}
                 del({{methods['delete'].object_path[1]}}[{{methods['delete'].arguments[1]}}]{{methods['delete'].ending}})
+                {% endif %}
             else:
                 raise KeyError('{{methods['get'].arguments[1]}}')
             {% else %}
@@ -62,7 +76,14 @@ class {{class_name}}Impl:
         if {{methods['get'].arguments[0]}} in {{methods['get'].object_path[0]}}:
             {% if methods['get'].arguments | length > 1 %}
             if {{methods['get'].arguments[1]}} in {{methods['get'].object_path[1]}}:
+                {% if methods['get'].arguments | length > 2 %}
+                if {{methods['get'].arguments[2]}} in {{methods['get'].object_path[2]}}:
+                    return {{methods['get'].object_path[2]}}[{{methods['get'].arguments[2]}}]{{methods['get'].ending}}
+                else:
+                    raise KeyError('{{methods['get'].arguments[2]}}')
+                {% else %}
                 return {{methods['get'].object_path[1]}}[{{methods['get'].arguments[1]}}]{{methods['get'].ending}}
+                {% endif %}
             else:
                 raise KeyError('{{methods['get'].arguments[1]}}')
             {% else %}
