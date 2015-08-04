@@ -166,10 +166,11 @@ class {{callback.name}}:
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
-        existing_object = {{callback.name}}Impl.get({{callback.arguments|join(', ')}})
-        if existing_object != None:
-            raise BadRequestError("Object already exists. For updates use POST.")
-        else:
+        try:
+            existing_object = {{callback.name}}Impl.get({{callback.arguments|join(', ')}})
+        except KeyError as inst:
+            if inst.args[0] != '{{callback.arguments|last()}}':
+                raise NotFoundError(inst.args[0] + " not found")
             json_string = web.data()
             json_struct = json_loads(json_string)
         {% if callback.check_id %}
@@ -180,6 +181,8 @@ class {{callback.name}}:
             {{callback.name}}Impl.put({{callback.arguments|join(', ')}}, new_object)
             js=new_object.serialize_json()
             raise Successful("Successful operation",json_dumps(js))
+        else:
+            raise BadRequestError("Object already exists. For updates use POST.")
     {% endif %}
     {% if callback.methods.post %}
 
@@ -196,13 +199,11 @@ class {{callback.name}}:
         {% endif %}
         json_string=web.data()
         json_struct=json_loads(json_string)
-        existing_object = {{callback.name}}Impl.get({{callback.arguments|join(', ')}})
-        if existing_object != None:
-            existing_object = modify_instance(existing_object, json_struct)
-            {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, existing_object)
-            js=existing_object.serialize_json()
-            raise Successful("Successful operation",json_dumps(js))
-        else:
+        try:
+            existing_object = {{callback.name}}Impl.get({{callback.arguments|join(', ')}})
+        except KeyError as inst:
+            if inst.args[0] != '{{callback.arguments|last()}}':
+                raise NotFoundError(inst.args[0] + " not found")
         {% if callback.check_id %}
             new_object=create_instance({{callback.thing}}, json_struct, ({{callback.arguments|last()}},'{{callback.arguments|last()}}'))
         {% else %}
@@ -210,6 +211,11 @@ class {{callback.name}}:
         {% endif %}
             {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, new_object)
             js=new_object.serialize_json()
+            raise Successful("Successful operation",json_dumps(js))
+        else:
+            existing_object = modify_instance(existing_object, json_struct)
+            {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, existing_object)
+            js=existing_object.serialize_json()
             raise Successful("Successful operation",json_dumps(js))
     {% endif %}
     {% if callback.methods.delete %}
@@ -225,11 +231,12 @@ class {{callback.name}}:
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
-        response={{callback.name}}Impl.delete({{callback.arguments|join(', ')}})
-        if response:
-            raise Successful('Successful operation')
+        try:
+            response={{callback.name}}Impl.delete({{callback.arguments|join(', ')}})
+        except KeyError as inst:
+            raise NotFoundError(inst.args[0] + " not found")
         else:
-            raise NotFoundError("{{callback.thing}} not found")
+            raise Successful('Successful operation')
     {% endif %}
     {% if callback.methods.get %}
 
@@ -244,12 +251,13 @@ class {{callback.name}}:
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
-        response = {{callback.name}}Impl.get({{callback.arguments|join(', ')}})
-        if response != None:
+        try:
+            response = {{callback.name}}Impl.get({{callback.arguments|join(', ')}})
+        except KeyError as inst:
+            raise NotFoundError(inst.args[0] + " not found")
+        else:
             js = response.serialize_json()
             raise Successful("Successful operation",json_dumps(js))
-        else:
-            raise NotFoundError("{{callback.thing}} not found")
     {% endif %}
     {% if cors %}
 

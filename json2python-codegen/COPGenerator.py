@@ -30,6 +30,8 @@ jinja_env = Environment(loader=PackageLoader('jinja2_codegen', 'templates'), tri
 # The regular expression inserted in the url array.
 regex_string='(\\w+)'
 
+debug = False
+
 # Map from JSON types to python types
 type_map = {'string' : 'str', 'integer' : 'int'}
 
@@ -179,9 +181,10 @@ def generateServerStub(restname, data, services, path):
                                       port=data['port'])
 
     # write server file
-    out = open(path+restname+".py","w+")
-    out.write(rendered_string)
-    out.close()
+    if not debug:
+        out = open(path+restname+".py","w+")
+        out.write(rendered_string)
+        out.close()
 
 
 def generateNotificationServer(name, data, notfy_urls, path):
@@ -204,9 +207,10 @@ def generateNotificationServer(name, data, notfy_urls, path):
     rendered_string = template.render(servicemap=servicemap, class_list=class_list)
 
     # write notifiction server file
-    out = open(path+name+".py","w+")
-    out.write(rendered_string)
-    out.close()
+    if not debug:
+        out = open(path+name+".py","w+")
+        out.write(rendered_string)
+        out.close()
 
 
 def generateRESTapi(data, name, imp, restname, params, services, path, notfy_urls):
@@ -294,9 +298,10 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
                                       )
 
     # write API file
-    out=open(path + restname+".py","w+")
-    out.write(rendered_string)
-    out.close()
+    if not debug:
+        out=open(path + restname+".py","w+")
+        out.write(rendered_string)
+        out.close()
     return ret
 
 def translate_type_json2python(typename):
@@ -326,13 +331,15 @@ def generateAttributeValue(att): #Initialization of different attributes
 
 def generateClasses(data, restname, path):
     # Create folder objects_
-    if not os.path.exists(path+"objects_"+restname+"/"):
-        os.makedirs(path+"objects_"+restname+"/")
+    if not debug:
+        if not os.path.exists(path+"objects_"+restname+"/"):
+            os.makedirs(path+"objects_"+restname+"/")
 
     # Create __init__.py file
-    out=open(path+"objects_"+restname+"/__init__.py","w+")
-    out.write(" ")
-    out.close()
+    if not debug:
+        out=open(path+"objects_"+restname+"/__init__.py","w+")
+        out.write(" ")
+        out.close()
 
     # Create class.py files
     for klass in data:
@@ -386,18 +393,20 @@ def generateClasses(data, restname, path):
                                           superclass_name=superclass_name)
 
         #write class file
-        out=open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
-        out.write(rendered_string)
-        out.close()
+        if not debug:
+            out=open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
+            out.write(rendered_string)
+            out.close()
 
 
 def generateCallableClasses(funcs, data, imp, restname, path):
     # create folder funcs_
     if not os.path.exists(path+"funcs_"+restname+"/"):
-        os.makedirs(path+"funcs_"+restname+"/")
-        out=open(path+"funcs_"+restname+"/__init__.py","w+")
-        out.write(" ")
-        out.close()
+        if not debug:
+            os.makedirs(path+"funcs_"+restname+"/")
+            out=open(path+"funcs_"+restname+"/__init__.py","w+")
+            out.write(" ")
+            out.close()
 
     info=data['paths']
     name_classes = {}
@@ -410,8 +419,45 @@ def generateCallableClasses(funcs, data, imp, restname, path):
         name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == regex_string else element.title() for i,element in enumerate(list_element_url[3:-1])])
         params_callback[func]= [info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == regex_string]
 
+        # generate object path, for example: connections[connectionId].aEnd
+        relevant_list = []
+        for x in list_element_url[3:-1]:
+            if '_' in x:
+                relevant_list.append(to_lower_camelcase(str(x)))
+            else:
+                relevant_list.append(str(x))
+        if len(params_callback[func]) == 0:
+            object_path = relevant_list
+        else:
+            object_path_parts = []
+            object_path = []
+            params_found = 0
+            remain = []
+            for element in relevant_list:
+                if element == regex_string:
+                    if params_found == 0:
+                        object_path_parts.append('.'.join(remain[:-1]))
+                    else:
+                        object_path_parts.append('.'.join(remain))
+                    remain = []
+                    params_found += 1
+                else:
+                    remain.append(element)
+            for i, part in enumerate(object_path_parts):
+                object_path.append([])
+                if i > 0:
+                    object_path[i].append(object_path[i-1])
+                    object_path[i].append('[' + params_callback[func][i-1] + ']' + '.')
+                object_path[i].append(part)
+                object_path[i] = ''.join(object_path[i])
+            if remain:
+                ending = '.' + '.'.join(remain)
+            else:
+                ending = ''
+        toplevel = relevant_list[0]
+
         class_name = name_classes[func]
-        method_list = []
+        methods = {}
         for method in info[func]['methods'].keys():
             if len (params_callback[func]) > 0:
                 ## Input body parameters are included into the class headers if so.
@@ -429,17 +475,22 @@ def generateCallableClasses(funcs, data, imp, restname, path):
                 printstr = info[func]['methods'][method]['in_params'][0].lower()
             else:
                 printstr = ''
-            method_list.append(MethodObject(method, arguments, printstr))
+            methods[method] = {}
+            methods[method]['arguments'] = arguments
+            methods[method]['printstr'] = printstr
+            methods[method]['object_path'] = object_path
+            methods[method]['ending'] = ending
 
         # use jinja
         template = jinja_env.get_template('callable.py')
         rendered_string = template.render(class_name=class_name,
-                                          method_list=method_list)
+                                          methods=methods, toplevel=toplevel)
 
         # write callable file
-        out=open(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
-        out.write(rendered_string)
-        out.close()
+        if not debug:
+            out=open(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
+            out.write(rendered_string)
+            out.close()
 
 
 def to_lower_camelcase(name):
@@ -486,17 +537,19 @@ else:
     generateClasses(jsret,restname, path)
     imp=[]
     services=[]
-    if not os.path.exists(path+".cop/"):
-        os.makedirs(path+".cop/")
-    if os.path.isfile(path+".cop/services.json"):
-        servicefile=open(path+".cop/services.json", 'rb')
-        services=json.loads(servicefile.read())
-        servicefile.close()
+    if not debug:
+        if not os.path.exists(path+".cop/"):
+            os.makedirs(path+".cop/")
+        if os.path.isfile(path+".cop/services.json"):
+            servicefile=open(path+".cop/services.json", 'rb')
+            services=json.loads(servicefile.read())
+            servicefile.close()
 
     #copy common objects
-    srcdir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'objects_common')
-    dstdir = os.path.join(path, 'objects_common')
-    shutil.copytree(srcdir, dstdir)
+    if not debug:
+        srcdir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'objects_common')
+        dstdir = os.path.join(path, 'objects_common')
+        shutil.copytree(srcdir, dstdir)
 
     #create imports for the main class (in case the user needs to use them)
     for klass in jsret:
@@ -509,8 +562,9 @@ else:
         notfy_urls = getNotificationAPIs(jsret2)
         ret=generateRESTapi(jsret2,name,imp, restname,params, services, path, notfy_urls)
         generateCallableClasses(ret,jsret2, imp, restname, path)
-    servicefile=open(path+".cop/services.json", 'w+')
-    servicefile.write(json.dumps(services))
-    servicefile.close()
+    if not debug:
+        servicefile=open(path+".cop/services.json", 'w+')
+        servicefile.write(json.dumps(services))
+        servicefile.close()
     print "Finished"
 
