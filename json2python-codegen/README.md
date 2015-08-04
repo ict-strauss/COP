@@ -16,6 +16,9 @@ Python code that uses json outputs from **pyang** to generate **RESTful server**
  - This code generates python code that uses:
  - [web.py](http://webpy.org/install)
  - [autobahn 0.10.4] (https://pypi.python.org/pypi/autobahn)
+ -- Installation:
+>> cd autobahn
+>> python setup.py install
 
 ### Issues
 - Some of the configurations are fixed for COP (e.g. type of return messages). To be fixed in next version.
