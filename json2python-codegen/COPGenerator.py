@@ -254,11 +254,9 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         name = im
         objects_import_list.append(ImportObject(file, name))
 
-    ret = {}
     callback_list = []
     for func in info.keys():
         # Create funcs with inlineVars
-        ret[func+"Handle"] = []
 
         arguments = info[func]["inlineVars"]
 
@@ -266,7 +264,6 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         check_id = False
         thing = ''
         for method in info[func]['methods'].keys():
-            ret[func+"Handle"].append(method)
             methods[method.upper()] = {}
             methods[method.upper()]['printstr'] = str(info[func]['methods'][method]['desc'])
             if method == 'put':
@@ -308,7 +305,6 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         out = open(path + restname+".py", "w+")
         out.write(rendered_string)
         out.close()
-    return ret
 
 def translate_type_json2python(typename):
     if typename in type_map:
@@ -574,7 +570,7 @@ def main():
                 services.append(service)
             jsret2 = translateRequest(js)
             notfy_urls = getNotificationAPIs(jsret2)
-            ret = generateRESTapi(jsret2, name, imp, restname, params, services, path, notfy_urls)
+            generateRESTapi(jsret2, name, imp, restname, params, services, path, notfy_urls)
             generateCallableClasses(jsret2, restname, path)
         if not debug:
             servicefile = open(path+".cop/services.json", 'w+')
