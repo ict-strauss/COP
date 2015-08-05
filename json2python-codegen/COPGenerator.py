@@ -28,7 +28,7 @@ from jinja2_codegen.jinja_classes import *
 jinja_env = Environment(loader=PackageLoader('jinja2_codegen', 'templates'), trim_blocks=True, lstrip_blocks=True)
 
 # The regular expression inserted in the url array.
-regex_string='(\\w+)'
+regex_string = '(\\w+)'
 
 debug = False
 
@@ -36,99 +36,101 @@ debug = False
 type_map = {'string' : 'str', 'integer' : 'int'}
 
 def decomposeUrl(string):
-    slices=string.split("{")
-    varlist=[]
-    url=[]
+    slices = string.split("{")
+    varlist = []
+    url = []
     for sl in slices:
-        auxslice=sl.split("}")
-        if len(auxslice)!=1:
+        auxslice = sl.split("}")
+        if len(auxslice) != 1:
             varlist.append(auxslice[0])
             url.append(auxslice[1])
         else:
             url.append(auxslice[0])
 
-    defurl=url[0]
+    defurl = url[0]
     for st in url[1:]:
-        defurl+=regex_string+st
+        defurl += regex_string+st
 
     return defurl, varlist
 
 
 def translateRequest(js):
-    ret={}
-    res={}
-    i=1;
-    bp=js['basePath']
-    port=int(js['host'].split(":")[-1])
-    ret['port']=port
+    ret = {}
+    res = {}
+    i = 1
+    bp = js['basePath']
+    port = int(js['host'].split(":")[-1])
+    ret['port'] = port
     for path in js['paths'].keys():
-        ids={}
-        url,variables=decomposeUrl(path)
-        msgs=js['paths'][path].keys()
+        ids = {}
+        url, variables = decomposeUrl(path)
+        msgs = js['paths'][path].keys()
         for method in msgs:
-            ids[method]={}
-            ids[method]['desc']=js["paths"][path][method]['description']
-            ids[method]['resp']=js["paths"][path][method]['responses']
-            ids[method]['body']=False
-            ids[method]['json']=False
+            ids[method] = {}
+            ids[method]['desc'] = js["paths"][path][method]['description']
+            ids[method]['resp'] = js["paths"][path][method]['responses']
+            ids[method]['body'] = False
+            ids[method]['json'] = False
             if 'schemes' in js["paths"][path][method].keys():
                 ids[method]['schemes'] = js["paths"][path][method]['schemes']
             if "parameters" in js["paths"][path][method].keys():
                 for param in js["paths"][path][method]['parameters']:
                     if "body" in param['in']:
-                        ids[method]['body']=True
+                        ids[method]['body'] = True
                         if 'in_params' not in ids[method]:
                             ids[method]['in_params'] = [param['schema']['$ref'].split('/')[-1]]
                         else:
                             ids[method]['in_params'].append(param['schema']['$ref'].split('/')[-1])
 
             if "application/json" in js["paths"][path][method]['consumes']:
-                ids[method]['json']=True
-        res["func"+str(i)]={"url":bp+url,"inlineVars":variables, "methods":ids}
-        i+=1;
-    ret['paths']=res
+                ids[method]['json'] = True
+        res["func"+str(i)] = {"url":bp+url, "inlineVars":variables, "methods":ids}
+        i += 1
+    ret['paths'] = res
     return ret
 
 
 def getType(js):
+    # TODO support for keyed array type
     if "type" in js.keys():
         if "enum" in js.keys():
-            return "enum",[enum for enum in js['enum']],False
+            return "enum", [enum for enum in js['enum']], False
         if "integer" in js['type']:
-            return js['format'],"none",False
+            return js['format'], "none", False
         if "string" in js['type']:
-            return "string","none",False
+            return "string", "none", False
         if "boolean" in js['type']:
-            return "boolean","none",False
+            return "boolean", "none", False
         if "array" in js['type']:
             if "type" in js['items'].keys():
-                return "array", js['items']['type'],False
+                return "array", js['items']['type'], False
             elif "$ref" in js['items'].keys():
-                return "array",js['items']['$ref'].split("/")[-1],True
+                return "array", js['items']['$ref'].split("/")[-1], True
             else:
-                return "none","none", False
+                return "none", "none", False
         if "object" in js['type']:
             if "type" in js['additionalProperties'].keys():
-                return "object", js['additionalProperties']['type'],False
+                return "object", js['additionalProperties']['type'], False
             elif "$ref" in js['additionalProperties'].keys():
-                return "object",js['additionalProperties']['$ref'].split("/")[-1],True
+                return "object", js['additionalProperties']['$ref'].split("/")[-1], True
             else:
-                return "none","none", False
+                return "none", "none", False
         else:
-            return "none","none", False
+            return "none", "none", False
     elif "$ref" in js.keys():
-        return "import",js['$ref'].split("/")[-1],True
+        return "import", js['$ref'].split("/")[-1], True
     else:
-        return "none","none", False
+        return "none", "none", False
 
 
 def translateClasses(js):
-    res=[]
+    # TODO support for keyed array type
+    res = []
     for klass in js['definitions'].keys():
-        imports=[]
-        cl={}
-        atts=[]
-        cl['class']=klass
+        imports = []
+        cl = {}
+        atts = []
+        cl['class'] = klass
         if 'discriminator' in js['definitions'][klass]:
             cl["discriminator"] = js['definitions'][klass]['discriminator']
         # Special case where the model extending a father class
@@ -138,20 +140,20 @@ def translateClasses(js):
                     cl['extend_class'] = item['$ref'].split("/")[-1]
                 elif "properties" in item:
                     for att in item['properties'].keys():
-                        taip,other,imp=getType(item['properties'][att])
-                        atts.append({"att":att,"type":taip,"other":other})
+                        taip, other, imp = getType(item['properties'][att])
+                        atts.append({"att":att, "type":taip, "other":other})
                         if imp:
                             if other not in imports:
                                 imports.append(other)
         else:
             for att in js['definitions'][klass]['properties'].keys():
-                taip,other,imp=getType(js['definitions'][klass]['properties'][att])
-                atts.append({"att":att,"type":taip,"other":other})
+                taip, other, imp = getType(js['definitions'][klass]['properties'][att])
+                atts.append({"att":att, "type":taip, "other":other})
                 if imp:
                     if other not in imports:
                         imports.append(other)
-        cl["atts"]=atts
-        cl["imports"]=imports
+        cl["atts"] = atts
+        cl["imports"] = imports
         res.append(cl)
     return res
 
@@ -167,13 +169,14 @@ def getNotificationAPIs(data):
     return notification_urls
 
 
-## This function generates a HTTP Server which will serve as a unique access point to our COP server implementation.
+## This function generates a HTTP Server which will serve
+## as a unique access point to our COP server implementation.
 def generateServerStub(restname, data, services, path):
     import_list = []
     urls_list = []
     for serv in services:
-        import_list.append(ImportObject('',serv.replace("-","_")))
-        urls_list.append(serv.replace("-","_") + '.urls')
+        import_list.append(ImportObject('', serv.replace("-", "_")))
+        urls_list.append(serv.replace("-", "_") + '.urls')
 
     # use jinja
     template = jinja_env.get_template('server.py')
@@ -182,13 +185,13 @@ def generateServerStub(restname, data, services, path):
 
     # write server file
     if not debug:
-        out = open(path+restname+".py","w+")
+        out = open(path+restname+".py", "w+")
         out.write(rendered_string)
         out.close()
 
 
-def generateNotificationServer(name, data, notfy_urls, path):
-    class_list=[]
+def generateNotificationServer(name, notfy_urls, path):
+    class_list = []
     dictio = {}
     base_url = ''
     for element in notfy_urls:
@@ -208,7 +211,7 @@ def generateNotificationServer(name, data, notfy_urls, path):
 
     # write notifiction server file
     if not debug:
-        out = open(path+name+".py","w+")
+        out = open(path+name+".py", "w+")
         out.write(rendered_string)
         out.close()
 
@@ -219,18 +222,19 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
     if notfy_urls:
         generateNotificationServer("notification_factory", data, notfy_urls, path)
 
-    info=data['paths']
+    info = data['paths']
     name_classes = {}
     params_callback = {}
 
     url_object_list = []
-    
+
     for func in info.keys():
-        # Here we generate the name of the class and its related callback to the backend program based on the API syntax of each function.
+        # Here we generate the name of the class and its related callback
+        # to the backend program based on the API syntax of each function.
         list_element_url = info[func]['url'].split('/')
-        indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == regex_string]
-        name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == regex_string else element.title() for i,element in enumerate(list_element_url[3:-1])])
-        params_callback[func] = ",".join([info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == regex_string])
+        indexes = [i for i, element in enumerate(list_element_url[3:-1]) if element == regex_string]
+        name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == regex_string else element.title() for i, element in enumerate(list_element_url[3:-1])])
+        params_callback[func] = ",".join([info[func]["inlineVars"][indexes.index(i)] for i, element in enumerate(list_element_url[3:-1]) if element == regex_string])
         url = info[func]['url']
         callback = restname + "." + name_classes[func]
         url_object_list.append(UrlObject(url, callback))
@@ -241,7 +245,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         file = "funcs_" + restname + "." + name_classes[func][0].lower() + name_classes[func][1:] + "Impl"
         name = name_classes[func] + "Impl"
         functions_import_list.append(ImportObject(file, name))
-    
+
     # imports of objects
     objects_import_list = []
     for im in imp:
@@ -249,11 +253,11 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         name = im
         objects_import_list.append(ImportObject(file, name))
 
-    ret={}
+    ret = {}
     callback_list = []
     for func in info.keys():
         # Create funcs with inlineVars
-        ret[func+"Handle"]=[]
+        ret[func+"Handle"] = []
 
         arguments = info[func]["inlineVars"]
 
@@ -271,13 +275,15 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         url = info[func]['url']
         name = name_classes[func]
         callback_list.append(CallbackObject(name, url, methods, arguments, thing, check_id))
+        # TODO check the path (/restconf/config, /restconf/operations, /restconf/streams)
+        # and behave accordingly.
 
     if params.isAuth:
-        auth=True
-        users=json.dumps(params.users)
+        auth = True
+        users = json.dumps(params.users)
     else:
-        auth=False
-        users=None
+        auth = False
+        users = None
     if params.isCORS:
         cors = True
         url = params.url
@@ -294,12 +300,11 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
                                       functions_import_list=functions_import_list,
                                       objects_import_list=objects_import_list,
                                       url_object_list=url_object_list,
-                                      callback_list=callback_list,
-                                      )
+                                      callback_list=callback_list)
 
     # write API file
     if not debug:
-        out=open(path + restname+".py","w+")
+        out = open(path + restname+".py", "w+")
         out.write(rendered_string)
         out.close()
     return ret
@@ -311,6 +316,7 @@ def translate_type_json2python(typename):
         return typename
 
 def generateAttributeValue(att): #Initialization of different attributes
+    # TODO support for keyed array type
     if "string" in att['type']:
         return '""'
     elif "int" in att['type']:
@@ -326,7 +332,7 @@ def generateAttributeValue(att): #Initialization of different attributes
     elif "enum" in att['type']:
         return att['att'].capitalize() + '(1)'
     else:
-        return text+"None #FIXME: This parameter is not well defined"
+        return "None #FIXME: This parameter is not well defined"
 
 
 def generateClasses(data, restname, path):
@@ -337,13 +343,13 @@ def generateClasses(data, restname, path):
 
     # Create __init__.py file
     if not debug:
-        out=open(path+"objects_"+restname+"/__init__.py","w+")
+        out = open(path+"objects_"+restname+"/__init__.py", "w+")
         out.write(" ")
         out.close()
 
     # Create class.py files
     for klass in data:
-        name=klass['class']
+        name = klass['class']
 
         import_list = []
         attribute_list = []
@@ -372,13 +378,14 @@ def generateClasses(data, restname, path):
             if "array" in att['type']:
                 import_array = True
         if import_array:
+            # TODO support for keyed array type
             import_list.append(ImportObject('objects_common.arrayType', 'ArrayType'))
 
         # enums
         import_enum = False
         for att in klass['atts']:
             if "enum" in att['type']:
-                enum_values = [ '\'' + x + '\'' for x in att['other'] ]
+                enum_values = ['\'' + x + '\'' for x in att['other']]
                 enum_list.append(EnumObject(att['att'].capitalize(), enum_values))
                 import_enum = True
         if import_enum:
@@ -394,30 +401,31 @@ def generateClasses(data, restname, path):
 
         #write class file
         if not debug:
-            out=open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py","w+")
+            out = open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py", "w+")
             out.write(rendered_string)
             out.close()
 
 
-def generateCallableClasses(funcs, data, imp, restname, path):
+def generateCallableClasses(data, restname, path):
     # create folder funcs_
     if not os.path.exists(path+"funcs_"+restname+"/"):
         if not debug:
             os.makedirs(path+"funcs_"+restname+"/")
-            out=open(path+"funcs_"+restname+"/__init__.py","w+")
+            out = open(path+"funcs_"+restname+"/__init__.py", "w+")
             out.write(" ")
             out.close()
 
-    info=data['paths']
+    info = data['paths']
     name_classes = {}
     params_callback = {}
 
     for func in info.keys():
-        # Here we generate the name of the class_name and its related callback_name to the backend program based on the API syntax of each function.
+        # Here we generate the name of the class_name and its related callback_name
+        # to the backend program based on the API syntax of each function.
         list_element_url = info[func]['url'].split('/')
-        indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == regex_string]
-        name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == regex_string else element.title() for i,element in enumerate(list_element_url[3:-1])])
-        params_callback[func]= [info[func]["inlineVars"][indexes.index(i)] for i,element in enumerate(list_element_url[3:-1]) if element == regex_string]
+        indexes = [i for i, element in enumerate(list_element_url[3:-1]) if element == regex_string]
+        name_classes[func] = "".join([info[func]["inlineVars"][indexes.index(i)].title() if element == regex_string else element.title() for i, element in enumerate(list_element_url[3:-1])])
+        params_callback[func] = [info[func]["inlineVars"][indexes.index(i)] for i, element in enumerate(list_element_url[3:-1]) if element == regex_string]
 
         # generate object path, for example: connections[connectionId].aEnd
         relevant_list = []
@@ -456,19 +464,21 @@ def generateCallableClasses(funcs, data, imp, restname, path):
             else:
                 ending = ''
         toplevel = relevant_list[0]
+        # TODO check the path (/restconf/config, /restconf/operations, /restconf/streams)
+        # and behave accordingly.
 
         class_name = name_classes[func]
         methods = {}
         for method in info[func]['methods'].keys():
-            if len (params_callback[func]) > 0:
+            if len(params_callback[func]) > 0:
                 ## Input body parameters are included into the class headers if so.
-                if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
+                if (method in ['put', 'post']) and ('in_params' in info[func]['methods'][method]):
                     in_params = [element.lower() for element in info[func]['methods'][method]['in_params']]
                     arguments = params_callback[func] + in_params
                 else:
                     arguments = params_callback[func]
             else:
-                if (method in ['put','post']) and ('in_params' in info[func]['methods'][method]):
+                if (method in ['put', 'post']) and ('in_params' in info[func]['methods'][method]):
                     arguments = [element.lower() for element in info[func]['methods'][method]['in_params']]
                 else:
                     arguments = []
@@ -490,7 +500,7 @@ def generateCallableClasses(funcs, data, imp, restname, path):
 
         # write callable file
         if not debug:
-            out=open(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py","w+")
+            out = open(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py", "w+")
             out.write(rendered_string)
             out.close()
 
@@ -511,62 +521,65 @@ def to_upper_camelcase(name):
                   name)
 
 
-if len(sys.argv)==1:
-    print "Filename argument required"
-else:
-    filename=sys.argv[1]
-    if len(sys.argv)>2:
-        path=sys.argv[2]
+def main():
+    if len(sys.argv) == 1:
+        print "Filename argument required"
     else:
-        path = ""
-    params = CGConfiguration(os.path.abspath(os.path.dirname(sys.argv[0]))+"/CGConfiguration.xml")
-    if  len(path)>0 and path[-1]!="/":
-        path+="/"
+        filename = sys.argv[1]
+        if len(sys.argv) > 2:
+            path = sys.argv[2]
+        else:
+            path = ""
+        params = CGConfiguration(os.path.abspath(os.path.dirname(sys.argv[0]))+"/CGConfiguration.xml")
+        if  len(path) > 0 and path[-1] != "/":
+            path += "/"
 
-    f=open(filename, 'rb')
-    service=filename.split("/")[-1].split(".")[0]
-    name=service+".py"
-    restname=service.replace("-","_")
+        f = open(filename, 'rb')
+        service = filename.split("/")[-1].split(".")[0]
+        name = service+".py"
+        restname = service.replace("-", "_")
 
-    stri=f.read()
-    js=json.loads(stri)
-    #Translate json into a more manageable structure
-    jsret=translateClasses(js)
-    #print json.dumps(jsret)
-    #generating classes first
-    print "Generating Rest Server and Classes for "+name
-    print "classes could be found in '"+path+"objects_"+restname+"/' folder"
-    generateClasses(jsret,restname, path)
-    imp=[]
-    services=[]
-    if not debug:
-        if not os.path.exists(path+".cop/"):
-            os.makedirs(path+".cop/")
-        if os.path.isfile(path+".cop/services.json"):
-            servicefile=open(path+".cop/services.json", 'rb')
-            services=json.loads(servicefile.read())
+        stri = f.read()
+        js = json.loads(stri)
+        #Translate json into a more manageable structure
+        jsret = translateClasses(js)
+        #print json.dumps(jsret)
+        #generating classes first
+        print "Generating Rest Server and Classes for "+name
+        print "classes could be found in '"+path+"objects_"+restname+"/' folder"
+        generateClasses(jsret, restname, path)
+        imp = []
+        services = []
+        if not debug:
+            if not os.path.exists(path+".cop/"):
+                os.makedirs(path+".cop/")
+            if os.path.isfile(path+".cop/services.json"):
+                servicefile = open(path+".cop/services.json", 'rb')
+                services = json.loads(servicefile.read())
+                servicefile.close()
+
+        #copy common objects
+        if not debug:
+            srcdir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'objects_common')
+            dstdir = os.path.join(path, 'objects_common')
+            shutil.copytree(srcdir, dstdir)
+
+        #create imports for the main class (in case the user needs to use them)
+        for klass in jsret:
+            imp.append(klass['class'])
+        #generate (is any) the RESTful Server
+        if "paths" in js.keys():
+            if service not in services:
+                services.append(service)
+            jsret2 = translateRequest(js)
+            notfy_urls = getNotificationAPIs(jsret2)
+            ret = generateRESTapi(jsret2, name, imp, restname, params, services, path, notfy_urls)
+            generateCallableClasses(ret, jsret2, imp, restname, path)
+        if not debug:
+            servicefile = open(path+".cop/services.json", 'w+')
+            servicefile.write(json.dumps(services))
             servicefile.close()
+        print "Finished"
 
-    #copy common objects
-    if not debug:
-        srcdir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'objects_common')
-        dstdir = os.path.join(path, 'objects_common')
-        shutil.copytree(srcdir, dstdir)
-
-    #create imports for the main class (in case the user needs to use them)
-    for klass in jsret:
-        imp.append(klass['class'])
-    #generate (is any) the RESTful Server
-    if "paths" in js.keys():
-        if service not in services:
-            services.append(service)
-        jsret2=translateRequest(js)
-        notfy_urls = getNotificationAPIs(jsret2)
-        ret=generateRESTapi(jsret2,name,imp, restname,params, services, path, notfy_urls)
-        generateCallableClasses(ret,jsret2, imp, restname, path)
-    if not debug:
-        servicefile=open(path+".cop/services.json", 'w+')
-        servicefile.write(json.dumps(services))
-        servicefile.close()
-    print "Finished"
-
+if __name__ == '__main__':
+    main()
