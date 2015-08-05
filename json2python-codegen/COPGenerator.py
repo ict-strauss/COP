@@ -425,8 +425,6 @@ def generateClasses(data, restname, path):
             out.write(rendered_string)
             out.close()
 
-def tab(n):
-    return "    "*n
 
 def generateCallableClasses(data, restname, path, notfy_urls):
     # create folder funcs_
@@ -446,43 +444,30 @@ def generateCallableClasses(data, restname, path, notfy_urls):
             list_element_url = func['url'].split('/')
             indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
             name_classes[func['url']] = "".join([element.title() for i,element in enumerate(list_element_url[3:-1])])
-            if os.path.isfile(path+"funcs_"+restname+"/"+name_classes[func['url']][0].lower()+""+name_classes[func['url']][1:]+"Impl.py"): #if exists, don't create
-                print "funcs_"+restname+"/"+name_classes[func['url']][0].lower()+name_classes[func['url']][1:]+"Impl.py already exists, not overwrite"
+            filename = path+"funcs_"+restname+"/"+name_classes[func['url']][0].lower()+""+name_classes[func['url']][1:]+"Impl.py"
+            if os.path.isfile(filename): #if exists, don't create
+                print(filename + "already exists, not overwriting")
             else:
-                line="\n"
-                out=open(path+"funcs_"+restname+"/"+name_classes[func['url']][0].lower()+name_classes[func['url']][1:]+"Impl.py","w+")
-
-                out.write("import os.path, sys"+line)
-                out.write("import threading"+line)
-                out.write("import json"+line)
-                out.write("import time"+line)
-                out.write("sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))"+line+line)
+                import_list = []
                 for im in imp:
                     if im == resp_model:
-                        out.write("from objects_"+restname+"."+im[0].lower()+im[1:]+" import "+im+line)
+                        file = restname+"."+im[0].lower()+im[1:]
+                        import_list.append(ImportObject(file, im))
 
-                out.write(line+line+"class "+name_classes[func['url']]+"Impl (threading.Thread):"+line)
-                index+=1
-                out.write(tab(index)+"def __init__(self, handler):"+line)
-                index+=1
-                out.write(tab(index)+"threading.Thread.__init__(self)"+line)
-                out.write(tab(index)+"self.event = True"+line)
-                out.write(tab(index)+"self.handler = handler"+line+line)
-                index-=1
-                out.write(tab(index)+"def set_event(self, event):"+line)
-                index+=1
-                out.write(tab(index)+"print 'Event received'"+line)
-                out.write(tab(index)+"self.event = event"+line+line)
-                index-=1
-                out.write(tab(index)+"def run(self):"+line)
-                index+=1
-                out.write(tab(index)+"while self.event:"+line)
-                index+=1
-                out.write(tab(index)+"time.sleep(1)"+line+line)
-                index-=1
-                out.write(tab(index)+"payload = json.dumps("+resp_model+"(json_string={'callId':'Example_"+name_classes[func['url']]+"'}).json_serializer(), ensure_ascii = False).encode('utf8')"+line)
-                out.write(tab(index)+"self.handler.sendMessage(payload, False)"+line)
-                out.close()
+                class_name = name_classes[func['url']]
+                new_object = resp_model
+                json_string = '{"callId":"Example_' + class_name + '"}'
+
+                # use jinja
+                template = jinja_env.get_template('notificationImpl.py')
+                rendered_string = template.render(import_list=import_list, class_name=class_name,
+                                                  new_object=new_object, json_string=json_string)
+
+                # write Impl file
+                if not debug:
+                    out = open(filename, "w+")
+                    out.write(rendered_string)
+                    out.close()
 
     info = data['paths']
     name_classes = {}
