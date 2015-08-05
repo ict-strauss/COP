@@ -4,7 +4,8 @@ class JsonObject(object):
 
     def __init__(self, json_struct=None):
         self.build_child_objects_list()
-        self.load_json(json_struct)
+        if json_struct is not None:
+            self.load_json(json_struct)
 
     def build_child_objects_list(self):
         self._child_objects = [i for i in dir(self) if not i.startswith('_') and not callable(getattr(self, i))]
@@ -22,8 +23,8 @@ class JsonObject(object):
         return str(self.serialize_json())
 
     def load_json(self, json_struct):
-        if json_struct == None:
-            return
+        if type(json_struct) != dict:
+            raise TypeError('', json_struct, 'object')
         # Run through the keys in the input structure
         for key in json_struct:
             # Check if there is an attribute in this object that has the name of the key
