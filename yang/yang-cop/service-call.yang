@@ -267,19 +267,21 @@ module service-call {
             type topo:end-ref;
         }*/
     }
-
-	grouping traffic_params{
-		description "Basic Traffic Parameters to be offered within a Call";
-
-		leaf reserved_bandwidth {
-			description "Reserved Bandwidth measured in Mb/s i.e. 10, 100, 1000 Mb/s";
+    grouping traffic_params{
+        description "Basic Traffic Parameters to be offered within a Call";
+        leaf reserved_bandwidth {
+            description "Reserved Bandwidth measured in Mb/s i.e. 10, 100, 1000 Mb/s";
             type int32;
         }
-		leaf latency {
-			description "Connection latency measured in ms";
+        leaf latency {
+            description "Connection latency measured in ms";
             type int32;
         }
-	}
+        leaf estimated_PLR {
+            description "Estimated packet loss ratio in %";
+            type decimal64;
+        }
+    }
 
     grouping connection {
         description "The Connection represents an enabled potential for forwarding (including all circuit and packet forms) between two or more endpoints";

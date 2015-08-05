@@ -79,9 +79,15 @@ def translateRequest(js):
                     if "body" in param['in']:
                         ids[method]['body'] = True
                         if 'in_params' not in ids[method]:
-                            ids[method]['in_params'] = [param['schema']['$ref'].split('/')[-1]]
+                            if 'items' in param['schema']:
+                                ids[method]['in_params'] = [param['schema']['items']['$ref'].split('/')[-1]]
+                            else:
+                                ids[method]['in_params'] = [param['schema']['$ref'].split('/')[-1]]
                         else:
-                            ids[method]['in_params'].append(param['schema']['$ref'].split('/')[-1])
+                            if 'items' in param['schema']:
+                                ids[method]['in_params'].append(param['schema']['items']['$ref'].split('/')[-1])
+                            else:
+                                ids[method]['in_params'].append(param['schema']['$ref'].split('/')[-1])
 
             if "application/json" in js["paths"][path][method]['consumes']:
                 ids[method]['json'] = True
@@ -192,15 +198,28 @@ def generateServerStub(restname, data, services, path):
 
 
 def generateNotificationServer(name, notfy_urls, path):
+    name_classes = {}
+    import_list = []
+    for func in notfy_urls:
+        list_element_url = func['url'].split('/')
+        indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
+        name_classes[func['url']] = "".join([element.title() for i,element in enumerate(list_element_url[3:-1])])
+        # TODO restname is undefined
+        file = 'funcs_' + restname + '.' + name_classes[func['url']][0].lower() + name_classes[func['url']][1:] + "Impl"
+        name = name_classes[func['url']] + "Impl"
+        import_list.append(ImportObject(file, name))
+
     class_list = []
     dictio = {}
     base_url = ''
     for element in notfy_urls:
         base_url = '/'.join(element['url'].split('/')[:-2])
+        className = to_upper_camelcase(element['url'].split('/')[-2])
+        class_name = name_classes[element['url']]
         url = to_upper_camelcase(element['url'].split('/')[-2])+"Service"
         lower_url = "/"+to_lower_camelcase(element['url'].split('/')[-2])+"Service"
         dictio[str(base_url)+str(lower_url)] = str(url)
-        class_list.append(url)
+        class_list.append((className, class_name))
 
     servicemap = []
     for element in dictio:
@@ -222,6 +241,13 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
     generateServerStub("server", data, services, path)
     if notfy_urls:
         generateNotificationServer("notification_factory", notfy_urls, path)
+        urls = [element['url'] for element in notfy_urls]
+        data_prov={}
+        for entry in data['paths']:
+            if data['paths'][entry]['url'] not in urls:
+                data_prov[entry] = data['paths'][entry]
+
+        data['paths'] = data_prov
 
     info = data['paths']
     name_classes = {}
@@ -402,6 +428,8 @@ def generateClasses(data, restname, path):
             out.write(rendered_string)
             out.close()
 
+def tab(n):
+    return "    "*n
 
 def generateCallableClasses(data, restname, path):
     # create folder funcs_
@@ -411,6 +439,53 @@ def generateCallableClasses(data, restname, path):
             out = open(path+"funcs_"+restname+"/__init__.py", "w+")
             out.write(" ")
             out.close()
+
+    if notfy_urls:
+        name_classes = {}
+        params_callback = {}
+        for func in notfy_urls:
+            index=0
+            resp_model = func['methods']['get']['resp']['200']['schema']['$ref'].split('/')[-1]
+            list_element_url = func['url'].split('/')
+            indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
+            name_classes[func['url']] = "".join([element.title() for i,element in enumerate(list_element_url[3:-1])])
+            if os.path.isfile(path+"funcs_"+restname+"/"+name_classes[func['url']][0].lower()+""+name_classes[func['url']][1:]+"Impl.py"): #if exists, don't create
+                print "funcs_"+restname+"/"+name_classes[func['url']][0].lower()+name_classes[func['url']][1:]+"Impl.py already exists, not overwrite"
+            else:
+                line="\n"
+                out=open(path+"funcs_"+restname+"/"+name_classes[func['url']][0].lower()+name_classes[func['url']][1:]+"Impl.py","w+")
+
+                out.write("import os.path, sys"+line)
+                out.write("import threading"+line)
+                out.write("import json"+line)
+                out.write("import time"+line)
+                out.write("sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))"+line+line)
+                for im in imp:
+                    if im == resp_model:
+                        out.write("from objects_"+restname+"."+im[0].lower()+im[1:]+" import "+im+line)
+
+                out.write(line+line+"class "+name_classes[func['url']]+"Impl (threading.Thread):"+line)
+                index+=1
+                out.write(tab(index)+"def __init__(self, handler):"+line)
+                index+=1
+                out.write(tab(index)+"threading.Thread.__init__(self)"+line)
+                out.write(tab(index)+"self.event = True"+line)
+                out.write(tab(index)+"self.handler = handler"+line+line)
+                index-=1
+                out.write(tab(index)+"def set_event(self, event):"+line)
+                index+=1
+                out.write(tab(index)+"print 'Event received'"+line)
+                out.write(tab(index)+"self.event = event"+line+line)
+                index-=1
+                out.write(tab(index)+"def run(self):"+line)
+                index+=1
+                out.write(tab(index)+"while self.event:"+line)
+                index+=1
+                out.write(tab(index)+"time.sleep(1)"+line+line)
+                index-=1
+                out.write(tab(index)+"payload = json.dumps("+resp_model+"(json_string={'callId':'Example_"+name_classes[func['url']]+"'}).json_serializer(), ensure_ascii = False).encode('utf8')"+line)
+                out.write(tab(index)+"self.handler.sendMessage(payload, False)"+line)
+                out.close()
 
     info = data['paths']
     name_classes = {}
@@ -517,7 +592,7 @@ def to_upper_camelcase(name):
                   name)
 
 
-def main():
+if __name__ == '__main__':
     if len(sys.argv) == 1:
         print "Filename argument required"
     else:
@@ -576,6 +651,3 @@ def main():
             servicefile.write(json.dumps(services))
             servicefile.close()
         print "Finished"
-
-if __name__ == '__main__':
-    main()
