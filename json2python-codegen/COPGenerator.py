@@ -24,7 +24,8 @@ from CGConfiguration import CGConfiguration
 
 # jinja code generator
 from jinja2 import Environment, PackageLoader
-from jinja2_codegen.jinja_classes import *
+from jinja2_codegen.jinja_classes import ImportObject, AttributeObject, EnumObject, UrlObject, CallbackObject
+
 jinja_env = Environment(loader=PackageLoader('jinja2_codegen', 'templates'), trim_blocks=True, lstrip_blocks=True)
 
 # The regular expression inserted in the url array.
@@ -220,7 +221,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
     #if not os.path.isfile("server.py"):
     generateServerStub("server", data, services, path)
     if notfy_urls:
-        generateNotificationServer("notification_factory", data, notfy_urls, path)
+        generateNotificationServer("notification_factory", notfy_urls, path)
 
     info = data['paths']
     name_classes = {}
@@ -574,7 +575,7 @@ def main():
             jsret2 = translateRequest(js)
             notfy_urls = getNotificationAPIs(jsret2)
             ret = generateRESTapi(jsret2, name, imp, restname, params, services, path, notfy_urls)
-            generateCallableClasses(ret, jsret2, imp, restname, path)
+            generateCallableClasses(jsret2, restname, path)
         if not debug:
             servicefile = open(path+".cop/services.json", 'w+')
             servicefile.write(json.dumps(services))
