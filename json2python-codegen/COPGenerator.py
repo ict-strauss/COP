@@ -487,13 +487,12 @@ def generateCallableClasses(data, restname, path):
             methods[method] = {}
             methods[method]['arguments'] = arguments
             methods[method]['printstr'] = printstr
-            methods[method]['object_path'] = object_path
-            methods[method]['ending'] = ending
 
         # use jinja
         template = jinja_env.get_template('callable.py')
         rendered_string = template.render(class_name=class_name,
-                                          methods=methods, toplevel=toplevel)
+                                          methods=methods, toplevel=toplevel,
+                                          object_path=object_path, ending=ending)
 
         # write callable file
         if not debug:

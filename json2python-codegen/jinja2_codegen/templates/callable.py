@@ -22,19 +22,19 @@ class {{class_name}}Impl:
         {% endif %}
         print 'handling post'
         {% if methods['POST'].arguments | length > 2 %}
-        if {{methods['POST'].arguments[0]}} in {{methods['POST'].object_path[0]}}:
+        if {{methods['POST'].arguments[0]}} in {{object_path[0]}}:
             {% if methods['POST'].arguments | length > 3 %}
-            if {{methods['POST'].arguments[1]}} in {{methods['POST'].object_path[1]}}:
-                {{methods['POST'].object_path[2]}}[{{methods['POST'].arguments[2]}}]{{methods['POST'].ending}} = {{methods['POST'].arguments[3]}}
+            if {{methods['POST'].arguments[1]}} in {{object_path[1]}}:
+                {{object_path[2]}}[{{methods['POST'].arguments[2]}}]{{ending}} = {{methods['POST'].arguments[3]}}
             else:
                 raise KeyError('{{methods['POST'].arguments[1]}}')
             {% else %}
-            {{methods['POST'].object_path[1]}}[{{methods['POST'].arguments[1]}}]{{methods['POST'].ending}} = {{methods['POST'].arguments[2]}}
+            {{object_path[1]}}[{{methods['POST'].arguments[1]}}]{{ending}} = {{methods['POST'].arguments[2]}}
             {% endif %}
         else:
             raise KeyError('{{methods['POST'].arguments[0]}}')
         {% else %}
-        {{methods['POST'].object_path[0]}}[{{methods['POST'].arguments[0]}}]{{methods['POST'].ending}} = {{methods['POST'].arguments[1]}}
+        {{object_path[0]}}[{{methods['POST'].arguments[0]}}]{{ending}} = {{methods['POST'].arguments[1]}}
         {% endif %}
     {% endif %}
     {% if methods['DELETE'] %}
@@ -45,21 +45,21 @@ class {{class_name}}Impl:
         print str({{methods['DELETE'].printstr}})
         {% endif %}
         print 'handling delete'
-        if {{methods['DELETE'].arguments[0]}} in {{methods['DELETE'].object_path[0]}}:
+        if {{methods['DELETE'].arguments[0]}} in {{object_path[0]}}:
             {% if methods['DELETE'].arguments | length > 1 %}
-            if {{methods['DELETE'].arguments[1]}} in {{methods['DELETE'].object_path[1]}}:
+            if {{methods['DELETE'].arguments[1]}} in {{object_path[1]}}:
                 {% if methods['DELETE'].arguments | length > 2 %}
-                if {{methods['DELETE'].arguments[2]}} in {{methods['DELETE'].object_path[2]}}:
-                    del({{methods['DELETE'].object_path[2]}}[{{methods['DELETE'].arguments[2]}}]{{methods['DELETE'].ending}})
+                if {{methods['DELETE'].arguments[2]}} in {{object_path[2]}}:
+                    del({{object_path[2]}}[{{methods['DELETE'].arguments[2]}}]{{ending}})
                 else:
                     raise KeyError('{{methods['DELETE'].arguments[2]}}')
                 {% else %}
-                del({{methods['DELETE'].object_path[1]}}[{{methods['DELETE'].arguments[1]}}]{{methods['DELETE'].ending}})
+                del({{object_path[1]}}[{{methods['DELETE'].arguments[1]}}]{{ending}})
                 {% endif %}
             else:
                 raise KeyError('{{methods['DELETE'].arguments[1]}}')
             {% else %}
-            del({{methods['DELETE'].object_path[0]}}[{{methods['DELETE'].arguments[0]}}]{{methods['DELETE'].ending}})
+            del({{object_path[0]}}[{{methods['DELETE'].arguments[0]}}]{{ending}})
             {% endif %}
         else:
             raise KeyError('{{methods['DELETE'].arguments[0]}}')
@@ -73,26 +73,26 @@ class {{class_name}}Impl:
         {% endif %}
         print 'handling get'
         {% if methods['GET'].arguments | length > 0 %}
-        if {{methods['GET'].arguments[0]}} in {{methods['GET'].object_path[0]}}:
+        if {{methods['GET'].arguments[0]}} in {{object_path[0]}}:
             {% if methods['GET'].arguments | length > 1 %}
-            if {{methods['GET'].arguments[1]}} in {{methods['GET'].object_path[1]}}:
+            if {{methods['GET'].arguments[1]}} in {{object_path[1]}}:
                 {% if methods['GET'].arguments | length > 2 %}
-                if {{methods['GET'].arguments[2]}} in {{methods['GET'].object_path[2]}}:
-                    return {{methods['GET'].object_path[2]}}[{{methods['GET'].arguments[2]}}]{{methods['GET'].ending}}
+                if {{methods['GET'].arguments[2]}} in {{object_path[2]}}:
+                    return {{object_path[2]}}[{{methods['GET'].arguments[2]}}]{{ending}}
                 else:
                     raise KeyError('{{methods['GET'].arguments[2]}}')
                 {% else %}
-                return {{methods['GET'].object_path[1]}}[{{methods['GET'].arguments[1]}}]{{methods['GET'].ending}}
+                return {{object_path[1]}}[{{methods['GET'].arguments[1]}}]{{ending}}
                 {% endif %}
             else:
                 raise KeyError('{{methods['GET'].arguments[1]}}')
             {% else %}
-            return {{methods['GET'].object_path[0]}}[{{methods['GET'].arguments[0]}}]{{methods['GET'].ending}}
+            return {{object_path[0]}}[{{methods['GET'].arguments[0]}}]{{ending}}
             {% endif %}
         else:
             raise KeyError('{{methods['GET'].arguments[0]}}')
         {% else %}
-        return {{methods['GET'].object_path[0]}}
+        return {{object_path[0]}}
         {% endif %}
         
     {% endif %}
