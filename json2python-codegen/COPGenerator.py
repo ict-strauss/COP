@@ -197,14 +197,13 @@ def generateServerStub(restname, data, services, path):
         out.close()
 
 
-def generateNotificationServer(name, notfy_urls, path):
+def generateNotificationServer(name, notfy_urls, path, restname):
     name_classes = {}
     import_list = []
     for func in notfy_urls:
         list_element_url = func['url'].split('/')
         indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
         name_classes[func['url']] = "".join([element.title() for i,element in enumerate(list_element_url[3:-1])])
-        # TODO restname is undefined
         file = 'funcs_' + restname + '.' + name_classes[func['url']][0].lower() + name_classes[func['url']][1:] + "Impl"
         name = name_classes[func['url']] + "Impl"
         import_list.append(ImportObject(file, name))
@@ -240,7 +239,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
     #if not os.path.isfile("server.py"):
     generateServerStub("server", data, services, path)
     if notfy_urls:
-        generateNotificationServer("notification_factory", notfy_urls, path)
+        generateNotificationServer("notification_factory", notfy_urls, path, restname)
         urls = [element['url'] for element in notfy_urls]
         data_prov={}
         for entry in data['paths']:
@@ -429,7 +428,7 @@ def generateClasses(data, restname, path):
 def tab(n):
     return "    "*n
 
-def generateCallableClasses(data, restname, path):
+def generateCallableClasses(data, restname, path, notfy_urls):
     # create folder funcs_
     if not os.path.exists(path+"funcs_"+restname+"/"):
         if not debug:
@@ -641,7 +640,7 @@ if __name__ == '__main__':
             jsret2 = translateRequest(js)
             notfy_urls = getNotificationAPIs(jsret2)
             generateRESTapi(jsret2, name, imp, restname, params, services, path, notfy_urls)
-            generateCallableClasses(jsret2, restname, path)
+            generateCallableClasses(jsret2, restname, path, notfy_urls)
         if not debug:
             servicefile = open(path+".cop/services.json", 'w+')
             servicefile.write(json.dumps(services))
