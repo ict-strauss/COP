@@ -299,8 +299,6 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         url = info[func]['url']
         name = name_classes[func]
         callback_list.append(CallbackObject(name, url, methods, arguments, thing, check_id))
-        # TODO check the path (/restconf/config, /restconf/operations, /restconf/streams)
-        # and behave accordingly.
 
     if params.isAuth:
         auth = True
@@ -536,8 +534,6 @@ def generateCallableClasses(data, restname, path):
             else:
                 ending = ''
         toplevel = relevant_list[0]
-        # TODO check the path (/restconf/config, /restconf/operations, /restconf/streams)
-        # and behave accordingly.
 
         class_name = name_classes[func]
         methods = {}
