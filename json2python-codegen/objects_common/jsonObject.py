@@ -1,4 +1,5 @@
 from arrayType import ArrayTypeError
+from keyedArrayType import KeyedArrayKeyError
 
 class JsonObject(object):
 
@@ -45,6 +46,8 @@ class JsonObject(object):
                                 getattr(self, key).append_new(json_struct=element)
                             except ArrayTypeError as inst:
                                 raise TypeError(key + '[...]', inst.args[0], inst.args[1])
+                            except KeyedArrayKeyError as inst:
+                                raise KeyedArrayKeyError(key + '[...]', inst.args[0], inst.args[1])
                     else:
                         raise TypeError(key, json_struct[key], 'array')
                 #if superclass type(getattr(self, key)) == JsonObject:

@@ -1,6 +1,7 @@
 from collections import OrderedDict
+from arrayType import ArrayTypeError
 
-class ArrayTypeError(Exception):
+class KeyedArrayKeyError(Exception):
     pass
 
 class KeyedArrayType(OrderedDict):
@@ -30,7 +31,7 @@ class KeyedArrayType(OrderedDict):
         if self.key in json_struct:
             self[json_struct[self.key]] = self.klass(json_struct)
         else:
-            raise ArrayTypeError(json_struct, 'KEY ERROR')
+            raise KeyedArrayKeyError(json_struct, self.key)
 
     def serialize_json(self):
         ret = []
