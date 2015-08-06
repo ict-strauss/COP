@@ -13,7 +13,29 @@ Python code that uses json outputs from **pyang** to generate **RESTful server**
 - Check **CGConfiguration.xml** to enable/disable CORS and Basic Authentication
 
 ### Dependencies
- - This code generates python code that uses [web.py](http://webpy.org/install)
+ - This code generates python code that uses:
+ - [web.py](http://webpy.org/install)
+ - [Twisted](https://twistedmatrix.com/trac/)
+```
+wget https://pypi.python.org/packages/source/T/Twisted/Twisted-15.3.0.tar.bz2
+
+tar -xjvf Twisted-15.3.0.tar.bz2
+
+cd Twisted-15.3.0/
+
+python setup.py install
+```
+ - [Autobahn] (https://pypi.python.org/pypi/autobahn)
+```
+wget https://pypi.python.org/packages/source/a/autobahn/autobahn-0.10.4.tar.gz
+
+tar -xvzf autobahn-0.10.4.tar.gz
+
+cd autobahn-0.10.4/
+
+python setup.py install
+```
+
 
 ### Issues
 - Some of the configurations are fixed for COP (e.g. type of return messages). To be fixed in next version.
