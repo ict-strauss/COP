@@ -267,19 +267,23 @@ module service-call {
             type topo:end-ref;
         }*/
     }
+
     grouping traffic_params{
         description "Basic Traffic Parameters to be offered within a Call";
         leaf reserved_bandwidth {
             description "Reserved Bandwidth measured in Mb/s i.e. 10, 100, 1000 Mb/s";
             type int32;
         }
-        leaf latency {
-            description "Connection latency measured in ms";
+		leaf latency {
+			description "Connection latency measured in ms";
             type int32;
         }
+
         leaf estimated_PLR {
             description "Estimated packet loss ratio in %";
-            type decimal64;
+            type decimal64{
+                fraction-digits 2;
+            }
         }
     }
 
@@ -290,30 +294,24 @@ module service-call {
             type string;
         }
         container aEnd{
-            config false;
             uses endpoint;
         }
         container zEnd{
-            config false;
             uses endpoint;
         }
         container path{
-            config false;
             uses path-type;
         }
         container match {
-            config false;
             uses match-rules;
         }
         container traffic_params {
-            config false;
             uses traffic_params;
         }
         leaf controller_domain_id{
              type string;
         }
         container transport_layer{
-            config false;
             uses transport_layer-type;
         }
         leaf operStatus {
@@ -339,20 +337,16 @@ module service-call {
             type string;
         }
         container aEnd{
-            config false;
             uses endpoint;
         }
         container zEnd{
-            config false;
             uses endpoint;
         }
         container transport_layer{
-            config false;
             uses transport_layer-type;
         }
         leaf operStatus {
             description "Running status";
-            config false;
             type enumeration {
                 enum down {
                     value 0;
@@ -365,11 +359,9 @@ module service-call {
             }
         }
         container match{
-            config false;
             uses match-rules;
         }
         container traffic_params {
-            config false;
             uses traffic_params;
         }
         list connections{
@@ -388,14 +380,12 @@ module service-call {
     }
 
     container calls{
-        config false;
         list call {
             key "call_id";
             uses call;
         }
     }
     container connections{
-        config false;
         list connection {
             key "connection_id";
             uses connection;
