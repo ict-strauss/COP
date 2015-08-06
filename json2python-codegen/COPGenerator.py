@@ -98,40 +98,48 @@ def translateRequest(js):
 
 
 def getType(js):
-    # TODO support for keyed array type
+    ret = {}
+    imp = False
     if "type" in js.keys():
         if "enum" in js.keys():
-            return "enum", [enum for enum in js['enum']], False
-        if "integer" in js['type']:
-            return js['format'], "none", False
-        if "string" in js['type']:
-            return "string", "none", False
-        if "boolean" in js['type']:
-            return "boolean", "none", False
-        if "array" in js['type']:
+            ret['type'] = 'enum'
+            ret['possible_values'] = [enum for enum in js['enum']]
+        elif "integer" in js['type']:
+            ret['type'] = js['format']
+        elif "string" in js['type']:
+            ret['type'] = 'string'
+        elif "boolean" in js['type']:
+            ret['type'] = 'boolean'
+        elif "array" in js['type']:
             if "type" in js['items'].keys():
-                return "array", js['items']['type'], False
+                ret['type'] = 'array'
+                ret['klass'] = js['items']['type']
             elif "$ref" in js['items'].keys():
-                return "array", js['items']['$ref'].split("/")[-1], True
-            else:
-                return "none", "none", False
-        if "object" in js['type']:
+                imp = True
+                ret['klass'] = js['items']['$ref'].split("/")[-1]
+                if "x-key" in js.keys():
+                    ret['type'] = 'keyed-array'
+                    ret['key'] = js['x-key']
+                else:
+                    ret['type'] = 'array'
+        """ TODO, this code path is unused, swagger.py does not generate the type "object"
+        elif "object" in js['type']:
             if "type" in js['additionalProperties'].keys():
-                return "object", js['additionalProperties']['type'], False
-            elif "$ref" in js['additionalProperties'].keys():
-                return "object", js['additionalProperties']['$ref'].split("/")[-1], True
-            else:
-                return "none", "none", False
-        else:
-            return "none", "none", False
+                ret['type'] = 'object'
+                ret['klass'] = js['additionalProperties']['type']
+            elif "$ref" js['additionalProperties'].keys():
+                imp = True
+                ret['type'] = 'object'
+                ret['klass'] = js['additionalProperties']['$ref'].split("/")[-1]
+        """
     elif "$ref" in js.keys():
-        return "import", js['$ref'].split("/")[-1], True
-    else:
-        return "none", "none", False
+        imp = True
+        ret['type'] = 'object'
+        ret['klass'] = js['$ref'].split("/")[-1]
+    return ret, imp
 
 
 def translateClasses(js):
-    # TODO support for keyed array type
     res = []
     for klass in js['definitions'].keys():
         imports = []
@@ -147,18 +155,20 @@ def translateClasses(js):
                     cl['extend_class'] = item['$ref'].split("/")[-1]
                 elif "properties" in item:
                     for att in item['properties'].keys():
-                        taip, other, imp = getType(item['properties'][att])
-                        atts.append({"att":att, "type":taip, "other":other})
+                        ret, imp = getType(item['properties'][att])
+                        ret['att'] = att
+                        atts.append(ret)
                         if imp:
-                            if other not in imports:
-                                imports.append(other)
+                            if ret['klass'] not in imports:
+                                imports.append(ret['klass'])
         else:
             for att in js['definitions'][klass]['properties'].keys():
-                taip, other, imp = getType(js['definitions'][klass]['properties'][att])
-                atts.append({"att":att, "type":taip, "other":other})
+                ret, imp = getType(js['definitions'][klass]['properties'][att])
+                ret['att'] = att
+                atts.append(ret)
                 if imp:
-                    if other not in imports:
-                        imports.append(other)
+                    if ret['klass'] not in imports:
+                        imports.append(ret['klass'])
         cl["atts"] = atts
         cl["imports"] = imports
         res.append(cl)
@@ -336,20 +346,20 @@ def translate_type_json2python(typename):
         return typename
 
 def generateAttributeValue(att): #Initialization of different attributes
-    # TODO support for keyed array type
-    if "string" in att['type']:
+    if att['type'] == "string":
         return '""'
     elif "int" in att['type']:
         return '0'
-    elif "boolean" in att['type']:
+    elif att['type'] == "boolean":
         return 'False'
-    elif "array" in att['type']:
-        return "ArrayType(" + translate_type_json2python(att['other']) + ")"
-    elif "object" in att['type']:
-        return "{} #dict of " + att['other']
-    elif "import" in att['type']:
-        return att['other']+"() #import"
-    elif "enum" in att['type']:
+    elif att['type'] == "array":
+        return "ArrayType(" + translate_type_json2python(att['klass']) + ")"
+    elif att['type'] == "keyed-array":
+        return "KeyedArrayType(" + att['klass'] + ", '" + att['key'] + "')"
+    # Always use class definitions for objects, not dicts
+    elif att['type'] == "object":
+        return att['klass']+"() #import"
+    elif att['type'] == "enum":
         return att['att'].capitalize() + '(1)'
     else:
         return "None #FIXME: This parameter is not well defined"
@@ -393,19 +403,23 @@ def generateClasses(data, restname, path):
 
         # attributes
         import_array = False
+        import_keyed_array = False
         for att in klass['atts']:
             attribute_list.append(AttributeObject(att['att'], generateAttributeValue(att)))
-            if "array" in att['type']:
+            if att['type'] == "array":
                 import_array = True
+            if att['type'] == "keyed-array":
+                import_keyed_array = True
         if import_array:
-            # TODO support for keyed array type
             import_list.append(ImportObject('objects_common.arrayType', 'ArrayType'))
+        if import_keyed_array:
+            import_list.append(ImportObject('objects_common.keyedArrayType', 'KeyedArrayType'))
 
         # enums
         import_enum = False
         for att in klass['atts']:
             if "enum" in att['type']:
-                enum_values = ['\'' + x + '\'' for x in att['other']]
+                enum_values = ['\'' + x + '\'' for x in att['possible_values']]
                 enum_list.append(EnumObject(att['att'].capitalize(), enum_values))
                 import_enum = True
         if import_enum:
