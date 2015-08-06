@@ -279,7 +279,9 @@ module service-call {
         }
         leaf estimated_PLR {
             description "Estimated packet loss ratio in %";
-            type decimal64;
+            type decimal64{
+                fraction-digits 2;
+            }
         }
     }
 
