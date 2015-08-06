@@ -1,7 +1,9 @@
+from collections import OrderedDict
+
 class ArrayTypeError(Exception):
     pass
 
-class KeyedArrayType(dict):
+class KeyedArrayType(OrderedDict):
 
     def __init__(self, klass, key):
         super(KeyedArrayType, self).__init__()
