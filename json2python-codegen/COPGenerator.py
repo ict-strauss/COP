@@ -83,33 +83,37 @@ def translateRequest(js):
 def getType(js):
     if "type" in js.keys():
         if "enum" in js.keys():
-            return "enum",[enum for enum in js['enum']],False
+            return "enum",[enum for enum in js['enum']],False,None
         if "integer" in js['type']:
-            return js['format'],"none",False
+            return js['format'],"none",False,None
         if "string" in js['type']:
-            return "string","none",False
+            return "string","none",False,None
         if "boolean" in js['type']:
-            return "boolean","none",False
+            return "boolean","none",False,None
         if "array" in js['type']:
-            if "type" in js['items'].keys():
-                return "array", js['items']['type'],False
-            elif "$ref" in js['items'].keys():
-                return "array",js['items']['$ref'].split("/")[-1],True
+            if "x-key" in js.keys():
+                key = js['x-key']
             else:
-                return "none","none", False
+                key = None
+            if "type" in js['items'].keys():
+                return "array", js['items']['type'],False, key
+            elif "$ref" in js['items'].keys():
+                return "array",js['items']['$ref'].split("/")[-1],True, key
+            else:
+                return "none","none", False, key
         if "object" in js['type']:
             if "type" in js['additionalProperties'].keys():
-                return "object", js['additionalProperties']['type'],False
+                return "object", js['additionalProperties']['type'],False, None
             elif "$ref" in js['additionalProperties'].keys():
-                return "object",js['additionalProperties']['$ref'].split("/")[-1],True
+                return "object",js['additionalProperties']['$ref'].split("/")[-1],True, None
             else:
-                return "none","none", False
+                return "none","none", False,None
         else:
-            return "none","none", False
+            return "none","none", False, None
     elif "$ref" in js.keys():
-        return "import",js['$ref'].split("/")[-1],True
+        return "import",js['$ref'].split("/")[-1],True, None
     else:
-        return "none","none", False
+        return "none","none", False, None
 
 def translateClasses(js):
     res=[]
@@ -127,15 +131,15 @@ def translateClasses(js):
                     cl['extend_class'] = item['$ref'].split("/")[-1]
                 elif "properties" in item:
                     for att in item['properties'].keys():
-                        taip,other,imp=getType(item['properties'][att])
-                        atts.append({"att":att,"type":taip,"other":other})
+                        taip,other,imp,key=getType(item['properties'][att])
+                        atts.append({"att":att,"type":taip,"other":other,"key":key})
                         if imp:
                             if other not in imports:
                                 imports.append(other)
         else:
             for att in js['definitions'][klass]['properties'].keys():
-                taip,other,imp=getType(js['definitions'][klass]['properties'][att])
-                atts.append({"att":att,"type":taip,"other":other})
+                taip,other,imp,key=getType(js['definitions'][klass]['properties'][att])
+                atts.append({"att":att,"type":taip,"other":other,"key":key})
                 if imp:
                     if other not in imports:
                         imports.append(other)
@@ -483,7 +487,10 @@ def generateAttribute(att): #Initialization of different attributes
     elif "boolean" in att['type']:
         return text + 'False'
     elif "array" in att['type']:
-        return text+"[] #array of "+att['other']
+        if att['key']:
+            return text+"{} #array of "+att['other']+", keyed by "+att['key']
+        else:
+            return text+"[] #array of "+att['other']
     elif "object" in att['type']:
         return text+"{} #dict of "+att['other']
     elif "import" in att['type']:
@@ -603,7 +610,10 @@ def create_serializer(out, index, klass, enum_class_string):
                 out.write(tab(index)+"for a in self."+att['att']+":"+line)
                 index+=1
                 if att['other'] in imports:
-                    out.write(tab(index)+"ret['"+att['att']+"'].append(a.json_serializer())"+line)
+                    if att['key']:
+                        out.write(tab(index)+"ret['"+att['att']+"'].append(self."+att['att']+"[a].json_serializer())"+line)
+                    else:
+                        out.write(tab(index)+"ret['"+att['att']+"'].append(a.json_serializer())"+line)
                 else:
                     out.write(tab(index)+"ret['"+att['att']+"'].append(a)"+line)
                 index-=1
@@ -689,29 +699,57 @@ def create_deserializer(index, klass, data):
                 out += tab(index)+"self."+str(att['att'])+"[element] = "+str(att['att'])+"[element]"+line
             index -=2
         elif att['type'] == 'array':
-            out += tab(index)+"self."+str(att['att'])+"=[]"+line
-            out += tab(index)+str(att['att'])+" = json_string[key]"+line
-            out += tab(index)+"for element in "+str(att['att'])+":"+line
-            index +=1
-            if att['other'] not in ['string','integer']:
-                if is_inheritted_class(data, att):
-                    struc = get_child_classes(data, att)
-                    out += tab(index)+"element2 = "+str(att['att'])+"[element]"+line
-                    first2 = True
-                    for child_class in struc['child_classes']:
-                        if first2:
-                            out += tab(index)+"if element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
-                            first2 = False
-                        else:
-                            out += tab(index)+"elif element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
-                        index += 1
-                        out += tab(index)+"self."+str(att['att'])+"[element] = "+child_class+"(json_string="+str(att['att'])+"[element])"+line
-                        index -= 1
+            if att['key']:
+                out += tab(index)+"self."+str(att['att'])+"={}"+line
+                out += tab(index)+str(att['att'])+" = json_string[key]"+line
+                out += tab(index)+"for element in "+str(att['att'])+":"+line
+                index +=1
+                if att['other'] not in ['string','integer']:
+                    if is_inheritted_class(data, att):
+                        struc = get_child_classes(data, att)
+                        first2 = True
+                        for child_class in struc['child_classes']:
+                            if first2:
+                                out += tab(index)+"if"
+                                first2 = False
+                            else:
+                                out += tab(index)+"elif"
+                            if str(struc['type']) == 'enum':
+                                out+=" element['"+struc['discriminator']+"'] == "+att['other']+"."+struc['discriminator'].capitalize()+"."+child_class+":"+line
+                            else:
+                                out+=" element['"+struc['discriminator']+"'] == '"+child_class+"':"+line
+                            index += 1
+                            out += tab(index)+"self."+str(att['att'])+"[str(element[\'"+att['key']+"\'])] = "+child_class+"(json_string=element)"+line
+                            index -= 1
+                    else:
+                        out += tab(index)+"self."+str(att['att'])+"[str(element[\'"+att['key']+"\'])] = "+att['other']+"(json_string=element)"+line
                 else:
-                    out += tab(index)+"self."+str(att['att'])+".append("+att['other']+"(json_string=element))"+line
+                    out += tab(index)+"self."+str(att['att'])+".append(element)"+line
+                index -=2
             else:
-                out += tab(index)+"self."+str(att['att'])+".append(element)"+line
-            index -=2
+                out += tab(index)+"self."+str(att['att'])+"=[]"+line
+                out += tab(index)+str(att['att'])+" = json_string[key]"+line
+                out += tab(index)+"for element in "+str(att['att'])+":"+line
+                index +=1
+                if att['other'] not in ['string','integer']:
+                    if is_inheritted_class(data, att):
+                        struc = get_child_classes(data, att)
+                        out += tab(index)+"element2 = "+str(att['att'])+"[element]"+line
+                        first2 = True
+                        for child_class in struc['child_classes']:
+                            if first2:
+                                out += tab(index)+"if element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
+                                first2 = False
+                            else:
+                                out += tab(index)+"elif element2['"+struc['discriminator']+"'] == '"+child_class+"':"+line
+                            index += 1
+                            out += tab(index)+"self."+str(att['att'])+"[element] = "+child_class+"(json_string="+str(att['att'])+"[element])"+line
+                            index -= 1
+                    else:
+                        out += tab(index)+"self."+str(att['att'])+".append("+att['other']+"(json_string=element))"+line
+                else:
+                    out += tab(index)+"self."+str(att['att'])+".append(element)"+line
+                index -=2
         elif att['type'] == 'import':
             out += tab(index)+"self."+str(att['att'])+"="+att['other']+"(json_string=json_string[key])"+line
             index -=1
