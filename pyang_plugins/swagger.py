@@ -264,7 +264,9 @@ def gen_model(children, tree_structure):
                     else:
                         node['$ref'] = ref
                         referenced = True
-
+                elif attribute.keyword == 'key':
+                    if str(child.keyword) == 'list':
+                        node['x-key'] = to_lower_camelcase(attribute.arg)
         # When a node contains a referenced model as an attribute the algorithm
         # does not go deeper into the sub-tree of the referenced model.
         if not referenced :
@@ -348,12 +350,16 @@ def gen_api_node(node, path, apis, definitions):
                 for child in node.i_children:
                     if child.keyword == 'list':
                         schema['type'] = 'array'
+                        key = [ch for ch in child.substmts if ch.keyword == 'key']
+                        if key:
+                            schema['x-key'] = to_lower_camelcase(key[0].arg)
                     ref_model = [ch for ch in child.substmts
                                  if ch.keyword == 'uses']
                     schema['items'] = {
                         '$ref': '#/definitions/' + to_upper_camelcase(
                             ref_model[0].arg)
                     }
+
             else:
                 # TODO: dead code for our model
                 properties = {}
