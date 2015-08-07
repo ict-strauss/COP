@@ -30,7 +30,7 @@ Go to the `yang-cop` folder and run pyang:
 ```
 pyang -f swagger -p yang/yang-cop service-call.yang -o service-call.json
 
---use the option '-p' to specify the path of the yang models for import purposes.
+      --use the option '-p' to specify the path of the yang models for import purposes.
 ```
 
 ## Have a look at the JSON output with the Swagger editor
