@@ -26,12 +26,15 @@ from CGConfiguration import CGConfiguration
 from jinja2 import Environment, PackageLoader
 from jinja2_codegen.jinja_classes import ImportObject, AttributeObject, EnumObject, UrlObject, CallbackObject
 
-jinja_env = Environment(loader=PackageLoader('jinja2_codegen', 'templates'), trim_blocks=True, lstrip_blocks=True)
+#templates_dir = 'templates/demo'
+templates_dir = 'templates/base'
+jinja_env = Environment(loader=PackageLoader('jinja2_codegen', templates_dir), trim_blocks=True, lstrip_blocks=True)
 
 # The regular expression inserted in the url array.
 regex_string = '(\\w+)'
 
 debug = False
+#debug = True
 
 # Map from JSON types to python types
 type_map = {'string' : 'str', 'integer' : 'int'}
