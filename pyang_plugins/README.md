@@ -28,7 +28,9 @@ sudo cp pyang_plugins/swagger.py /usr/local/lib/python2.7/dist-packages/pyang/pl
 Go to the `yang-cop` folder and run pyang:
 
 ```
-pyang -f swagger service-call.yang -o service-call.json
+pyang -f swagger -p yang/yang-cop service-call.yang -o service-call.json
+
+--use the option '-p' to specify the path of the yang models for import purposes.
 ```
 
 ## Have a look at the JSON output with the Swagger editor
