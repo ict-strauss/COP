@@ -6,6 +6,9 @@ class EnumType(object):
     def __init__(self, initial_value):
         self.set(initial_value)
 
+    def load_json(self, json_struct):
+        self.set(json_struct)
+
     def serialize_json(self):
         # Returns a string
         # This could be changed to encode enums as integers when transmitting messages
@@ -25,13 +28,13 @@ class EnumType(object):
             try:
                 self.value = type(self).possible_values.index(value)
             except ValueError:
-                raise ValueError(value, type(self).possible_values)
+                raise ValueError('', value, type(self).possible_values)
         elif type(value) is int:
             if value >= 1 and value <= type(self).range_end:
                 # External representation of Enum starts at 1, internal at 0
                 value = value - 1
                 self.value = value
             else:
-                raise ValueError(value, type(self).range_end)
+                raise ValueError('', value, type(self).range_end)
         else:
-            raise TypeError
+            raise TypeError('', value, 'string or integer')

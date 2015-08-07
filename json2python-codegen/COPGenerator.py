@@ -353,7 +353,7 @@ def generateAttributeValue(att): #Initialization of different attributes
     elif att['type'] == "boolean":
         return 'False'
     elif att['type'] == "array":
-        return "ArrayType(" + translate_type_json2python(att['klass']) + ")"
+        return "ArrayType.factory(" + translate_type_json2python(att['klass']) + ")"
     elif att['type'] == "keyed-array":
         return "KeyedArrayType(" + att['klass'] + ", '" + att['key'] + "')"
     # Always use class definitions for objects, not dicts

@@ -1,4 +1,3 @@
-from arrayType import ArrayTypeError
 from keyedArrayType import KeyedArrayKeyError
 
 class JsonObject(object):
@@ -30,43 +29,17 @@ class JsonObject(object):
         for key in json_struct:
             # Check if there is an attribute in this object that has the name of the key
             if key in self._child_objects:
-                # Execute different actions depending on the type of the attribute,
-                # always check if the type of the key matches the type of the attribute
-                #if type(getattr(self, key)) is ArrayType:
-                if hasattr(getattr(self, key), 'append_new'):
-                    # array
-                    if type(json_struct[key]) is list:
-                        # clear list
-                        getattr(self, key).delete_all()
-                        for element in json_struct[key]:
-                            # Instantiate new object of the class
-                            # Initialize from json
-                            # Append to the list
-                            try:
-                                getattr(self, key).append_new(json_struct=element)
-                            except ArrayTypeError as inst:
-                                raise TypeError(key + '[...]', inst.args[0], inst.args[1])
-                            except KeyedArrayKeyError as inst:
-                                raise KeyedArrayKeyError(key + '[...]', inst.args[0], inst.args[1])
-                    else:
-                        raise TypeError(key, json_struct[key], 'array')
-                #if superclass type(getattr(self, key)) == JsonObject:
-                elif hasattr(getattr(self, key), 'load_json'):
-                    # object
-                    if type(json_struct[key]) is dict:
+                if hasattr(getattr(self, key), 'load_json'):
+                    try:
                         getattr(self, key).load_json(json_struct[key])
-                    else:
-                        raise TypeError(key, json_struct[key], 'object')
-                #elif type(getattr(self, key)) is EnumType:
-                elif hasattr(getattr(self, key), 'set'):
-                    # enum
-                    if type(json_struct[key]) in [str, int]:
-                        try:
-                            getattr(self, key).set(json_struct[key])
-                        except ValueError as inst:
-                            raise ValueError(key, inst.args[0], inst.args[1])
-                    else:
-                        raise TypeError(key, json_struct[key], 'enum (integer or string)')
+                    except KeyError as inst:
+                        raise KeyError(key + '/' + inst.args[0])
+                    except ValueError as inst:
+                        raise ValueError(key + '/' + inst.args[0], inst.args[1], inst.args[2])
+                    except TypeError as inst:
+                        raise TypeError(key + '/' + inst.args[0], inst.args[1], inst.args[2])
+                    except KeyedArrayKeyError as inst:
+                        raise KeyedArrayKeyError(key + '/' + inst.args[0], inst.args[1], inst.args[2])
                 else:
                     # basic type
                     if type(json_struct[key]) == type(getattr(self, key)):

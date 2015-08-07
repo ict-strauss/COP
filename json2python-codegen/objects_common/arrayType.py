@@ -1,39 +1,67 @@
-class ArrayTypeError(Exception):
-    pass
-
 class ArrayType(list):
+
+    @staticmethod
+    def factory(klass):
+        if hasattr(klass, 'load_json'):
+            if hasattr(klass, 'serialize_json'):
+                return ArrayTypeComplexLoaderSerializer(klass)
+            else:
+                return ArrayTypeComplexLoader(klass)
+        else:
+            if hasattr(klass, 'serialize_json'):
+                return ArrayTypeBasicLoaderSerializer(klass)
+            else:
+                return ArrayTypeBasicLoader(klass)
 
     def __init__(self, klass):
         super(ArrayType, self).__init__()
         self.klass = klass
 
-    def delete_all(self):
-        del self[:]
+    def load_json(self, json_struct):
+        if type(json_struct) is list:
+            del self[:]
+            for element in json_struct[key]:
+                self.append_new(json_struct[key])
+        else:
+            raise TypeError('', json_struct, 'list')
+
+
+class ArrayTypeBasicLoader(ArrayType):
+
+    def __init__(self, klass):
+        super(ArrayTypeBasicLoader, self).__init__(klass)
 
     def append_new(self, json_struct):
-        if hasattr(self.klass, 'load_json'):
-            # object
-            if type(json_struct) != dict:
-                raise ArrayTypeError(json_struct, 'object')
-        elif hasattr(self.klass, 'set'):
-            # enum
-            if type(json_struct) not in [str, int]:
-                raise ArrayTypeError(json_struct, 'enum (integer or string)')
+        if type(json_struct) == self.klass:
+            self.append(self.klass(json_struct))
         else:
-            # basic type
-            if type(json_struct) != self.klass:
-                raise ArrayTypeError(json_struct, str(self.klass)[7:-2])
-        # checks passed
+            raise TypeError('', json_struct, str(self.klass)[7:-2])
+
+
+class ArrayTypeComplexLoader(ArrayType):
+
+    def __init__(self, klass):
+        super(ArrayTypeComplexLoader, self).__init__(klass)
+
+    def append_new(self, json_struct):
         self.append(self.klass(json_struct))
 
+
+class Serializer(object):
+
     def serialize_json(self):
-        ret = []
-        for a in self:
-            if hasattr(a, 'serialize_json'):
-                ret.append(a.serialize_json())
-            else:
-                ret.append(a)
-        return ret
+        return [x.serialize_json() for x in self]
 
     def __str__(self):
         return str(self.serialize_json())
+
+class ArrayTypeComplexLoaderSerializer(ArrayTypeComplexLoader, Serializer):
+
+    def __init__(self, klass):
+        super(ArrayTypeComplexLoaderSerializer, self).__init__(klass)
+
+
+class ArrayTypeBasicLoaderSerializer(ArrayTypeBasicLoader, Serializer):
+
+    def __init__(self, klass):
+        super(ArrayTypeBasicLoaderSerializer, self).__init__(klass)
