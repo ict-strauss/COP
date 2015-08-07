@@ -25,11 +25,11 @@ class MyClientProtocol(WebSocketClientProtocol):
         hello()
 
     def onMessage(self, payload, isBinary):
-        print 'On message'
         if isBinary:
             print("Binary message received: {0} bytes".format(len(payload)))
         else:
             print("Text message received: {0}".format(json.loads(payload.decode('utf8'))))
+            print("From : "+self.factory.url)
 
     def onClose(self, wasClean, code, reason):
         print code
