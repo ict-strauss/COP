@@ -20,8 +20,8 @@ class ArrayType(list):
     def load_json(self, json_struct):
         if type(json_struct) is list:
             del self[:]
-            for element in json_struct[key]:
-                self.append_new(json_struct[key])
+            for element in json_struct:
+                self.append_new(element)
         else:
             raise TypeError('', json_struct, 'list')
 
