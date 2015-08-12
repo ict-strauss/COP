@@ -15,6 +15,8 @@ from {{import_object.file}} import {{import_object.name}}
 from {{import_object.file}} import {{import_object.name}}
 {% endfor %}
 
+from objects_common.keyedArrayType import KeyedArrayKeyError
+
 urls = (
 {% for url_object in url_object_list -%}
     "{{url_object.path}}" , "{{url_object.callback}}" ,
@@ -76,6 +78,14 @@ def create_instance(klass, json_struct, id=None):
                                   str(inst.args[1]) + "<br>" +
                                   "Allowed range:" + "<br>" +
                                   "1 - " + str(inst.args[2]))
+    except KeyedArrayKeyError as inst:
+        raise BadRequestError("Error in JSON:" + "<br>" +
+                              "Missing key in list:" + "<br>" +
+                              inst.args[0] + "<br>" +
+                              "Received JSON:" + "<br>" +
+                              json.dumps(inst.args[1]) + "<br>" +
+                              "Key name:" + "<br>" +
+                              inst.args[2])
     else:
         # Check if the id given in the URL matches the id given in the body
         if id != None and id[0] != getattr(new_object, id[1]):
@@ -109,6 +119,14 @@ def modify_instance(existing_object, json_struct):
                                   str(inst.args[1]) + "<br>" +
                                   "Allowed range:" + "<br>" +
                                   "1 - " + str(inst.args[2]))
+    except KeyedArrayKeyError as inst:
+        raise BadRequestError("Error in JSON:" + "<br>" +
+                              "Missing key in list:" + "<br>" +
+                              inst.args[0] + "<br>" +
+                              "Received JSON:" + "<br>" +
+                              json.dumps(inst.args[1]) + "<br>" +
+                              "Key name:" + "<br>" +
+                              inst.args[2])
     else:
         return existing_object
 
@@ -268,3 +286,21 @@ class {{callback.name}}:
     {% endif %}
 
 {% endfor %}
+
+#/backend/save_state/
+class BackendSaveState:
+
+    def POST(self):
+        print "Save state operation"
+        retval = save_state()
+        if retval:
+            raise Successful("Successful operation",'Saved state')
+
+#/backend/load_state/
+class BackendLoadState:
+
+    def POST(self):
+        print "Load state operation"
+        retval = load_state()
+        if retval:
+            raise Successful("Successful operation",'Loaded state')

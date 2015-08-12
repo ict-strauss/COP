@@ -286,12 +286,19 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         callback = restname + "." + name_classes[func]
         url_object_list.append(UrlObject(url, callback))
 
+    if templates_dir == 'templates/demo':
+        url_object_list.append(UrlObject('/backend/save_state/', restname + "." + "BackendSaveState"))
+        url_object_list.append(UrlObject('/backend/load_state/', restname + "." + "BackendLoadState"))
+
     # imports of functions
     functions_import_list = []
     for func in info.keys():
         file = "funcs_" + restname + "." + name_classes[func][0].lower() + name_classes[func][1:] + "Impl"
         name = name_classes[func] + "Impl"
         functions_import_list.append(ImportObject(file, name))
+
+    if templates_dir == 'templates/demo':
+        functions_import_list.append(ImportObject("funcs_" + restname + "." + "backend", "save_state, load_state"))
 
     # imports of objects
     objects_import_list = []
