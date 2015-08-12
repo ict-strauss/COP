@@ -214,7 +214,7 @@ def generateServerStub(restname, data, services, path):
             out.close()
 
 
-def generateNotificationServer(name, notfy_urls, path, restname):
+def generateNotificationServer(notification_server_name, notfy_urls, path, restname):
     name_classes = {}
     import_list = []
     for func in notfy_urls:
@@ -247,7 +247,7 @@ def generateNotificationServer(name, notfy_urls, path, restname):
 
     # write notification server file
     if not debug:
-        dst = path + name + ".py"
+        dst = path + notification_server_name + ".py"
         if os.path.isfile(dst):
             print("Notification server already exists, skipping write.")
         else:
