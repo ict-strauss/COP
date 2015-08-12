@@ -18,6 +18,7 @@ import json
 import os
 import re
 import shutil
+import argparse
 
 sys.path.append(os.path.abspath(os.path.dirname(sys.argv[0])))
 from CGConfiguration import CGConfiguration
@@ -26,15 +27,8 @@ from CGConfiguration import CGConfiguration
 from jinja2 import Environment, PackageLoader
 from jinja2_codegen.jinja_classes import ImportObject, AttributeObject, EnumObject, UrlObject, CallbackObject
 
-#templates_dir = 'templates/demo'
-templates_dir = 'templates/base'
-jinja_env = Environment(loader=PackageLoader('jinja2_codegen', templates_dir), trim_blocks=True, lstrip_blocks=True)
-
 # The regular expression inserted in the url array.
 regex_string = '(\\w+)'
-
-debug = False
-#debug = True
 
 # Map from JSON types to python types
 type_map = {'string' : 'str', 'integer' : 'int'}
@@ -191,17 +185,22 @@ def getNotificationAPIs(data):
 
 ## This function generates a HTTP Server which will serve
 ## as a unique access point to our COP server implementation.
-def generateServerStub(restname, data, services, path):
+def generateServerStub(restname, port, services, path, notfy):
+
     import_list = []
     urls_list = []
     for serv in services:
         import_list.append(ImportObject('', serv.replace("-", "_")))
         urls_list.append(serv.replace("-", "_") + '.urls')
 
+    if target == 'demo':
+        import_list.append(ImportObject('', 'backend_api'))
+        urls_list.append('backend_api.urls')
+
     # use jinja
     template = jinja_env.get_template('server.py')
     rendered_string = template.render(import_list=import_list, urls_list=urls_list,
-                                      port=data['port'])
+                                      port=port, notifications=notfy)
 
     # write server file
     if not debug:
@@ -257,8 +256,6 @@ def generateNotificationServer(notification_server_name, notfy_urls, path, restn
 
 
 def generateRESTapi(data, name, imp, restname, params, services, path, notfy_urls):
-    #if not os.path.isfile("server.py"):
-    generateServerStub("server", data, services, path)
     if notfy_urls:
         generateNotificationServer("notification_factory", notfy_urls, path, restname)
         urls = [element['url'] for element in notfy_urls]
@@ -286,19 +283,12 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         callback = restname + "." + name_classes[func]
         url_object_list.append(UrlObject(url, callback))
 
-    if templates_dir == 'templates/demo':
-        url_object_list.append(UrlObject('/backend/save_state/', restname + "." + "BackendSaveState"))
-        url_object_list.append(UrlObject('/backend/load_state/', restname + "." + "BackendLoadState"))
-
     # imports of functions
     functions_import_list = []
     for func in info.keys():
         file = "funcs_" + restname + "." + name_classes[func][0].lower() + name_classes[func][1:] + "Impl"
         name = name_classes[func] + "Impl"
         functions_import_list.append(ImportObject(file, name))
-
-    if templates_dir == 'templates/demo':
-        functions_import_list.append(ImportObject("funcs_" + restname + "." + "backend", "save_state, load_state"))
 
     # imports of objects
     objects_import_list = []
@@ -617,63 +607,91 @@ def to_upper_camelcase(name):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        print("Filename argument required")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('swagger_json_files', nargs='+', type=str)
+    parser.add_argument('-o', '--outdir', type=str, default='')
+    parser.add_argument('-d', '--debug', action='store_true')
+    parser.add_argument('-p', '--port', type=str, default='8080')
+    parser.add_argument('-a', '--alternative', action='store_true')
+    #parser.add_argument('-t', '--target', type=str, choices=['base', 'demo'], default='base')
+    args = parser.parse_args()
+    debug = args.debug
+    port = args.port
+    params = CGConfiguration(os.path.abspath(os.path.dirname(sys.argv[0]))+"/CGConfiguration.xml")
+    if args.alternative:
+        target = 'demo'
     else:
-        filename = sys.argv[1]
-        if len(sys.argv) > 2:
-            path = sys.argv[2]
-        else:
-            path = ""
-        params = CGConfiguration(os.path.abspath(os.path.dirname(sys.argv[0]))+"/CGConfiguration.xml")
-        if  len(path) > 0 and path[-1] != "/":
+        target = 'base'
+    templates_dir = 'templates/' + target
+    jinja_env = Environment(loader=PackageLoader('jinja2_codegen', templates_dir), trim_blocks=True, lstrip_blocks=True)
+    services = []
+    for filename in args.swagger_json_files:
+        print("Processing file: " + filename)
+        path = args.outdir
+        if path and path[-1] != "/":
             path += "/"
 
-        f = open(filename, 'rb')
         service = filename.split("/")[-1].split(".")[0]
+        services.append(service)
+
         name = service+".py"
         restname = service.replace("-", "_")
 
+        # read input from swagger json file
+        f = open(filename, 'rb')
         stri = f.read()
+        f.close()
+
         js = json.loads(stri)
         #Translate json into a more manageable structure
         jsret = translateClasses(js)
         #generating classes first
-        print("Generating Rest Server and Classes for " + name)
         print("Class definitions are found in the folder '" + path + "objects_" + restname + "/'")
         generateClasses(jsret, restname, path)
-        imp = []
-        services = []
-        if not debug:
-            if not os.path.exists(path+".cop/"):
-                os.makedirs(path+".cop/")
-            if os.path.isfile(path+".cop/services.json"):
-                servicefile = open(path+".cop/services.json", 'rb')
-                services = json.loads(servicefile.read())
-                servicefile.close()
-
-        #copy common objects
-        if not debug:
-            srcdir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'objects_common')
-            dstdir = os.path.join(path, 'objects_common')
-            if os.path.exists(dstdir):
-                print("Common objects folder already exists, skipping copy.")
-            else:
-                shutil.copytree(srcdir, dstdir)
 
         #create imports for the main class (in case the user needs to use them)
+        imp = []
         for klass in jsret:
             imp.append(klass['class'])
-        #generate (is any) the RESTful Server
+
+        #generate (if any) the RESTful Server
         if "paths" in js.keys():
-            if service not in services:
-                services.append(service)
             jsret2 = translateRequest(js)
             notfy_urls = getNotificationAPIs(jsret2)
             generateRESTapi(jsret2, name, imp, restname, params, services, path, notfy_urls)
             generateCallableClasses(jsret2, restname, path, notfy_urls)
-        if not debug:
-            servicefile = open(path+".cop/services.json", 'w+')
-            servicefile.write(json.dumps(services))
-            servicefile.close()
-        print("Finished")
+
+    #copy common objects
+    if not debug:
+        srcdir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'objects_common')
+        dstdir = os.path.join(path, 'objects_common')
+        if os.path.exists(dstdir):
+            print("Common objects folder already exists, skipping copy.")
+        else:
+            shutil.copytree(srcdir, dstdir)
+
+    #copy backend files
+    if not debug and target == 'demo':
+        # copy backend_api.py
+        src = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'jinja2_codegen', 'templates', 'demo', 'backend_api.py')
+        shutil.copyfile(src, path + 'backend_api.py')
+        if not os.path.exists(path + "backend/"):
+            os.makedirs(path + "backend/")
+            open(path + "backend/__init__.py", "a").close()
+            # copy backend.py
+            src = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'jinja2_codegen', 'templates', 'demo', 'backend.py')
+            dst = path + "backend/" + 'backend.py'
+            shutil.copyfile(src, dst)
+
+    if notfy_urls:
+        notfy = True
+    else:
+        notfy = False
+    generateServerStub("server", port, services, path, notfy)
+    """
+    if not debug:
+        servicefile = open(path+".cop/services.json", 'w+')
+        servicefile.write(json.dumps(services))
+        servicefile.close()
+    """
+    print("Finished processing " + str(len(args.swagger_json_files)) + " file(s).")

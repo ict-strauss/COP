@@ -286,21 +286,3 @@ class {{callback.name}}:
     {% endif %}
 
 {% endfor %}
-
-#/backend/save_state/
-class BackendSaveState:
-
-    def POST(self):
-        print "Save state operation"
-        retval = save_state()
-        if retval:
-            raise Successful("Successful operation",'Saved state')
-
-#/backend/load_state/
-class BackendLoadState:
-
-    def POST(self):
-        print "Load state operation"
-        retval = load_state()
-        if retval:
-            raise Successful("Successful operation",'Loaded state')

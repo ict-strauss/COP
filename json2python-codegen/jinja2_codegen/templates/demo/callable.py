@@ -1,6 +1,6 @@
 import os.path, sys
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__))))
-from backend import {{toplevel}}
+from backend.backend import {{toplevel}}
 
 class {{class_name}}Impl:
     {% if methods['PUT'] %}
