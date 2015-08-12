@@ -205,9 +205,13 @@ def generateServerStub(restname, data, services, path):
 
     # write server file
     if not debug:
-        out = open(path+restname+".py", "w+")
-        out.write(rendered_string)
-        out.close()
+        dst = path + restname + ".py"
+        if os.path.isfile(dst):
+            print("Server stub already exists, skipping write.")
+        else:
+            out = open(dst, "w+")
+            out.write(rendered_string)
+            out.close()
 
 
 def generateNotificationServer(name, notfy_urls, path, restname):
@@ -241,11 +245,15 @@ def generateNotificationServer(name, notfy_urls, path, restname):
     template = jinja_env.get_template('notification_server.py')
     rendered_string = template.render(servicemap=servicemap, class_list=class_list)
 
-    # write notifiction server file
+    # write notification server file
     if not debug:
-        out = open(path+name+".py", "w+")
-        out.write(rendered_string)
-        out.close()
+        dst = path + name + ".py"
+        if os.path.isfile(dst):
+            print("Notification server already exists, skipping write.")
+        else:
+            out = open(dst, "w+")
+            out.write(rendered_string)
+            out.close()
 
 
 def generateRESTapi(data, name, imp, restname, params, services, path, notfy_urls):
@@ -338,9 +346,14 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
 
     # write API file
     if not debug:
-        out = open(path + restname+".py", "w+")
-        out.write(rendered_string)
-        out.close()
+        dst = path + restname + ".py"
+        if os.path.isfile(dst):
+            print("REST API file already exists, skipping write.")
+        else:
+            out = open(dst, "w+")
+            out.write(rendered_string)
+            out.close()
+
 
 def translate_type_json2python(typename):
     if typename in type_map:
@@ -376,9 +389,7 @@ def generateClasses(data, restname, path):
 
     # Create __init__.py file
     if not debug:
-        out = open(path+"objects_"+restname+"/__init__.py", "w+")
-        out.write(" ")
-        out.close()
+        open(path+"objects_"+restname+"/__init__.py", "a").close()
 
     # Create class.py files
     for klass in data:
@@ -438,19 +449,24 @@ def generateClasses(data, restname, path):
 
         #write class file
         if not debug:
-            out = open(path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py", "w+")
-            out.write(rendered_string)
-            out.close()
+            dst = path+"objects_"+restname+"/"+name[0].lower()+name[1:]+".py"
+            if os.path.isfile(dst):
+                print("Class file already exists, skipping write.")
+            else:
+                out = open(dst, "w+")
+                out.write(rendered_string)
+                out.close()
 
 
 def generateCallableClasses(data, restname, path, notfy_urls):
     # create folder funcs_
-    if not os.path.exists(path+"funcs_"+restname+"/"):
-        if not debug:
+    if not debug:
+        if os.path.exists(path+"funcs_"+restname+"/"):
+            print("Callable classes folder already exists, skipping.")
+        else:
             os.makedirs(path+"funcs_"+restname+"/")
-            out = open(path+"funcs_"+restname+"/__init__.py", "w+")
-            out.write(" ")
-            out.close()
+            open(path+"funcs_"+restname+"/__init__.py", "a").close()
+
 
     if notfy_urls:
         name_classes = {}
@@ -463,7 +479,7 @@ def generateCallableClasses(data, restname, path, notfy_urls):
             name_classes[func['url']] = "".join([element.title() for i,element in enumerate(list_element_url[3:-1])])
             filename = path+"funcs_"+restname+"/"+name_classes[func['url']][0].lower()+""+name_classes[func['url']][1:]+"Impl.py"
             if os.path.isfile(filename): #if exists, don't create
-                print(filename + "already exists, not overwriting")
+                print(filename + "already exists, skipping write")
             else:
                 import_list = []
                 for im in imp:
@@ -568,9 +584,13 @@ def generateCallableClasses(data, restname, path, notfy_urls):
 
         # write callable file
         if not debug:
-            out = open(path+"funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py", "w+")
-            out.write(rendered_string)
-            out.close()
+            dst = path+"funcs_"+restname+"/"+name_classes[func][0].lower()+name_classes[func][1:]+"Impl.py"
+            if os.path.isfile(dst):
+                print("Callable class file already exists, skipping write.")
+            else:
+                out = open(dst, "w+")
+                out.write(rendered_string)
+                out.close()
 
 
 def to_lower_camelcase(name):
@@ -591,7 +611,7 @@ def to_upper_camelcase(name):
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        print "Filename argument required"
+        print("Filename argument required")
     else:
         filename = sys.argv[1]
         if len(sys.argv) > 2:
@@ -611,10 +631,9 @@ if __name__ == '__main__':
         js = json.loads(stri)
         #Translate json into a more manageable structure
         jsret = translateClasses(js)
-        #print json.dumps(jsret)
         #generating classes first
-        print "Generating Rest Server and Classes for "+name
-        print "classes could be found in '"+path+"objects_"+restname+"/' folder"
+        print("Generating Rest Server and Classes for " + name)
+        print("Class definitions are found in the folder '" + path + "objects_" + restname + "/'")
         generateClasses(jsret, restname, path)
         imp = []
         services = []
@@ -630,7 +649,10 @@ if __name__ == '__main__':
         if not debug:
             srcdir = os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'objects_common')
             dstdir = os.path.join(path, 'objects_common')
-            shutil.copytree(srcdir, dstdir)
+            if os.path.exists(dstdir):
+                print("Common objects folder already exists, skipping copy.")
+            else:
+                shutil.copytree(srcdir, dstdir)
 
         #create imports for the main class (in case the user needs to use them)
         for klass in jsret:
@@ -647,4 +669,4 @@ if __name__ == '__main__':
             servicefile = open(path+".cop/services.json", 'w+')
             servicefile.write(json.dumps(services))
             servicefile.close()
-        print "Finished"
+        print("Finished")
