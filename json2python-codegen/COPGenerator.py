@@ -242,7 +242,7 @@ def generateNotificationServer(notification_server_name, notfy_urls, path, restn
 
     # use jinja
     template = jinja_env.get_template('notification_server.py')
-    rendered_string = template.render(servicemap=servicemap, class_list=class_list)
+    rendered_string = template.render(servicemap=servicemap, class_list=class_list, import_list=import_list)
 
     # write notification server file
     if not debug:
@@ -455,7 +455,7 @@ def generateClasses(data, restname, path):
                 out.close()
 
 
-def generateCallableClasses(data, restname, path, notfy_urls):
+def generateCallableClasses(data, imp, restname, path, notfy_urls):
     # create folder funcs_
     if not debug:
         if os.path.exists(path+"funcs_"+restname+"/"):
@@ -659,7 +659,7 @@ if __name__ == '__main__':
             jsret2 = translateRequest(js)
             notfy_urls = getNotificationAPIs(jsret2)
             generateRESTapi(jsret2, name, imp, restname, params, services, path, notfy_urls)
-            generateCallableClasses(jsret2, restname, path, notfy_urls)
+            generateCallableClasses(jsret2, imp, restname, path, notfy_urls)
 
     #copy common objects
     if not debug:
