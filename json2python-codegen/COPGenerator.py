@@ -263,9 +263,9 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         generateNotificationServer("notification_factory", notfy_urls, path, restname)
         urls = [element['url'] for element in notfy_urls]
         data_prov={}
-        for entry in data['paths']:
-            if data['paths'][entry]['url'] not in urls:
-                data_prov[entry] = data['paths'][entry]
+        for k, v in data['paths'].items():
+            if v['url'] not in urls:
+                data_prov[k] = v
 
         data['paths'] = data_prov
 
