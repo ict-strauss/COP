@@ -51,7 +51,7 @@ class basicauth:
 
     @classmethod
     def check(self,auth):
-        if auth != None:
+        if auth is not None:
             auth2 = re.sub("^Basic ","", auth)
             user,pswd = base64.decodestring(auth2).split(':')
             if user in users.keys() and pswd == users[user]:
@@ -79,6 +79,11 @@ class {{callback.name}}:
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
+        json_string = web.data() #data in body
+        json_struct = json.loads(json_string) #json parser.
+        new_object = {{callback.thing}}(json_struct) #It creates an object instance from the json_input data.
+        response = {{callback.name}}Impl.put({{callback.arguments|join(', ')}}, new_object)
+        raise Successful('Successful operation','{"description":"{{callback.methods['PUT'].printstr}}"}')
     {% endif %}
     {% if callback.methods['POST'] %}
 
@@ -93,6 +98,11 @@ class {{callback.name}}:
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
+        json_string = web.data() #data in body
+        json_struct = json.loads(json_string) #json parser.
+        new_object = {{callback.thing}}(json_struct) #It creates an object instance from the json_input data.
+        response = {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, new_object)
+        raise Successful('Successful operation','{"description":"{{callback.methods['POST'].printstr}}"}')
     {% endif %}
     {% if callback.methods['DELETE'] %}
 
@@ -107,6 +117,8 @@ class {{callback.name}}:
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
+        response = {{callback.name}}Impl.delete({{callback.arguments|join(', ')}})
+        raise Successful('Successful operation','{"description":"{{callback.methods['DELETE'].printstr}}"}')
     {% endif %}
     {% if callback.methods['GET'] %}
 
@@ -121,6 +133,8 @@ class {{callback.name}}:
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
+        response = {{callback.name}}Impl.get({{callback.arguments|join(', ')}})
+        raise Successful('Successful operation','{"description":"{{callback.methods['GET'].printstr}}"}')
     {% endif %}
     {% if cors %}
 
