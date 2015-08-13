@@ -21,8 +21,8 @@ class KeyedArrayType(OrderedDict):
         else:
             raise TypeError('', json_struct, 'list')
 
-    def serialize_json(self):
-        return [a.serialize_json() for a in self.values()]
+    def json_serializer(self):
+        return [a.json_serializer() for a in self.values()]
 
     def __str__(self):
-        return str(self.serialize_json())
+        return str(self.json_serializer())

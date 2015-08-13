@@ -197,7 +197,7 @@ class {{callback.name}}:
             new_object=create_instance({{callback.thing}}, json_struct)
         {% endif %}
             {{callback.name}}Impl.put({{callback.arguments|join(', ')}}, new_object)
-            js=new_object.serialize_json()
+            js=new_object.json_serializer()
             raise Successful("Successful operation",json_dumps(js))
         else:
             raise BadRequestError("Object already exists. For updates use POST.")
@@ -228,12 +228,12 @@ class {{callback.name}}:
             new_object=create_instance({{callback.thing}}, json_struct)
         {% endif %}
             {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, new_object)
-            js=new_object.serialize_json()
+            js=new_object.json_serializer()
             raise Successful("Successful operation",json_dumps(js))
         else:
             existing_object = modify_instance(existing_object, json_struct)
             {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, existing_object)
-            js=existing_object.serialize_json()
+            js=existing_object.json_serializer()
             raise Successful("Successful operation",json_dumps(js))
     {% endif %}
     {% if callback.methods['DELETE'] %}
@@ -274,7 +274,7 @@ class {{callback.name}}:
         except KeyError as inst:
             raise NotFoundError(inst.args[0] + " not found")
         else:
-            js = response.serialize_json()
+            js = response.json_serializer()
             raise Successful("Successful operation",json_dumps(js))
     {% endif %}
     {% if cors %}

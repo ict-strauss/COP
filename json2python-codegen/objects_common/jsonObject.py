@@ -10,17 +10,17 @@ class JsonObject(object):
     def build_child_objects_list(self):
         self._child_objects = [i for i in dir(self) if not i.startswith('_') and not callable(getattr(self, i))]
 
-    def serialize_json(self):
+    def json_serializer(self):
         ret={}
         for item in self._child_objects:
-            if hasattr(getattr(self, item), 'serialize_json'):
-                ret[item]=getattr(self, item).serialize_json()
+            if hasattr(getattr(self, item), 'json_serializer'):
+                ret[item]=getattr(self, item).json_serializer()
             else:
                 ret[item]=getattr(self, item)
         return ret
 
     def __str__(self):
-        return str(self.serialize_json())
+        return str(self.json_serializer())
 
     def load_json(self, json_struct):
         if type(json_struct) != dict:

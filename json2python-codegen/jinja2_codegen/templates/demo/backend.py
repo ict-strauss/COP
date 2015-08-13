@@ -37,8 +37,8 @@ connections = KeyedArrayType(Connection, 'connectionId')
 calls = KeyedArrayType(Call, 'callId')
 
 def save_state():
-    json_struct = {'connections' : connections.serialize_json(), 'calls' : calls.serialize_json(),
-                   'topologies' : topologies.serialize_json()}
+    json_struct = {'connections' : connections.json_serializer(), 'calls' : calls.json_serializer(),
+                   'topologies' : topologies.json_serializer()}
     json_string = json_dumps(json_struct)
     out = open(filename, 'w+')
     out.write(json_string)

@@ -3,12 +3,12 @@ class ArrayType(list):
     @staticmethod
     def factory(klass):
         if hasattr(klass, 'load_json'):
-            if hasattr(klass, 'serialize_json'):
+            if hasattr(klass, 'json_serializer'):
                 return ArrayTypeComplexLoaderSerializer(klass)
             else:
                 return ArrayTypeComplexLoader(klass)
         else:
-            if hasattr(klass, 'serialize_json'):
+            if hasattr(klass, 'json_serializer'):
                 return ArrayTypeBasicLoaderSerializer(klass)
             else:
                 return ArrayTypeBasicLoader(klass)
@@ -49,11 +49,11 @@ class ArrayTypeComplexLoader(ArrayType):
 
 class Serializer(object):
 
-    def serialize_json(self):
-        return [x.serialize_json() for x in self]
+    def json_serializer(self):
+        return [x.json_serializer() for x in self]
 
     def __str__(self):
-        return str(self.serialize_json())
+        return str(self.json_serializer())
 
 class ArrayTypeComplexLoaderSerializer(ArrayTypeComplexLoader, Serializer):
 

@@ -9,13 +9,13 @@ class EnumType(object):
     def load_json(self, json_struct):
         self.set(json_struct)
 
-    def serialize_json(self):
+    def json_serializer(self):
         # Returns a string
         # This could be changed to encode enums as integers when transmitting messages
         return type(self).possible_values[self.value]
 
     def __str__(self):
-        return str(self.serialize_json())
+        return str(self.json_serializer())
 
     def get(self):
         # Returns an integer, using the external representation
