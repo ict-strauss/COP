@@ -481,7 +481,7 @@ def generateCallableClasses(data, imp, restname, path, notfy_urls):
                 import_list = []
                 for im in imp:
                     if im == resp_model:
-                        file = restname+"."+im[0].lower()+im[1:]
+                        file = "objects_" + restname + "." + im[0].lower() + im[1:]
                         import_list.append(ImportObject(file, im))
 
                 class_name = name_classes[func['url']]

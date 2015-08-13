@@ -23,5 +23,5 @@ class {{class_name}}Impl (threading.Thread):
         while self.event:
             time.sleep(1)
 
-        payload = json.dumps({{new_object}}(json_string='{{json_string}}').json_serializer(), ensure_ascii = False).encode('utf8')
+        payload = json.dumps({{new_object}}({{json_string}}).json_serializer()).encode('utf8')
         self.handler.sendMessage(payload, False)
