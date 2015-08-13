@@ -14,7 +14,8 @@ Python code that uses json outputs from **pyang** to generate **RESTful server**
 
 ### Dependencies
 To allow simple installation using pip commands, install [setuptools](https://pypi.python.org/pypi/setuptools).
-The code generator itself uses the templating language [jinja2](http://jinja.pocoo.org/docs/dev/intro/#installation)
+
+The code generator itself uses the templating language [Jinja2](http://jinja.pocoo.org/docs/dev/intro/#installation).
  ```
 pip install Jinja2
  ```
@@ -22,6 +23,9 @@ The Jinja2 library also requires the setuptools package to be installed, see ste
 
  This code generates python code that uses:
  - [web.py](http://webpy.org/install)
+```
+pip install web.py
+```
  - [Twisted](https://twistedmatrix.com/trac/)
 ```
 pip install twisted
