@@ -607,12 +607,12 @@ def to_upper_camelcase(name):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('swagger_json_files', nargs='+', type=str)
-    parser.add_argument('-o', '--outdir', type=str, default='')
-    parser.add_argument('-d', '--debug', action='store_true')
-    parser.add_argument('-p', '--port', type=str, default='8080')
-    parser.add_argument('-a', '--alternative', action='store_true')
+    parser = argparse.ArgumentParser(description='Generate a RESTful server and class definitions using the swagger.py json output.')
+    parser.add_argument('swagger_json_files', nargs='+', type=str, help='a list of swagger JSON files generated with swagger.py which serves as the input of this generator')
+    parser.add_argument('-o', '--outdir', type=str, default='', help='the directory to which the output files are saved')
+    parser.add_argument('-d', '--debug', action='store_true', help='if flag is given, do not write any files')
+    parser.add_argument('-p', '--port', type=str, default='8080', help='the port on which the REST server is listening')
+    parser.add_argument('-a', '--alternative', action='store_true', help='if flag is given, generate the demo code instead of the base code')
     #parser.add_argument('-t', '--target', type=str, choices=['base', 'demo'], default='base')
     args = parser.parse_args()
     debug = args.debug
