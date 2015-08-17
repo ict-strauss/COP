@@ -242,6 +242,11 @@ def gen_model(children, tree_structure):
                     if str(child.keyword) == 'list':
                         node['items'] = {'$ref': ref}
                         node['type'] = 'array'
+                        for attribute in child.substmts:
+                            if attribute.keyword == 'key':
+                                listkey = to_lower_camelcase(attribute.arg)
+                        if listkey:
+                            node['x-key'] = listkey
                         referenced = True
                     elif str(child.keyword) == 'grouping':
                         ref = to_upper_camelcase(attribute.arg)
@@ -264,9 +269,7 @@ def gen_model(children, tree_structure):
                     else:
                         node['$ref'] = ref
                         referenced = True
-                elif attribute.keyword == 'key':
-                    if str(child.keyword) == 'list':
-                        node['x-key'] = to_lower_camelcase(attribute.arg)
+
         # When a node contains a referenced model as an attribute the algorithm
         # does not go deeper into the sub-tree of the referenced model.
         if not referenced :
@@ -350,16 +353,12 @@ def gen_api_node(node, path, apis, definitions):
                 for child in node.i_children:
                     if child.keyword == 'list':
                         schema['type'] = 'array'
-                        key = [ch for ch in child.substmts if ch.keyword == 'key']
-                        if key:
-                            schema['x-key'] = to_lower_camelcase(key[0].arg)
                     ref_model = [ch for ch in child.substmts
                                  if ch.keyword == 'uses']
                     schema['items'] = {
                         '$ref': '#/definitions/' + to_upper_camelcase(
                             ref_model[0].arg)
                     }
-
             else:
                 # TODO: dead code for our model
                 properties = {}
@@ -428,7 +427,7 @@ def print_notification(node, schema_out):
 
 def print_rpc(node, schema_in, schema_out):
     operations = {}
-    operations['post'] = generate_update(node, schema_in, None, schema_out)
+    operations['put'] = generate_update(node, schema_in, None, schema_out)
     return operations
 # print the API JSON structure.
 
@@ -443,9 +442,9 @@ def print_api(node, config, ref, path):
 #             if param.keyword == 'list':
 #                 is_list = True
     if config and config != 'false':
-        operations['put'] = generate_create(node, ref, path)
+        operations['post'] = generate_create(node, ref, path)
         operations['get'] = generate_retrieve(node, ref, path)
-        operations['post'] = generate_update(node, ref, path)
+        operations['put'] = generate_update(node, ref, path)
         operations['delete'] = generate_delete(node, ref, path)
     else:
         operations['get'] = generate_retrieve(node, ref, path)
@@ -473,18 +472,18 @@ def generate_create(stmt, schema, path):
     """ Generates the create function definitions."""
     if path:
         path_params = get_input_path_parameters(path)
-    put = {}
-    generate_api_header(stmt, put, 'Create')
+    post = {}
+    generate_api_header(stmt, post, 'Create')
     # Input parameters
     if path_params:
-        put['parameters'] = create_parameter_list(path_params)
+        post['parameters'] = create_parameter_list(path_params)
     else:
-        put['parameters'] = []
-    put['parameters'].append(create_body_dict(stmt.arg, schema))
+        post['parameters'] = []
+    post['parameters'].append(create_body_dict(stmt.arg, schema))
     # Responses
     response = create_responses(stmt.arg)
-    put['responses'] = response
-    return put
+    post['responses'] = response
+    return post
 
 
 # RETRIEVE
@@ -513,21 +512,21 @@ def generate_update(stmt, schema, path, rpc=None):
     """ Generates the update function definitions."""
     if path:
         path_params = get_input_path_parameters(path)
-    post = {}
-    generate_api_header(stmt, post, 'Update')
+    put = {}
+    generate_api_header(stmt, put, 'Update')
     # Input parameters
     if path:
-        post['parameters'] = create_parameter_list(path_params)
+        put['parameters'] = create_parameter_list(path_params)
     else:
-        post['parameters'] = []
-    post['parameters'].append(create_body_dict(stmt.arg, schema))
+        put['parameters'] = []
+    put['parameters'].append(create_body_dict(stmt.arg, schema))
     # Responses
     if rpc:
         response = create_responses(stmt.arg, rpc)
     else:
         response = create_responses(stmt.arg)
-    post['responses'] = response
-    return post
+    put['responses'] = response
+    return put
 
 
 # DELETE
