@@ -625,6 +625,7 @@ if __name__ == '__main__':
     templates_dir = 'templates/' + target
     jinja_env = Environment(loader=PackageLoader('jinja2_codegen', templates_dir), trim_blocks=True, lstrip_blocks=True)
     services = []
+    notfy_urls_total = []
     for filename in args.swagger_json_files:
         print("Processing file: " + filename)
         path = args.outdir
@@ -658,6 +659,7 @@ if __name__ == '__main__':
         if "paths" in js.keys():
             jsret2 = translateRequest(js)
             notfy_urls = getNotificationAPIs(jsret2)
+            notfy_urls_total+=notfy_urls
             generateRESTapi(jsret2, name, imp, restname, params, services, path, notfy_urls)
             generateCallableClasses(jsret2, imp, restname, path, notfy_urls)
 
@@ -683,7 +685,7 @@ if __name__ == '__main__':
             dst = path + "backend/" + 'backend.py'
             shutil.copyfile(src, dst)
 
-    if notfy_urls:
+    if notfy_urls_total:
         notfy = True
     else:
         notfy = False
