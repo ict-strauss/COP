@@ -82,7 +82,7 @@ class {{callback.name}}:
         json_string = web.data() #data in body
         json_struct = json.loads(json_string) #json parser.
         new_object = {{callback.thing}}(json_struct) #It creates an object instance from the json_input data.
-        response = {{callback.name}}Impl.put({{callback.arguments|join(', ')}}, new_object)
+        response = {{callback.name}}Impl.put({{callback.arguments|join(', ')}} {% if callback.arguments|count >0 %} , {% endif %}new_object)
         raise Successful('Successful operation','{"description":"{{callback.methods['PUT'].printstr}}"}')
     {% endif %}
     {% if callback.methods['POST'] %}
@@ -101,7 +101,7 @@ class {{callback.name}}:
         json_string = web.data() #data in body
         json_struct = json.loads(json_string) #json parser.
         new_object = {{callback.thing}}(json_struct) #It creates an object instance from the json_input data.
-        response = {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, new_object)
+        response = {{callback.name}}Impl.post({{callback.arguments|join(', ')}} {% if callback.arguments|count >0 %} , {% endif %} new_object)
         raise Successful('Successful operation','{"description":"{{callback.methods['POST'].printstr}}"}')
     {% endif %}
     {% if callback.methods['DELETE'] %}
