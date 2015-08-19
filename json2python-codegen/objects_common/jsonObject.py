@@ -22,7 +22,18 @@ class JsonObject(object):
     def __str__(self):
         return str(self.json_serializer())
 
+    def byteify(self,input):
+        if isinstance(input, dict):
+            return {self.byteify(key):self.byteify(value) for key,value in input.iteritems()}
+        elif isinstance(input, list):
+            return [self.byteify(element) for element in input]
+        elif isinstance(input, unicode):
+            return input.encode('utf-8')
+        else:
+            return input
+
     def load_json(self, json_struct):
+        json_struct=self.byteify(json_struct)
         if type(json_struct) != dict:
             raise TypeError('', json_struct, 'object')
         # Run through the keys in the input structure
