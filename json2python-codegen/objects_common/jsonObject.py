@@ -14,9 +14,11 @@ class JsonObject(object):
         ret={}
         for item in self._child_objects:
             if hasattr(getattr(self, item), 'json_serializer'):
-                ret[item]=getattr(self, item).json_serializer()
+                if getattr(self, item).json_serializer():
+                    ret[item]=getattr(self, item).json_serializer()
             else:
-                ret[item]=getattr(self, item)
+                if getattr(self, item):
+                    ret[item]=getattr(self, item)
         return ret
 
     def __str__(self):
