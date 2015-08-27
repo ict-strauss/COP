@@ -5,6 +5,8 @@ from objects_service_topology.topology import Topology
 from objects_service_call.connection import Connection
 from objects_service_call.call import Call
 import json
+from objects_service_path_computation.pathRequest import PathRequest
+from objects_service_virtual_network.virtualNetwork import VirtualNetwork
 
 """
 class TopLevelObject(jsonObject):
@@ -35,10 +37,13 @@ filename = 'server_backend_state.json'
 topologies = KeyedArrayType(Topology, 'topologyId')
 connections = KeyedArrayType(Connection, 'connectionId')
 calls = KeyedArrayType(Call, 'callId')
+pathComputation = KeyedArrayType(PathRequest, 'pathComputationId')
+virtualNetworks = KeyedArrayType(VirtualNetwork, 'virtualNetworkId')
 
 def save_state():
     json_struct = {'connections' : connections.json_serializer(), 'calls' : calls.json_serializer(),
-                   'topologies' : topologies.json_serializer()}
+                   'topologies' : topologies.json_serializer(), 'pathComputation' : pathComputation.json_serializer(),
+                   'virtualNetworks' : virtualNetworks.json_serializer()}
     json_string = json_dumps(json_struct)
     out = open(filename, 'w+')
     out.write(json_string)
@@ -53,4 +58,6 @@ def load_state():
     topologies.load_json(json_struct['topologies'])
     connections.load_json(json_struct['connections'])
     calls.load_json(json_struct['calls'])
+    pathComputation.load_json(json_struct['pathComputation'])
+    virtualNetworks.load_json(json_struct['virtualNetworks'])
     return True

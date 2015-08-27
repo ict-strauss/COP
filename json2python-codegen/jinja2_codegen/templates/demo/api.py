@@ -196,7 +196,11 @@ class {{callback.name}}:
         {% else %}
             new_object=create_instance({{callback.thing}}, json_struct)
         {% endif %}
+        {% if callback.arguments %}
             {{callback.name}}Impl.put({{callback.arguments|join(', ')}}, new_object)
+        {% else %}
+            {{callback.name}}Impl.put(new_object)
+        {% endif %}
             js=new_object.json_serializer()
             raise Successful("Successful operation",json_dumps(js))
         else:
@@ -227,12 +231,20 @@ class {{callback.name}}:
         {% else %}
             new_object=create_instance({{callback.thing}}, json_struct)
         {% endif %}
+        {% if callback.arguments %}
             {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, new_object)
+        {% else %}
+            {{callback.name}}Impl.post(new_object)
+        {% endif %}
             js=new_object.json_serializer()
             raise Successful("Successful operation",json_dumps(js))
         else:
             existing_object = modify_instance(existing_object, json_struct)
+        {% if callback.arguments %}
             {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, existing_object)
+        {% else %}
+            {{callback.name}}Impl.post(existing_object)
+        {% endif %}
             js=existing_object.json_serializer()
             raise Successful("Successful operation",json_dumps(js))
     {% endif %}

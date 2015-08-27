@@ -4,14 +4,30 @@ from backend.backend import {{toplevel}}
 
 class {{class_name}}Impl:
     {% if methods['PUT'] %}
-
     @classmethod
     def put(cls, {{methods['PUT'].arguments|join(', ')}}):
         {% if methods['PUT'].printstr %}
         print str({{methods['PUT'].printstr}})
         {% endif %}
         print 'handling put'
-        cls.post({{methods['PUT'].arguments|join(', ')}})
+        {% if methods['PUT'].arguments | length > 2 %}
+        if {{methods['PUT'].arguments[0]}} in {{object_path[0]}}:
+            {% if methods['PUT'].arguments | length > 3 %}
+            if {{methods['PUT'].arguments[1]}} in {{object_path[1]}}:
+                {{object_path[2]}}[{{methods['PUT'].arguments[2]}}]{{ending}} = {{methods['PUT'].arguments[3]}}
+            else:
+                raise KeyError('{{methods['PUT'].arguments[1]}}')
+            {% else %}
+            {{object_path[1]}}[{{methods['PUT'].arguments[1]}}]{{ending}} = {{methods['PUT'].arguments[2]}}
+            {% endif %}
+        else:
+            raise KeyError('{{methods['PUT'].arguments[0]}}')
+        {% elif methods['PUT'].arguments | length == 2 %}
+        {{object_path[0]}}[{{methods['PUT'].arguments[0]}}]{{ending}} = {{methods['PUT'].arguments[1]}}
+
+        {% else %}
+        {{object_path[0]}} = {{methods['PUT'].arguments[0]}}
+        {% endif %}
     {% endif %}
     {% if methods['POST'] %}
 
@@ -33,8 +49,11 @@ class {{class_name}}Impl:
             {% endif %}
         else:
             raise KeyError('{{methods['POST'].arguments[0]}}')
-        {% else %}
+        {% elif methods['POST'].arguments | length == 2 %}
         {{object_path[0]}}[{{methods['POST'].arguments[0]}}]{{ending}} = {{methods['POST'].arguments[1]}}
+
+        {% else %}
+        {{object_path[0]}} = {{methods['POST'].arguments[0]}}
         {% endif %}
     {% endif %}
     {% if methods['DELETE'] %}
@@ -45,6 +64,9 @@ class {{class_name}}Impl:
         print str({{methods['DELETE'].printstr}})
         {% endif %}
         print 'handling delete'
+        {% if methods['DELETE'].arguments | length == 0 %}
+        del({{object_path[0]}})
+        {% else %}
         if {{methods['DELETE'].arguments[0]}} in {{object_path[0]}}:
             {% if methods['DELETE'].arguments | length > 1 %}
             if {{methods['DELETE'].arguments[1]}} in {{object_path[1]}}:
@@ -63,6 +85,7 @@ class {{class_name}}Impl:
             {% endif %}
         else:
             raise KeyError('{{methods['DELETE'].arguments[0]}}')
+        {% endif %}
     {% endif %}
     {% if methods['GET'] %}
 
