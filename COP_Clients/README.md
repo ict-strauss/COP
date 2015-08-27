@@ -15,4 +15,4 @@ The clients connect to the websocket server and wait for a notification_stream a
 
 This example can be easily launch as a python script as:
 
- >> python notificationClientFactory.py
+ >> python notificationService.py
