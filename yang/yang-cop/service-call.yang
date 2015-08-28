@@ -285,6 +285,12 @@ module service-call {
                 fraction-digits 2;
             }
         }
+        leaf OSNR {
+            description "Optical Signal-to-noise ratio";
+            type decimal64{
+                fraction-digits 2;
+            }
+        }
     }
 
     grouping connection {
