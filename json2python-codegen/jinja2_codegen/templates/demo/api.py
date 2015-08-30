@@ -171,16 +171,16 @@ class basicauth:
 
 #{{callback.path}}
 class {{callback.name}}:
-    {% if callback.methods['PUT'] %}
+    {% if callback.methods['POST'] %}
 
-    def PUT(self, {{callback.arguments|join(', ')}}):
+    def POST(self, {{callback.arguments|join(', ')}}):
         {% if auth %}
         if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
             web.header('WWW-Authenticate','Basic realm="Auth example"')
             web.ctx.status = '401 Unauthorized'
             return 'Unauthorized'
         {% endif %}
-        print "{{callback.methods['PUT'].printstr}}"
+        print "{{callback.methods['POST'].printstr}}"
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
@@ -197,25 +197,25 @@ class {{callback.name}}:
             new_object=create_instance({{callback.thing}}, json_struct)
         {% endif %}
         {% if callback.arguments %}
-            {{callback.name}}Impl.put({{callback.arguments|join(', ')}}, new_object)
+            {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, new_object)
         {% else %}
-            {{callback.name}}Impl.put(new_object)
+            {{callback.name}}Impl.post(new_object)
         {% endif %}
             js=new_object.json_serializer()
             raise Successful("Successful operation",json_dumps(js))
         else:
-            raise BadRequestError("Object already exists. For updates use POST.")
+            raise BadRequestError("Object already exists. For updates use PUT.")
     {% endif %}
-    {% if callback.methods['POST'] %}
+    {% if callback.methods['PUT'] %}
 
-    def POST(self, {{callback.arguments|join(', ')}}):
+    def PUT(self, {{callback.arguments|join(', ')}}):
         {% if auth %}
         if not basicauth.check(web.ctx.env.get("HTTP_AUTHORIZATION")):
             web.header('WWW-Authenticate','Basic realm="Auth example"')
             web.ctx.status = '401 Unauthorized'
             return 'Unauthorized'
         {% endif %}
-        print "{{callback.methods['POST'].printstr}}"
+        print "{{callback.methods['PUT'].printstr}}"
         {% if cors %}
         web.header('Access-Control-Allow-Origin','{{url}}')
         {% endif %}
@@ -232,18 +232,18 @@ class {{callback.name}}:
             new_object=create_instance({{callback.thing}}, json_struct)
         {% endif %}
         {% if callback.arguments %}
-            {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, new_object)
+            {{callback.name}}Impl.put({{callback.arguments|join(', ')}}, new_object)
         {% else %}
-            {{callback.name}}Impl.post(new_object)
+            {{callback.name}}Impl.put(new_object)
         {% endif %}
             js=new_object.json_serializer()
             raise Successful("Successful operation",json_dumps(js))
         else:
             existing_object = modify_instance(existing_object, json_struct)
         {% if callback.arguments %}
-            {{callback.name}}Impl.post({{callback.arguments|join(', ')}}, existing_object)
+            {{callback.name}}Impl.put({{callback.arguments|join(', ')}}, existing_object)
         {% else %}
-            {{callback.name}}Impl.post(existing_object)
+            {{callback.name}}Impl.put(existing_object)
         {% endif %}
             js=existing_object.json_serializer()
             raise Successful("Successful operation",json_dumps(js))
