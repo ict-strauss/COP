@@ -14,6 +14,18 @@ module service-call {
         "Service call module for STRAUSS";
     }
 
+    typedef qos_class_enumeration {
+    	type enumeration {
+    	    enum gold {
+    	        description "Gold QoS Class";
+    	        value 1;
+    	    }
+    	    enum silver {
+    	        description "Silver QoS Class";
+    	        value 2;
+    	    }
+    	}
+    }
 
     typedef transport_layer_type_enumeration {
         type enumeration {
@@ -290,6 +302,9 @@ module service-call {
             type decimal64{
                 fraction-digits 2;
             }
+        }
+        leaf qos_class {
+            type qos_class_enumeration;
         }
     }
 
