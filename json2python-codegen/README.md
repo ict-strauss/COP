@@ -35,6 +35,19 @@ pip install twisted
 pip install autobahn
 ```
 
+### COP Server generation
+
+- Base Version:
+
+```
+python json2python-codegen/COPGenerator.py service-call.json service-path-computation.json service-virtual-network.json service-topology.json -o outputdir_exp_base/
+```
+
+- Demo Version: 
+
+```
+python json2python-codegen/COPGenerator.py service-call.json service-path-computation.json service-virtual-network.json service-topology.json -a -o outputdir_exp_demo/
+```
 
 ### Issues
 - Some of the configurations are fixed for COP (e.g. type of return messages). To be fixed in next version.
