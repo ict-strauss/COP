@@ -12,7 +12,10 @@ class EnumType(object):
     def json_serializer(self):
         # Returns a string
         # This could be changed to encode enums as integers when transmitting messages
-        return type(self).possible_values[self.value]
+        if self.value > 0:
+            return None
+        else:
+            return type(self).possible_values[self.value]
 
     def __str__(self):
         return str(self.json_serializer())
@@ -30,8 +33,9 @@ class EnumType(object):
             except ValueError:
                 raise ValueError('', value, type(self).possible_values)
         elif type(value) is int:
-            if value >= 1 and value <= type(self).range_end:
-                # External representation of Enum starts at 1, internal at 0
+            if value >= 0 and value <= type(self).range_end:
+                # External representation of Enum starts at 1, internal at 0. External value 0 by default
+                # to indicate empty object.
                 value = value - 1
                 self.value = value
             else:
