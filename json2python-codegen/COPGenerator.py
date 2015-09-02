@@ -373,7 +373,7 @@ def generateAttributeValue(att): #Initialization of different attributes
     elif att['type'] == "object":
         return att['klass']+"() #import"
     elif att['type'] == "enum":
-        return att['att'].capitalize() + '(1)'
+        return att['att'].capitalize() + '(0)'
     else:
         return "None #FIXME: This parameter is not well defined"
 
