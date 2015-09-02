@@ -12,7 +12,7 @@ class EnumType(object):
     def json_serializer(self):
         # Returns a string
         # This could be changed to encode enums as integers when transmitting messages
-        if self.value > 0:
+        if self.value < 0:
             return None
         else:
             return type(self).possible_values[self.value]
