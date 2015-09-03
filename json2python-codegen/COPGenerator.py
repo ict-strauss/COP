@@ -358,7 +358,7 @@ def translate_type_json2python(typename):
     else:
         return typename
 
-def generateAttributeValue(att): #Initialization of different attributes
+def generateAttributeValue(att, struc=None): #Initialization of different attributes
     if att['type'] == "string":
         return '""'
     elif "int" in att['type']:
@@ -368,7 +368,15 @@ def generateAttributeValue(att): #Initialization of different attributes
     elif att['type'] == "array":
         return "ArrayType.factory(" + translate_type_json2python(att['klass']) + ")"
     elif att['type'] == "keyed-array":
-        return "KeyedArrayType(" + att['klass'] + ", '" + att['key'] + "')"
+        if struc:
+            child_classes = '('
+            for i in struc['child_classes']:
+                child_classes+=i
+                child_classes+=','
+            child_classes = child_classes[:-1] + ')'
+            return "KeyedArrayType("+ child_classes + ", '" + att['key'] + "', '"+ struc['discriminator'] +"')"
+        else:
+            return "KeyedArrayType(" + att['klass'] + ", '" + att['key'] + "')"
     # Always use class definitions for objects, not dicts
     elif att['type'] == "object":
         return att['klass']+"() #import"
@@ -415,12 +423,20 @@ def generateClasses(data, restname, path):
         # attributes
         import_array = False
         import_keyed_array = False
+        print klass
         for att in klass['atts']:
-            attribute_list.append(AttributeObject(att['att'], generateAttributeValue(att)))
+            struc = ''
             if att['type'] == "array":
                 import_array = True
             if att['type'] == "keyed-array":
                 import_keyed_array = True
+                if is_inheritted_class(data, att):
+                    struc = get_child_classes(data, att)
+            if struc:
+                attribute_list.append(AttributeObject(att['att'], generateAttributeValue(att,struc)))
+            else:
+                attribute_list.append(AttributeObject(att['att'], generateAttributeValue(att)))
+
         if import_array:
             import_list.append(ImportObject('objects_common.arrayType', 'ArrayType'))
         if import_keyed_array:
@@ -454,6 +470,28 @@ def generateClasses(data, restname, path):
                 out.write(rendered_string)
                 out.close()
 
+def is_inheritted_class(data, att):
+    for child_klass in data:
+        if child_klass['class'] == att['klass']:
+            if 'discriminator' in child_klass.keys():
+                return True
+    return False
+
+def get_child_classes(data, att):
+    print att
+    child_classes = []
+    for child_klass in data:
+        if child_klass['class'] == att['klass']:
+            discriminator = child_klass['discriminator']
+            for att2 in child_klass['atts']:
+                if att2['att'] == discriminator:
+                    _type = att2['type']
+                    print _type
+        if 'extend_class' in child_klass.keys():
+            if child_klass['extend_class'] == att['klass']:
+                child_classes.append(child_klass['class'].encode('ascii','ignore'))
+
+    return {'discriminator':discriminator, 'child_classes':child_classes, 'type':_type}
 
 def generateCallableClasses(data, imp, restname, path, notfy_urls):
     # create folder funcs_
