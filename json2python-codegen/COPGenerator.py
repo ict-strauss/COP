@@ -423,7 +423,7 @@ def generateClasses(data, restname, path):
         # attributes
         import_array = False
         import_keyed_array = False
-        print klass
+        
         for att in klass['atts']:
             struc = ''
             if att['type'] == "array":
@@ -486,7 +486,7 @@ def get_child_classes(data, att):
             for att2 in child_klass['atts']:
                 if att2['att'] == discriminator:
                     _type = att2['type']
-                    print _type
+                    
         if 'extend_class' in child_klass.keys():
             if child_klass['extend_class'] == att['klass']:
                 child_classes.append(child_klass['class'].encode('ascii','ignore'))
