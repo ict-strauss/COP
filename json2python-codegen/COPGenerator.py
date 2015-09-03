@@ -478,7 +478,6 @@ def is_inheritted_class(data, att):
     return False
 
 def get_child_classes(data, att):
-    print att
     child_classes = []
     for child_klass in data:
         if child_klass['class'] == att['klass']:
