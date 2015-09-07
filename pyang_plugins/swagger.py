@@ -218,8 +218,8 @@ def gen_model(children, tree_structure):
                     elif attribute.arg[:3] == 'int':
                         node['type'] = 'integer'
                         node['format'] = attribute.arg
-                    elif attribute == 'decimal64':
-                        node['type'] = 'number',
+                    elif attribute.arg == 'decimal64':
+                        node['type'] = 'number'
                         node['format'] = 'double'
                     elif attribute.arg == 'boolean':
                         node['type'] = attribute.arg
