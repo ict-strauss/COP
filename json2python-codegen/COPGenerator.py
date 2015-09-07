@@ -119,6 +119,8 @@ def getType(js):
                     ret['key'] = js['x-key']
                 else:
                     ret['type'] = 'array'
+        else:
+            ret['type'] = 'string'
         """ TODO, this code path is unused, swagger.py does not generate the type "object"
         elif "object" in js['type']:
             if "type" in js['additionalProperties'].keys():
@@ -133,6 +135,7 @@ def getType(js):
         imp = True
         ret['type'] = 'object'
         ret['klass'] = js['$ref'].split("/")[-1]
+
     return ret, imp
 
 
