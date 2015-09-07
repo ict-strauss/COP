@@ -218,6 +218,9 @@ def gen_model(children, tree_structure):
                     elif attribute.arg[:3] == 'int':
                         node['type'] = 'integer'
                         node['format'] = attribute.arg
+                    elif attribute == 'decimal64':
+                        node['type'] = 'number',
+                        node['format'] = 'double'
                     elif attribute.arg == 'boolean':
                         node['type'] = attribute.arg
                     elif attribute.arg == 'enumeration':
@@ -473,7 +476,7 @@ def generate_create(stmt, schema, path):
     if path:
         path_params = get_input_path_parameters(path)
     post = {}
-    generate_api_header(stmt, post, 'Create')
+    generate_api_header(stmt, post, 'Create', path)
     # Input parameters
     if path_params:
         post['parameters'] = create_parameter_list(path_params)
@@ -493,7 +496,7 @@ def generate_retrieve(stmt, schema, path):
     if path:
         path_params = get_input_path_parameters(path)
     get = {}
-    generate_api_header(stmt, get, 'Retrieve', stmt.keyword == 'container'
+    generate_api_header(stmt, get, 'Retrieve', path, stmt.keyword == 'container'
                         and not path_params)
     if path:
         get['parameters'] = create_parameter_list(path_params)
@@ -513,7 +516,7 @@ def generate_update(stmt, schema, path, rpc=None):
     if path:
         path_params = get_input_path_parameters(path)
     put = {}
-    generate_api_header(stmt, put, 'Update')
+    generate_api_header(stmt, put, 'Update', path)
     # Input parameters
     if path:
         put['parameters'] = create_parameter_list(path_params)
@@ -535,7 +538,7 @@ def generate_delete(stmt, ref, path):
     """ Generates the delete function definitions."""
     path_params = get_input_path_parameters(path)
     delete = {}
-    generate_api_header(stmt, delete, 'Delete')
+    generate_api_header(stmt, delete, 'Delete', path)
     # Input parameters
     if path_params:
         delete['parameters'] = create_parameter_list(path_params)
@@ -582,16 +585,26 @@ def create_responses(name, schema=None):
     return response
 
 
-def generate_api_header(stmt, struct, operation, is_collection=False):
+def generate_api_header(stmt, struct, operation, path, is_collection=False):
     """ Auxiliary function to generate the API-header skeleton.
     The "is_collection" flag is used to decide if an ID is needed.
     """
+    childPath = False
+    parentContainer = [to_upper_camelcase(element) for i,element in enumerate(str(path).split('/')[1:-1]) if str(element)[0] =='{' and str(element)[-1] == '}' ]
+
+
+    if len(str(path).split('/'))>3:
+        childPath = True
+        parentContainer = ''.join([to_upper_camelcase(element) for i,element in enumerate(str(path).split('/')[1:-1])
+                           if not str(element)[0] =='{' and not str(element)[-1] == '}' ])
+
     struct['summary'] = '%s %s%s' % (
         str(operation), str(stmt.arg),
         ('' if is_collection else ' by ID'))
     struct['description'] = str(operation) + ' operation of resource: ' \
         + str(stmt.arg)
-    struct['operationId'] = '%s%s%s' % (str(operation).lower(),
+    struct['operationId'] = '%s%s%s%s' % (str(operation).lower(),
+                                        (parentContainer if childPath else ''),
                                         to_upper_camelcase(stmt.arg),
                                         ('' if is_collection else 'ById'))
     struct['produces'] = ['application/json']
