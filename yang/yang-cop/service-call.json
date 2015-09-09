@@ -1,0 +1,4360 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "1.0.0",
+        "description": "service-call API generated from service-call.yang",
+        "title": "service-call API"
+    },
+    "host": "localhost:8080",
+    "basePath": "/restconf",
+    "schemes": [
+        "http"
+    ],
+    "paths": {
+        "/streams/update_call/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Call"
+                        }
+                    },
+                    "404": {
+                        "description": "Update_call not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "schemes": [
+                    "ws"
+                ],
+                "description": "Retrieve operation of resource: update_call",
+                "parameters": [],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve update_call by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveUpdateCallById"
+            }
+        },
+        "/streams/remove_call/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Call"
+                        }
+                    },
+                    "404": {
+                        "description": "Remove_call not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "schemes": [
+                    "ws"
+                ],
+                "description": "Retrieve operation of resource: remove_call",
+                "parameters": [],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve remove_call by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveRemoveCallById"
+            }
+        },
+        "/config/calls/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Calls not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: calls",
+                "parameters": [
+                    {
+                        "required": true,
+                        "description": "ID of calls",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Call"
+                            },
+                            "type": "array"
+                        },
+                        "name": "calls",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update calls by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Calls not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: calls",
+                "parameters": [
+                    {
+                        "required": true,
+                        "description": "ID of calls",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Call"
+                            },
+                            "type": "array"
+                        },
+                        "name": "calls",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create calls by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Calls not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "description": "Delete operation of resource: calls",
+                "summary": "Delete calls by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Call"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "404": {
+                        "description": "Calls not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: calls",
+                "parameters": [],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCalls"
+            }
+        },
+        "/config/calls/call/{callId}/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Call not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: call",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of call",
+                        "schema": {
+                            "$ref": "#/definitions/Call"
+                        },
+                        "name": "call",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update call by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallCallById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Call not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: call",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of call",
+                        "schema": {
+                            "$ref": "#/definitions/Call"
+                        },
+                        "name": "call",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create call by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallCallById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Call not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: call",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete call by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallCallById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Call"
+                        }
+                    },
+                    "404": {
+                        "description": "Call not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: call",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve call by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallCallById"
+            }
+        },
+        "/config/calls/call/{callId}/aEnd/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of aEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "aEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallAEndAEndById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of aEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "aEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallAEndAEndById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallAEndAEndById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallAEndAEndById"
+            }
+        },
+        "/config/calls/call/{callId}/zEnd/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of zEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "zEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallZEndZEndById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of zEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "zEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallZEndZEndById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallZEndZEndById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallZEndZEndById"
+            }
+        },
+        "/config/calls/call/{callId}/transport_layer/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of transport_layer",
+                        "schema": {
+                            "$ref": "#/definitions/TransportLayerType"
+                        },
+                        "name": "transport_layer",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallTransportLayerTransportLayerById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of transport_layer",
+                        "schema": {
+                            "$ref": "#/definitions/TransportLayerType"
+                        },
+                        "name": "transport_layer",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallTransportLayerTransportLayerById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallTransportLayerTransportLayerById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/TransportLayerType"
+                        }
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallTransportLayerTransportLayerById"
+            }
+        },
+        "/config/calls/call/{callId}/match/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of match",
+                        "schema": {
+                            "$ref": "#/definitions/MatchRules"
+                        },
+                        "name": "match",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallMatchMatchById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of match",
+                        "schema": {
+                            "$ref": "#/definitions/MatchRules"
+                        },
+                        "name": "match",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallMatchMatchById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallMatchMatchById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MatchRules"
+                        }
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallMatchMatchById"
+            }
+        },
+        "/config/calls/call/{callId}/traffic_params/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of traffic_params",
+                        "schema": {
+                            "$ref": "#/definitions/TrafficParams"
+                        },
+                        "name": "traffic_params",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallTrafficParamsTrafficParamsById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of traffic_params",
+                        "schema": {
+                            "$ref": "#/definitions/TrafficParams"
+                        },
+                        "name": "traffic_params",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallTrafficParamsTrafficParamsById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallTrafficParamsTrafficParamsById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/TrafficParams"
+                        }
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallTrafficParamsTrafficParamsById"
+            }
+        },
+        "/config/calls/call/{callId}/connections/{connectionId}/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Connection"
+                        }
+                    },
+                    "404": {
+                        "description": "Connections not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: connections",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve connections by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallConnectionsConnectionsById"
+            }
+        },
+        "/config/calls/call/{callId}/connections/{connectionId}/aEnd/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of aEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "aEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallConnectionsAEndAEndById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of aEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "aEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallConnectionsAEndAEndById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallConnectionsAEndAEndById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallConnectionsAEndAEndById"
+            }
+        },
+        "/config/calls/call/{callId}/connections/{connectionId}/zEnd/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of zEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "zEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallConnectionsZEndZEndById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of zEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "zEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallConnectionsZEndZEndById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallConnectionsZEndZEndById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallConnectionsZEndZEndById"
+            }
+        },
+        "/config/calls/call/{callId}/connections/{connectionId}/path/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Path not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: path",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of path",
+                        "schema": {
+                            "$ref": "#/definitions/PathType"
+                        },
+                        "name": "path",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update path by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallConnectionsPathPathById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Path not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: path",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of path",
+                        "schema": {
+                            "$ref": "#/definitions/PathType"
+                        },
+                        "name": "path",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create path by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallConnectionsPathPathById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Path not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: path",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete path by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallConnectionsPathPathById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/PathType"
+                        }
+                    },
+                    "404": {
+                        "description": "Path not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: path",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve path by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallConnectionsPathPathById"
+            }
+        },
+        "/config/calls/call/{callId}/connections/{connectionId}/path/topo_components/{endpointId}/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Topo_components not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: topo_components",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of endpoint",
+                        "required": true,
+                        "type": "string",
+                        "name": "endpointId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of topo_components",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "topo_components",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update topo_components by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallConnectionsPathTopoComponentsTopoComponentsById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Topo_components not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: topo_components",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of endpoint",
+                        "required": true,
+                        "type": "string",
+                        "name": "endpointId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of topo_components",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "topo_components",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create topo_components by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallConnectionsPathTopoComponentsTopoComponentsById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Topo_components not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: topo_components",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of endpoint",
+                        "required": true,
+                        "type": "string",
+                        "name": "endpointId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete topo_components by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallConnectionsPathTopoComponentsTopoComponentsById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Topo_components not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: topo_components",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of endpoint",
+                        "required": true,
+                        "type": "string",
+                        "name": "endpointId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve topo_components by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallConnectionsPathTopoComponentsTopoComponentsById"
+            }
+        },
+        "/config/calls/call/{callId}/connections/{connectionId}/path/label/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: label",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of label",
+                        "schema": {
+                            "$ref": "#/definitions/Label"
+                        },
+                        "name": "label",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update label by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallConnectionsPathLabelLabelById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: label",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of label",
+                        "schema": {
+                            "$ref": "#/definitions/Label"
+                        },
+                        "name": "label",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create label by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallConnectionsPathLabelLabelById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: label",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete label by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallConnectionsPathLabelLabelById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Label"
+                        }
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: label",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve label by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallConnectionsPathLabelLabelById"
+            }
+        },
+        "/config/calls/call/{callId}/connections/{connectionId}/match/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of match",
+                        "schema": {
+                            "$ref": "#/definitions/MatchRules"
+                        },
+                        "name": "match",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallConnectionsMatchMatchById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of match",
+                        "schema": {
+                            "$ref": "#/definitions/MatchRules"
+                        },
+                        "name": "match",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallConnectionsMatchMatchById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallConnectionsMatchMatchById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MatchRules"
+                        }
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallConnectionsMatchMatchById"
+            }
+        },
+        "/config/calls/call/{callId}/connections/{connectionId}/traffic_params/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of traffic_params",
+                        "schema": {
+                            "$ref": "#/definitions/TrafficParams"
+                        },
+                        "name": "traffic_params",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallConnectionsTrafficParamsTrafficParamsById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of traffic_params",
+                        "schema": {
+                            "$ref": "#/definitions/TrafficParams"
+                        },
+                        "name": "traffic_params",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallConnectionsTrafficParamsTrafficParamsById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallConnectionsTrafficParamsTrafficParamsById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/TrafficParams"
+                        }
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallConnectionsTrafficParamsTrafficParamsById"
+            }
+        },
+        "/config/calls/call/{callId}/connections/{connectionId}/transport_layer/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of transport_layer",
+                        "schema": {
+                            "$ref": "#/definitions/TransportLayerType"
+                        },
+                        "name": "transport_layer",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateCallsCallConnectionsTransportLayerTransportLayerById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of transport_layer",
+                        "schema": {
+                            "$ref": "#/definitions/TransportLayerType"
+                        },
+                        "name": "transport_layer",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createCallsCallConnectionsTransportLayerTransportLayerById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteCallsCallConnectionsTransportLayerTransportLayerById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/TransportLayerType"
+                        }
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of call",
+                        "required": true,
+                        "type": "string",
+                        "name": "callId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveCallsCallConnectionsTransportLayerTransportLayerById"
+            }
+        },
+        "/config/connections/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Connections not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: connections",
+                "parameters": [
+                    {
+                        "required": true,
+                        "description": "ID of connections",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Connection"
+                            },
+                            "type": "array"
+                        },
+                        "name": "connections",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update connections by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateConnectionsById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Connections not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: connections",
+                "parameters": [
+                    {
+                        "required": true,
+                        "description": "ID of connections",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Connection"
+                            },
+                            "type": "array"
+                        },
+                        "name": "connections",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create connections by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createConnectionsById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Connections not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "description": "Delete operation of resource: connections",
+                "summary": "Delete connections by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteConnectionsById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Connection"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "404": {
+                        "description": "Connections not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: connections",
+                "parameters": [],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve connections",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveConnections"
+            }
+        },
+        "/config/connections/connection/{connectionId}/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Connection not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: connection",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of connection",
+                        "schema": {
+                            "$ref": "#/definitions/Connection"
+                        },
+                        "name": "connection",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update connection by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateConnectionsConnectionConnectionById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Connection not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: connection",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of connection",
+                        "schema": {
+                            "$ref": "#/definitions/Connection"
+                        },
+                        "name": "connection",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create connection by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createConnectionsConnectionConnectionById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Connection not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: connection",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete connection by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteConnectionsConnectionConnectionById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Connection"
+                        }
+                    },
+                    "404": {
+                        "description": "Connection not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: connection",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve connection by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveConnectionsConnectionConnectionById"
+            }
+        },
+        "/config/connections/connection/{connectionId}/aEnd/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of aEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "aEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateConnectionsConnectionAEndAEndById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of aEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "aEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createConnectionsConnectionAEndAEndById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteConnectionsConnectionAEndAEndById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Aend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: aEnd",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve aEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveConnectionsConnectionAEndAEndById"
+            }
+        },
+        "/config/connections/connection/{connectionId}/zEnd/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of zEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "zEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateConnectionsConnectionZEndZEndById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of zEnd",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "zEnd",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createConnectionsConnectionZEndZEndById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteConnectionsConnectionZEndZEndById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Zend not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: zEnd",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve zEnd by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveConnectionsConnectionZEndZEndById"
+            }
+        },
+        "/config/connections/connection/{connectionId}/path/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Path not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: path",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of path",
+                        "schema": {
+                            "$ref": "#/definitions/PathType"
+                        },
+                        "name": "path",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update path by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateConnectionsConnectionPathPathById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Path not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: path",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of path",
+                        "schema": {
+                            "$ref": "#/definitions/PathType"
+                        },
+                        "name": "path",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create path by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createConnectionsConnectionPathPathById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Path not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: path",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete path by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteConnectionsConnectionPathPathById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/PathType"
+                        }
+                    },
+                    "404": {
+                        "description": "Path not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: path",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve path by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveConnectionsConnectionPathPathById"
+            }
+        },
+        "/config/connections/connection/{connectionId}/path/topo_components/{endpointId}/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Topo_components not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: topo_components",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of endpoint",
+                        "required": true,
+                        "type": "string",
+                        "name": "endpointId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of topo_components",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "topo_components",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update topo_components by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateConnectionsConnectionPathTopoComponentsTopoComponentsById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Topo_components not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: topo_components",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of endpoint",
+                        "required": true,
+                        "type": "string",
+                        "name": "endpointId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of topo_components",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        },
+                        "name": "topo_components",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create topo_components by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createConnectionsConnectionPathTopoComponentsTopoComponentsById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Topo_components not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: topo_components",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of endpoint",
+                        "required": true,
+                        "type": "string",
+                        "name": "endpointId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete topo_components by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteConnectionsConnectionPathTopoComponentsTopoComponentsById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Endpoint"
+                        }
+                    },
+                    "404": {
+                        "description": "Topo_components not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: topo_components",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "description": "ID of endpoint",
+                        "required": true,
+                        "type": "string",
+                        "name": "endpointId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve topo_components by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveConnectionsConnectionPathTopoComponentsTopoComponentsById"
+            }
+        },
+        "/config/connections/connection/{connectionId}/path/label/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: label",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of label",
+                        "schema": {
+                            "$ref": "#/definitions/Label"
+                        },
+                        "name": "label",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update label by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateConnectionsConnectionPathLabelLabelById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: label",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of label",
+                        "schema": {
+                            "$ref": "#/definitions/Label"
+                        },
+                        "name": "label",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create label by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createConnectionsConnectionPathLabelLabelById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: label",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete label by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteConnectionsConnectionPathLabelLabelById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Label"
+                        }
+                    },
+                    "404": {
+                        "description": "Label not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: label",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve label by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveConnectionsConnectionPathLabelLabelById"
+            }
+        },
+        "/config/connections/connection/{connectionId}/match/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of match",
+                        "schema": {
+                            "$ref": "#/definitions/MatchRules"
+                        },
+                        "name": "match",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateConnectionsConnectionMatchMatchById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of match",
+                        "schema": {
+                            "$ref": "#/definitions/MatchRules"
+                        },
+                        "name": "match",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createConnectionsConnectionMatchMatchById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteConnectionsConnectionMatchMatchById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MatchRules"
+                        }
+                    },
+                    "404": {
+                        "description": "Match not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: match",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve match by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveConnectionsConnectionMatchMatchById"
+            }
+        },
+        "/config/connections/connection/{connectionId}/traffic_params/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of traffic_params",
+                        "schema": {
+                            "$ref": "#/definitions/TrafficParams"
+                        },
+                        "name": "traffic_params",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateConnectionsConnectionTrafficParamsTrafficParamsById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of traffic_params",
+                        "schema": {
+                            "$ref": "#/definitions/TrafficParams"
+                        },
+                        "name": "traffic_params",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createConnectionsConnectionTrafficParamsTrafficParamsById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteConnectionsConnectionTrafficParamsTrafficParamsById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/TrafficParams"
+                        }
+                    },
+                    "404": {
+                        "description": "Traffic_params not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: traffic_params",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve traffic_params by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveConnectionsConnectionTrafficParamsTrafficParamsById"
+            }
+        },
+        "/config/connections/connection/{connectionId}/transport_layer/": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Update operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of transport_layer",
+                        "schema": {
+                            "$ref": "#/definitions/TransportLayerType"
+                        },
+                        "name": "transport_layer",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Update transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "updateConnectionsConnectionTransportLayerTransportLayerById"
+            },
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Create operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    },
+                    {
+                        "required": true,
+                        "description": "ID of transport_layer",
+                        "schema": {
+                            "$ref": "#/definitions/TransportLayerType"
+                        },
+                        "name": "transport_layer",
+                        "in": "body"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "createConnectionsConnectionTransportLayerTransportLayerById"
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Delete operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Delete transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "deleteConnectionsConnectionTransportLayerTransportLayerById"
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/TransportLayerType"
+                        }
+                    },
+                    "404": {
+                        "description": "Transport_layer not found"
+                    },
+                    "400": {
+                        "description": "Invalid ID parameter"
+                    }
+                },
+                "description": "Retrieve operation of resource: transport_layer",
+                "parameters": [
+                    {
+                        "description": "ID of connection",
+                        "required": true,
+                        "type": "string",
+                        "name": "connectionId",
+                        "in": "path"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Retrieve transport_layer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "operationId": "retrieveConnectionsConnectionTransportLayerTransportLayerById"
+            }
+        }
+    },
+    "definitions": {
+        "Endpoint": {
+            "properties": {
+                "routerId": {
+                    "type": "string"
+                },
+                "interfaceId": {
+                    "type": "string"
+                },
+                "endpointId": {
+                    "type": "string"
+                }
+            }
+        },
+        "TransportLayerType": {
+            "properties": {
+                "layer": {
+                    "enum": [
+                        "dwdm_link",
+                        "ethernet",
+                        "ethernet_broadcast",
+                        "mpls"
+                    ],
+                    "type": "string"
+                },
+                "layerId": {
+                    "type": "string"
+                }
+            }
+        },
+        "Connection": {
+            "properties": {
+                "controllerDomainId": {
+                    "type": "string"
+                },
+                "trafficParams": {
+                    "$ref": "#/definitions/TrafficParams"
+                },
+                "connectionId": {
+                    "type": "string"
+                },
+                "zEnd": {
+                    "$ref": "#/definitions/Endpoint"
+                },
+                "operStatus": {
+                    "enum": [
+                        "down",
+                        "up"
+                    ],
+                    "type": "string"
+                },
+                "aEnd": {
+                    "$ref": "#/definitions/Endpoint"
+                },
+                "path": {
+                    "$ref": "#/definitions/PathType"
+                },
+                "transportLayer": {
+                    "$ref": "#/definitions/TransportLayerType"
+                },
+                "match": {
+                    "$ref": "#/definitions/MatchRules"
+                }
+            }
+        },
+        "TrafficParams": {
+            "properties": {
+                "latency": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "OSNR": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "estimatedPLR": {
+                    "type": "number",
+                    "format": "double"
+                },
+                "qosClass": {
+                    "enum": [
+                        "gold",
+                        "silver"
+                    ],
+                    "type": "string"
+                },
+                "reservedBandwidth": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            }
+        },
+        "Label": {
+            "properties": {
+                "labelType": {
+                    "enum": [
+                        "GMPLS_FIXED",
+                        "GMPLS_FLEXI"
+                    ],
+                    "type": "string"
+                },
+                "labelValue": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            }
+        },
+        "MatchRules": {
+            "properties": {
+                "mplsLabel": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ethType": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ipEcn": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "icmpv4Type": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ethDst": {
+                    "type": "string"
+                },
+                "vlanPcp": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ipv4Dst": {
+                    "type": "string"
+                },
+                "arpTpa": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "arpSha": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ipv6Exthdr": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "icmpv6Type": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ipv6Src": {
+                    "type": "string"
+                },
+                "mplsTc": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "tunnelId": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "sctpDst": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ethSrc": {
+                    "type": "string"
+                },
+                "ipv6NdTarget": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "tcpSrc": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ipv4Src": {
+                    "type": "string"
+                },
+                "icmpv6Code": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "mplsBos": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "experimentalTeid": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "ipv6NdTll": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "sctpSrc": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "udpDst": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "pbbIsid": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ipv6Flabel": {
+                    "type": "string"
+                },
+                "inPort": {
+                    "type": "string"
+                },
+                "icmpv4Code": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ipDscp": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "inPhyPort": {
+                    "type": "string"
+                },
+                "ipProto": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "arpTha": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "arpSpa": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ipv6Dst": {
+                    "type": "string"
+                },
+                "udpSrc": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "arpOp": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "ipv6NdSll": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "vlanVid": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "experimentalGmplsWsonLabel": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "metadata": {
+                    "type": "string"
+                },
+                "tcpDst": {
+                    "type": "integer",
+                    "format": "int32"
+                }
+            }
+        },
+        "PathType": {
+            "properties": {
+                "multiLayer": {
+                    "type": "boolean"
+                },
+                "noPath": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "topoComponents": {
+                    "items": {
+                        "$ref": "#/definitions/Endpoint"
+                    },
+                    "type": "array",
+                    "x-key": "endpointId"
+                },
+                "label": {
+                    "$ref": "#/definitions/Label"
+                }
+            }
+        },
+        "Call": {
+            "properties": {
+                "operStatus": {
+                    "enum": [
+                        "down",
+                        "up"
+                    ],
+                    "type": "string"
+                },
+                "callId": {
+                    "type": "string"
+                },
+                "zEnd": {
+                    "$ref": "#/definitions/Endpoint"
+                },
+                "connections": {
+                    "items": {
+                        "$ref": "#/definitions/Connection"
+                    },
+                    "type": "array",
+                    "x-key": "connectionId"
+                },
+                "trafficParams": {
+                    "$ref": "#/definitions/TrafficParams"
+                },
+                "aEnd": {
+                    "$ref": "#/definitions/Endpoint"
+                },
+                "transportLayer": {
+                    "$ref": "#/definitions/TransportLayerType"
+                },
+                "match": {
+                    "$ref": "#/definitions/MatchRules"
+                }
+            }
+        }
+    }
+}
