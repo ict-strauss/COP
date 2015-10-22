@@ -64,7 +64,7 @@ Copy and paste your already generated swagger.json model/s into the swagger-code
 cp ../source_cop_files_folder/*.json .
 ```
 
-#To build a server stub using JAX-RS:
+###To build a server stub using JAX-RS:
 
 ```
 java -jar modules/swagger-codegen-cli/target/swagger-codegen-cli.jar generate \
