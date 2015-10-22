@@ -17,7 +17,7 @@ Install pyang  by running the following command inside that folder:
 sudo python setup.py install
 ```
 
-## Copy the swagger plugin to pyang's plugin directory:
+### Copy the swagger plugin to pyang's plugin directory:
 
 ```
 sudo cp pyang_plugins/swagger.py /usr/local/lib/python2.7/dist-packages/pyang/plugins/
@@ -33,23 +33,23 @@ pyang -f swagger -p yang/yang-cop service-call.yang -o service-call.json
       --use the option '-p' to specify the path of the yang models for import purposes.
 ```
 
-## Have a look at the JSON output with the Swagger editor
+### Have a look at the JSON output with the Swagger editor
 
 [Swagger editor](http://editor.swagger.io/#/)
 
 
-## To build a server stub
+## To build a JAX-RS server stub using Swagger-codegen 
 
 We will use the swagger code generator. The obtained swagger files from our pyang plugin are in swagger v2.0. To generate code from this swagger file version we use the current stable version of swagger-codegen (2.1.3) https://github.com/swagger-api/swagger-codegen.git :
 
-## Prerequisites
+### Prerequisites
 
 You need the following installed and available in your $PATH:
 
 [Java 7](http://java.oracle.com/)
 [Apache maven 3.0.3 or greater](http://maven.apache.org/)
 
-## Installation and code generation
+### Installation and code generation
 
 Download and build swagger-codegen
 
