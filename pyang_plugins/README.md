@@ -49,6 +49,8 @@ You need the following installed and available in your $PATH:
 [Java 7](http://java.oracle.com/)
 [Apache maven 3.0.3 or greater](http://maven.apache.org/)
 
+## Installation and code generation
+
 Download and build swagger-codegen
 
 ```
@@ -62,7 +64,7 @@ Copy and paste your already generated swagger.json model/s into the swagger-code
 cp ../source_cop_files_folder/*.json .
 ```
 
-To build a server stub using JAX-RS:
+#To build a server stub using JAX-RS:
 
 ```
 java -jar modules/swagger-codegen-cli/target/swagger-codegen-cli.jar generate \
