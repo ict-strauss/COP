@@ -20,7 +20,7 @@ sudo python setup.py install
 ### Copy the swagger plugin to pyang's plugin directory:
 
 ```
-sudo cp pyang_plugins/swagger.py /usr/local/lib/python2.7/dist-packages/pyang/plugins/
+sudo cp pyang_plugins/swagger.py /usr/local/lib/python2.7/dist-packages/{pyang_directory}/plugins/
 ```
 
 ## Run pyang swagger plugin
