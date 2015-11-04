@@ -40,7 +40,7 @@ pyang -f swagger -p yang/yang-cop service-call.yang -o service-call.json
 
 ## To build a JAX-RS server stub using Swagger-codegen 
 
-We will use the swagger code generator. The obtained swagger files from our pyang plugin are in swagger v2.0. To generate code from this swagger file version we use the current stable version of swagger-codegen (2.1.3) [swagger-codegen](https://github.com/swagger-api/swagger-codegen/tree/v2.1.3) :
+We will use the swagger code generator. The obtained swagger files from our pyang plugin are in swagger v2.0. To generate code from this swagger file version we use the current stable version of [swagger-codegen](https://github.com/swagger-api/swagger-codegen/tree/v2.1.3)(2.1.3):
 
 ### Prerequisites
 
