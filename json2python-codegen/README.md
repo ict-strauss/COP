@@ -43,7 +43,7 @@ pip install autobahn
 python json2python-codegen/COPGenerator.py service-call.json service-path-computation.json service-virtual-network.json service-topology.json -o outputdir_exp_base/
 ```
 
-- Demo Version: 
+- Demo Version (only works for COP yang models): 
 
 ```
 python json2python-codegen/COPGenerator.py service-call.json service-path-computation.json service-virtual-network.json service-topology.json -a -o outputdir_exp_demo/
