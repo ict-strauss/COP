@@ -50,8 +50,14 @@ module service-call {
 
     typedef direction_type_enumeration{
         type enumeration{
-            enum unidir;
-            enum bidir;
+            enum unidir{
+                description "Unidirectional service";
+                value 1;
+            }
+            enum bidir{
+                description "Bidirectional service";
+                value 2;
+            }
         }
     }
 
