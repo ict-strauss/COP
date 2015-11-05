@@ -1,18 +1,25 @@
 """Swagger output plugin for pyang.
+
+    List of contributors:
+    -Arturo Mayoral, Optical Networks & Systems group, Centre Tecnologic de Telecomunicacions de Catalunya (CTTC).
+    [arturo.mayoral@cttc.es]
+    -Ricard Vilalta, Optical Networks & Systems group, Centre Tecnologic de Telecomunicacions de Catalunya (CTTC)
+    [ricard.vilalta@cttc.es]
+
+    -Description:
+    This code  implements a pyang plugin to translate yang RFC-6020 model files into swagger 2.0 specification
+    json format (https://github.com/swagger-api/swagger-spec).
+    Any doubt, bug or suggestion: arturo.mayoral@cttc.es
 """
 
 import optparse
 import json
-import os
 import re
 import string
-import pyang
 from collections import OrderedDict
 
 from pyang import plugin
 from pyang import statements
-from pyang import Context as ctx
-import sys
 
 
 TYPEDEFS = dict()
@@ -95,7 +102,7 @@ def emit_swagger_spec(ctx, modules, fd, path):
     printed_header = False
     model = OrderedDict()
     definitions = OrderedDict()
-    augments = list()
+
     # Go through all modules and extend the model.
     for module in modules:
         if not printed_header:
@@ -118,8 +125,9 @@ def emit_swagger_spec(ctx, modules, fd, path):
         referenced_models = findModels(ctx, module, models, referenced_models)
         for element in referenced_models:
             models.append(element)
+
         # Print the swagger definitions of the Yang groupings.
-        definitions = gen_model(models, definitions)
+        gen_model(models, definitions)
 
         # If a model at runtime was dependant of another model which had been encounter yet, it is generated 'a posteriori'.
         if pending_models:
@@ -129,6 +137,7 @@ def emit_swagger_spec(ctx, modules, fd, path):
             for element in PARENT_MODELS:
                 if PARENT_MODELS[element]['models']:
                     definitions[element]['discriminator'] = PARENT_MODELS[element]['discriminator']
+
         # extract children which contain data definition keywords
         chs = [ch for ch in module.i_children
                if ch.keyword in (statements.data_definition_keywords + ['rpc','notification'])]
@@ -173,7 +182,6 @@ def findTypedefs(ctx, module, children, referenced_types):
                     if len(attribute.arg.split(':'))>1:
                         for i in module.search('import'):
                             subm = ctx.get_module(i.arg)
-                            print subm
                             models = [type for type in subm.i_typedefs.values() if str(type.arg) == str(attribute.arg.split(':')[-1]) and type.arg not in [element.arg for element in referenced_types]]
                             for element in models:
                                 referenced_types.append(element)
@@ -190,12 +198,11 @@ def findTypedefs(ctx, module, children, referenced_types):
 pending_models = list()
 def gen_model(children, tree_structure):
     """ Generates the swagger definition tree."""
-    referenced = False
-    extended = False
     for child in children:
-        #print child.arg
+        referenced = False
         node = dict()
-        extended = False
+        config = True
+        nonRefChildren = None
         if hasattr(child, 'substmts'):
             for attribute in child.substmts:
                 # process the 'type' attribute:
@@ -210,8 +217,7 @@ def gen_model(children, tree_structure):
                             node['format'] = TYPEDEFS[attribute.arg]['format']
                         elif TYPEDEFS[attribute.arg]['type'] == 'enumeration':
                             node['type'] = 'string'
-                            node['enum'] = [e
-                                            for e in TYPEDEFS[attribute.arg]['enum']]
+                            node['enum'] = [e for e in TYPEDEFS[attribute.arg]['enum']]
                         # map all other types to string
                         else:
                             node['type'] = 'string'
@@ -230,59 +236,60 @@ def gen_model(children, tree_structure):
                     # map all other types to string
                     else:
                         node['type'] = 'string'
+                elif attribute.keyword == 'key':
+                    listkey = to_lower_camelcase(attribute.arg)
+
                 elif attribute.keyword == 'mandatory':
                     parent_model = to_upper_camelcase(child.parent.arg)
                     if parent_model not in PARENT_MODELS.keys():
                         PARENT_MODELS[parent_model] = {'models':[],'discriminator':to_lower_camelcase(child.arg)}
+                elif attribute.keyword == 'config' and attribute.arg == 'false':
+                    config = False
+
                 # Process the reference to another model.
                 # We differentiate between single and array references.
                 elif attribute.keyword == 'uses':
+
                     if len(attribute.arg.split(':'))>1:
                         attribute.arg = attribute.arg.split(':')[-1]
 
-                    ref = to_upper_camelcase(attribute.arg)
-                    ref = '#/definitions/' + ref
-                    if str(child.keyword) == 'list':
-                        node['items'] = {'$ref': ref}
-                        node['type'] = 'array'
-                        for attribute in child.substmts:
-                            if attribute.keyword == 'key':
-                                listkey = to_lower_camelcase(attribute.arg)
-                        if listkey:
-                            node['x-key'] = listkey
-                        referenced = True
-                    elif str(child.keyword) == 'grouping':
-                        ref = to_upper_camelcase(attribute.arg)
-                        if ref in tree_structure:
-                            PARENT_MODELS[ref]['models'].append(child.arg)
-                            list_properties = [item for item in tree_structure[ref]['properties']]
-                            ref = '#/definitions/' + ref
-                            node['allOf'] = []
-                            node['allOf'].append({'$ref': ref})
-                            index = 0
-                            for i in range(0, len(child.i_children)):
-                                #print len(child.i_children)
-                                if to_lower_camelcase(child.i_children[index].arg) in list_properties:
-                                    del child.i_children[index]
-                                else:
-                                    index+=1
-                            extended = True
+                    ref_arg = to_upper_camelcase(attribute.arg)
+                    # A list is built containing the child elements which are not referenced statements.
+                    nonRefChildren = [e for e in child.i_children if not hasattr(e, 'i_uses')]
+                    # If a node contains mixed referenced and non-referenced children,
+                    # it is a extension of another object, which in swagger is defined using the
+                    # "AllOf" statement.
+                    if not nonRefChildren:
+                        if str(child.keyword) == 'list':
+                            ref = '#/definitions/' + ref_arg
+                            node['items'] = {'$ref': ref}
+                            node['type'] = 'array'
+                            if listkey:
+                                node['x-key'] = listkey
+                            referenced = True
                         else:
-                            pending_models.append(child)
+                            ref = '#/definitions/' + ref_arg
+                            node['$ref'] = ref
+                            referenced = True
                     else:
-                        node['$ref'] = ref
-                        referenced = True
+                        if ref_arg in PARENT_MODELS:
+                            PARENT_MODELS[ref_arg]['models'].append(child.arg)
+                        ref = '#/definitions/' + ref_arg
+                        node['allOf'] = []
+                        node['allOf'].append({'$ref': ref})
+
 
         # When a node contains a referenced model as an attribute the algorithm
         # does not go deeper into the sub-tree of the referenced model.
         if not referenced :
-            if not extended:
-                node = gen_model_node(child, node)
+            if not nonRefChildren:
+                gen_model_node(child, node)
             else:
                 node_ext = dict()
-                node_ext = gen_model_node(child, node_ext)
+                properties = dict()
+                gen_model(nonRefChildren, properties)
+                node_ext['properties'] = properties
                 node['allOf'].append( node_ext)
-                extended = False
 
         # Leaf-lists need to create arrays.
         # Copy the 'node' content to 'items' and change the reference
@@ -295,27 +302,20 @@ def gen_model(children, tree_structure):
             tree_structure[to_upper_camelcase(child.arg)] = node
         else:
             tree_structure[to_lower_camelcase(child.arg)] = node
-    # TODO: do we really need this return value? We are working on the
-    # reference anyhow.
-    return tree_structure
 
 
 def gen_model_node(node, tree_structure):
     """ Generates the properties sub-tree of the current node."""
     if hasattr(node, 'i_children'):
         properties = {}
-        properties = gen_model(node.i_children, properties)
+        gen_model(node.i_children, properties)
         if properties:
             tree_structure['properties'] = properties
-    # TODO: do we need a return value or is the reference enough.
-    return tree_structure
 
 def gen_apis(children, path, apis, definitions):
     """ Generates the swagger path tree for the APIs."""
     for child in children:
         gen_api_node(child, path, apis, definitions)
-    # TODO: do we need a return value or is the reference enough.
-    return apis
 
 
 # Generates the API of the current node.
@@ -332,11 +332,12 @@ def gen_api_node(node, path, apis, definitions):
             # TODO: this is not correct in general because it does not consider
             # inheritance. It should be changed to node.i_config.
             config = sub.arg
+
         elif sub.keyword == 'key':
             key = sub.arg
         elif sub.keyword == 'uses':
             # Set the reference to a model, previously defined by a grouping.
-            schema = {'$ref': '#/definitions/' + to_upper_camelcase(sub.arg)}
+            schema['$ref'] ='#/definitions/' + to_upper_camelcase(sub.arg)
 
     # API entries are only generated from container and list nodes.
     if node.keyword == 'list' or node.keyword == 'container':
@@ -349,28 +350,7 @@ def gen_api_node(node, path, apis, definitions):
         else:
             # If the container has not a referenced model it is necessary
             # to generate the schema tree based on the node children.
-
-            # In our case we just need to create arrays with references
-            # TODO: extend to general case and clean up the branches.
-            if node.keyword == 'container':
-                for child in node.i_children:
-                    if child.keyword == 'list':
-                        schema['type'] = 'array'
-                    ref_model = [ch for ch in child.substmts
-                                 if ch.keyword == 'uses']
-                    schema['items'] = {
-                        '$ref': '#/definitions/' + to_upper_camelcase(
-                            ref_model[0].arg)
-                    }
-            else:
-                # TODO: dead code for our model
-                properties = {}
-                item = {}
-                item = gen_model(node.i_children, tree)
-                properties2 = {}
-                properties2['properties'] = item
-                properties[str(node.arg)] = properties2
-                schema['properties'] = properties
+            gen_model_node(node, schema)
             apis['/config'+str(path)] = print_api(node, config, schema, path)
 
     elif node.keyword == 'rpc':
@@ -421,29 +401,22 @@ def gen_typedefs(typedefs):
                     type['type'] = 'string'
         TYPEDEFS[typedef.arg    ] = type
 
-def print_notification(node, schema_out):
-    operations = {}
-    operations['get'] = generate_retrieve(node, schema_out, None)
-    operations['get']['schemes'] = ['ws']
 
+def print_notification(node, schema_out):
+    operations = {'get': generate_retrieve(node, schema_out, None)}
+    operations['get']['schemes'] = ['ws']
     return operations
+
 
 def print_rpc(node, schema_in, schema_out):
-    operations = {}
-    operations['put'] = generate_update(node, schema_in, None, schema_out)
+    operations = {'put': generate_update(node, schema_in, None, schema_out)}
     return operations
-# print the API JSON structure.
 
+
+# print the API JSON structure.
 def print_api(node, config, ref, path):
     """ Creates the available operations for the node."""
     operations = {}
-#     is_list = False
-#     if node.keyword == 'list':
-#         is_list = True
-#     if hasattr(node, 'i_children'):
-#         for param in node.i_children:
-#             if param.keyword == 'list':
-#                 is_list = True
     if config and config != 'false':
         operations['post'] = generate_create(node, ref, path)
         operations['get'] = generate_retrieve(node, ref, path)
@@ -626,48 +599,3 @@ def to_upper_camelcase(name):
     return re.sub(r'(?:\B_|\b\-|^)([a-zA-Z0-9])', lambda l: l.group(1).upper(),
                   name)
 
-
-'''
-def import_models(module, path):
-    if module.search('namespace'):
-        if module.search('namespace')[0].arg[:4] == 'http':
-            namespace = ""
-            ##TODO: implement a method to access to this repository.
-            pass
-        elif module.search('namespace')[0].arg[:4] == 'file':
-            namespace = module.search('namespace')[0].arg[7:]
-            repos = pyang.FileRepository(namespace)
-            ctx = pyang.Context(repos)
-        else:
-            raise Exception('The namespace is incorrect or is missing, impossible to import modules')
-
-    imported_models = OrderedDict()
-    for i in module.search('import'):
-        filename = "/".join([element for element in i.arg.split(":")]) + ".yang"
-        for ch in i.substmts:
-            if ch.keyword == "prefix":
-                prefix = ch.arg
-            elif ch.keyword == "revision-date":
-                rev = ch.arg
-        if namespace != "":
-            f = open(namespace+filename)
-        else:
-            raise Exception('Namespace not found')
-            return None
-
-        text = f.read()
-        imported_module = ctx.add_module(filename, text, format, i.arg, rev, expect_failure_error=False)
-        imported_groupings = list(imported_module.i_groupings.values())
-        imported_definitions = OrderedDict()
-        imported_definitions = gen_model(imported_groupings, imported_definitions)
-
-        imported_chs = [ch for ch in imported_module.i_children
-           if ch.keyword in (statements.data_definition_keywords + ['rpc','notifications'])]
-        imported_model = OrderedDict()
-        if len(imported_chs) > 0:
-            imported_model['paths'] = OrderedDict()
-            gen_apis(imported_chs, path, imported_model['paths'], imported_definitions)
-
-        imported_model['definitions'] = imported_definitions
-        imported_models[prefix] = imported_model
-    return imported_models'''
