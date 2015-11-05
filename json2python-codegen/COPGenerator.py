@@ -75,7 +75,20 @@ def translateRequest(js):
                 for param in js["paths"][path][method]['parameters']:
                     if "body" in param['in']:
                         ids[method]['body'] = True
-                        if 'in_params' not in ids[method]:
+                        if '$ref' in param['schema']:
+                            if 'in_params' not in ids[method]:
+                                ids[method]['in_params'] = [param['schema']['$ref'].split('/')[-1]]
+                            else:
+                                ids[method]['in_params'].append(param['schema']['$ref'].split('/')[-1])
+                        else:
+                            input_name = "input"+str(to_upper_camelcase('_'.join(url.split('/')[2:-1])))
+                            input_klass = {input_name:param['schema']}
+                            input_params = translateClass(input_klass)
+                            if 'in_params' not in ids[method]:
+                                ids[method]['in_params'] = [input_params]
+                            else:
+                                ids[method]['in_params'].append(input_params)
+                        '''if 'in_params' not in ids[method]:
                             if 'items' in param['schema']:
                                 ids[method]['in_params'] = [param['schema']['items']['$ref'].split('/')[-1]]
                             else:
@@ -84,7 +97,7 @@ def translateRequest(js):
                             if 'items' in param['schema']:
                                 ids[method]['in_params'].append(param['schema']['items']['$ref'].split('/')[-1])
                             else:
-                                ids[method]['in_params'].append(param['schema']['$ref'].split('/')[-1])
+                                ids[method]['in_params'].append(param['schema']['$ref'].split('/')[-1])'''
 
             if "application/json" in js["paths"][path][method]['consumes']:
                 ids[method]['json'] = True
@@ -121,16 +134,7 @@ def getType(js):
                     ret['type'] = 'array'
         else:
             ret['type'] = 'string'
-        """ TODO, this code path is unused, swagger.py does not generate the type "object"
-        elif "object" in js['type']:
-            if "type" in js['additionalProperties'].keys():
-                ret['type'] = 'object'
-                ret['klass'] = js['additionalProperties']['type']
-            elif "$ref" js['additionalProperties'].keys():
-                imp = True
-                ret['type'] = 'object'
-                ret['klass'] = js['additionalProperties']['$ref'].split("/")[-1]
-        """
+
     elif "$ref" in js.keys():
         imp = True
         ret['type'] = 'object'
@@ -139,40 +143,40 @@ def getType(js):
     return ret, imp
 
 
-def translateClasses(js):
-    res = []
-    for klass in js['definitions'].keys():
-        imports = []
-        cl = {}
-        atts = []
-        cl['class'] = klass
-        if 'discriminator' in js['definitions'][klass]:
-            cl["discriminator"] = js['definitions'][klass]['discriminator']
-        # Special case where the model extending a father class
-        if 'allOf' in js['definitions'][klass]:
-            for item in js['definitions'][klass]['allOf']:
-                if "$ref" in item:
-                    cl['extend_class'] = item['$ref'].split("/")[-1]
-                elif "properties" in item:
-                    for att in item['properties'].keys():
-                        ret, imp = getType(item['properties'][att])
-                        ret['att'] = att
-                        atts.append(ret)
-                        if imp:
-                            if ret['klass'] not in imports:
-                                imports.append(ret['klass'])
-        else:
-            for att in js['definitions'][klass]['properties'].keys():
-                ret, imp = getType(js['definitions'][klass]['properties'][att])
-                ret['att'] = att
-                atts.append(ret)
-                if imp:
-                    if ret['klass'] not in imports:
-                        imports.append(ret['klass'])
-        cl["atts"] = atts
-        cl["imports"] = imports
-        res.append(cl)
-    return res
+def translateClass(klass):
+    name = klass.keys()[0]
+    imports = []
+    cl = {}
+    atts = []
+    cl['class'] = name
+    if 'discriminator' in klass[name]:
+        cl["discriminator"] = klass[name]['discriminator']
+    # Special case where the model extending a father class
+    if 'allOf' in klass[name]:
+        for item in klass[name]['allOf']:
+            if "$ref" in item:
+                cl['extend_class'] = item['$ref'].split("/")[-1]
+            elif "properties" in item:
+                for att in item['properties'].keys():
+                    ret, imp = getType(item['properties'][att])
+                    ret['att'] = att
+                    atts.append(ret)
+                    if imp:
+                        if ret['klass'] not in imports:
+                            imports.append(ret['klass'])
+    elif '$ref' in klass[name]:
+        cl['extend_class'] = klass[name]['$ref'].split("/")[-1]
+    else:
+        for att in klass[name]['properties'].keys():
+            ret, imp = getType(klass[name]['properties'][att])
+            ret['att'] = att
+            atts.append(ret)
+            if imp:
+                if ret['klass'] not in imports:
+                    imports.append(ret['klass'])
+    cl["atts"] = atts
+    cl["imports"] = imports
+    return cl
 
 
 def getNotificationAPIs(data):
@@ -576,6 +580,7 @@ def generateCallableClasses(data, imp, restname, path, notfy_urls):
                     params_found += 1
                 else:
                     remain.append(element)
+
             for i, part in enumerate(object_path_parts):
                 object_path.append([])
                 if i > 0:
@@ -595,17 +600,20 @@ def generateCallableClasses(data, imp, restname, path, notfy_urls):
             if len(params_callback[func]) > 0:
                 ## Input body parameters are included into the class headers if so.
                 if (method in ['put', 'post']) and ('in_params' in info[func]['methods'][method]):
-                    in_params = [element.lower() for element in info[func]['methods'][method]['in_params']]
+                    in_params = [element.lower() if not isinstance(element,dict) else element['class'].lower() for element in info[func]['methods'][method]['in_params']]
                     arguments = params_callback[func] + in_params
                 else:
                     arguments = params_callback[func]
             else:
                 if (method in ['put', 'post']) and ('in_params' in info[func]['methods'][method]):
-                    arguments = [element.lower() for element in info[func]['methods'][method]['in_params']]
+                    arguments = [element.lower() if not isinstance(element,dict) else element['class'].lower() for element in info[func]['methods'][method]['in_params']]
                 else:
                     arguments = []
             if 'in_params' in info[func]['methods'][method]:
-                printstr = info[func]['methods'][method]['in_params'][0].lower()
+                if not isinstance(info[func]['methods'][method]['in_params'][0],dict):
+                    printstr = info[func]['methods'][method]['in_params'][0].lower()
+                else:
+                    printstr = info[func]['methods'][method]['in_params'][0]['class'].lower()
             else:
                 printstr = ''
             method = method.upper()
@@ -614,6 +622,7 @@ def generateCallableClasses(data, imp, restname, path, notfy_urls):
             methods[method]['printstr'] = printstr
 
         # use jinja
+        #print 'URL %s, object_path %s' % (relevant_list, object_path )
         template = jinja_env.get_template('callable.py')
         rendered_string = template.render(class_name=class_name,
                                           methods=methods, toplevel=toplevel,
@@ -646,6 +655,10 @@ def to_upper_camelcase(name):
                   name)
 
 
+def is_instance(object, type):
+    return isinstance(object,type)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate a RESTful server and class definitions using the swagger.py json output.')
     parser.add_argument('swagger_json_files', nargs='+', type=str, help='a list of swagger JSON files generated with swagger.py which serves as the input of this generator')
@@ -664,6 +677,11 @@ if __name__ == '__main__':
         target = 'base'
     templates_dir = 'templates/' + target
     jinja_env = Environment(loader=PackageLoader('jinja2_codegen', templates_dir), trim_blocks=True, lstrip_blocks=True)
+
+    jinja_env.filters.update({
+            'is_instance': is_instance,
+    })
+
     services = []
     notfy_urls_total = []
     for filename in args.swagger_json_files:
@@ -685,7 +703,11 @@ if __name__ == '__main__':
 
         js = json.loads(stri)
         #Translate json into a more manageable structure
-        jsret = translateClasses(js)
+        jsret = []
+        for klass in js['definitions'].keys():
+            js_class = {klass:js['definitions'][klass]}
+            jsret.append(translateClass(js_class))
+
         #generating classes first
         print("Class definitions are found in the folder '" + path + "objects_" + restname + "/'")
         generateClasses(jsret, restname, path)
@@ -737,3 +759,4 @@ if __name__ == '__main__':
         servicefile.close()
     """
     print("Finished processing " + str(len(args.swagger_json_files)) + " file(s).")
+
