@@ -48,6 +48,13 @@ module service-call {
         }
     }
 
+    typedef direction_type_enumeration{
+        type enumeration{
+            enum unidir;
+            enum bidir;
+        }
+    }
+
     grouping transport_layer-type{
         description "";
         leaf layer {
@@ -55,6 +62,9 @@ module service-call {
         }
         leaf layer_id {
             type string;
+        }
+        leaf direction{
+            type direction_type_enumeration;
         }
     }
 
