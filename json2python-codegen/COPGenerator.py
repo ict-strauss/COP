@@ -307,9 +307,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
     callback_list = []
     for func in info.keys():
         # Create funcs with inlineVars
-
         arguments = info[func]["inlineVars"]
-
         methods = {}
         check_id = False
         thing = ''
@@ -317,9 +315,11 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
             methods[method.upper()] = {}
             methods[method.upper()]['printstr'] = str(info[func]['methods'][method]['desc'])
             if method == 'put':
-                thing = info[func]['methods'][method]['in_params'][0]
-                if [regex_string] == info[func]['url'].split('/')[-2:-1]:
-                    check_id = True
+                if 'in_params' in info[func]['methods'][method]:
+                    thing = info[func]['methods'][method]['in_params'][0]
+                    if [regex_string] == info[func]['url'].split('/')[-2:-1]:
+                        check_id = True
+
         url = info[func]['url']
         name = name_classes[func]
         callback_list.append(CallbackObject(name, url, methods, arguments, thing, check_id))
