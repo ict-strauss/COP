@@ -354,39 +354,27 @@ def gen_api_node(node, path, apis, definitions):
             apis['/config'+str(path)] = print_api(node, config, schema, path)
 
     elif node.keyword == 'rpc':
-        schema_out = dict()
+        #print node.i_children
         for child in node.i_children:
             if child.keyword == 'input':
                 ref_model = [ch for ch in child.substmts
                                  if ch.keyword == 'uses']
-                if ref_model:
-                    schema = {'$ref':'#/definitions/' + to_upper_camelcase(
-                                ref_model[0].arg)}
-                if not schema:
-                    gen_model_node(child, schema)
-
+                schema = {'$ref':'#/definitions/' + to_upper_camelcase(
+                            ref_model[0].arg)}
             elif child.keyword == 'output':
-
+                schema_out = dict()
                 ref_model = [ch for ch in child.substmts
                                  if ch.keyword == 'uses']
-                if ref_model:
-                    schema_out = {'$ref':'#/definitions/' + to_upper_camelcase(
-                                ref_model[0].arg)}
-                if not schema_out:
-                    gen_model_node(child, schema_out)
-
+                schema_out = {'$ref':'#/definitions/' + to_upper_camelcase(
+                            ref_model[0].arg)}
         apis['/operations'+str(path)] = print_rpc(node, schema, schema_out)
         return apis
 
     elif node.keyword == 'notification':
-        schema_out = dict()
         ref_model = [ch for ch in node.substmts
                          if ch.keyword == 'uses']
-        if ref_model:
-            schema_out = {'$ref':'#/definitions/' + to_upper_camelcase(
-                        ref_model[0].arg)}
-        if not schema_out:
-            gen_model_node(node, schema_out)
+        schema_out = {'$ref':'#/definitions/' + to_upper_camelcase(
+                    ref_model[0].arg)}
 
         apis['/streams'+str(path)] = print_notification(node, schema_out)
         return apis
@@ -467,12 +455,7 @@ def generate_create(stmt, schema, path):
         post['parameters'] = create_parameter_list(path_params)
     else:
         post['parameters'] = []
-    in_params = create_body_dict(stmt.arg, schema)
-    if in_params:
-        post['parameters'].append(in_params)
-    else:
-        if not post['parameters']:
-            del post['parameters']
+    post['parameters'].append(create_body_dict(stmt.arg, schema))
     # Responses
     response = create_responses(stmt.arg)
     post['responses'] = response
@@ -490,6 +473,8 @@ def generate_retrieve(stmt, schema, path):
                         and not path_params)
     if path:
         get['parameters'] = create_parameter_list(path_params)
+    else:
+        get['parameters'] = []
 
     # Responses
     response = create_responses(stmt.arg, schema)
@@ -510,12 +495,7 @@ def generate_update(stmt, schema, path, rpc=None):
         put['parameters'] = create_parameter_list(path_params)
     else:
         put['parameters'] = []
-    in_params = create_body_dict(stmt.arg, schema)
-    if in_params:
-        put['parameters'].append(in_params)
-    else:
-        if not put['parameters']:
-            del put['parameters']
+    put['parameters'].append(create_body_dict(stmt.arg, schema))
     # Responses
     if rpc:
         response = create_responses(stmt.arg, rpc)
@@ -535,7 +515,6 @@ def generate_delete(stmt, ref, path):
     # Input parameters
     if path_params:
         delete['parameters'] = create_parameter_list(path_params)
-
     # Responses
     response = create_responses(stmt.arg)
     delete['responses'] = response
@@ -559,12 +538,11 @@ def create_parameter_list(path_params):
 def create_body_dict(name, schema):
     """ Create a body description from the name and the schema."""
     body_dict = {}
-    if schema:
-        body_dict['in'] = 'body'
-        body_dict['name'] = name
-        body_dict['schema'] = schema
-        body_dict['description'] = 'ID of ' + name
-        body_dict['required'] = True
+    body_dict['in'] = 'body'
+    body_dict['name'] = name
+    body_dict['schema'] = schema
+    body_dict['description'] = 'ID of ' + name
+    body_dict['required'] = True
     return body_dict
 
 
