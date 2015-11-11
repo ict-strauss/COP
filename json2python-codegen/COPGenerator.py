@@ -514,6 +514,7 @@ def generateCallableClasses(data, imp, restname, path, notfy_urls):
         params_callback = {}
         for func in notfy_urls:
             index=0
+            print func
             resp_model = func['methods']['get']['resp']['200']['schema']['$ref'].split('/')[-1]
             list_element_url = func['url'].split('/')
             indexes=[i for i,element in enumerate(list_element_url[3:-1]) if element == '(.*)']
@@ -708,6 +709,7 @@ if __name__ == '__main__':
             js_class = {klass:js['definitions'][klass]}
             jsret.append(translateClass(js_class))
 
+        print json.dumps(jsret, sort_keys=True,indent=4, separators=(',', ': '))
         #generating classes first
         print("Class definitions are found in the folder '" + path + "objects_" + restname + "/'")
         generateClasses(jsret, restname, path)
