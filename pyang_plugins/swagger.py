@@ -366,7 +366,6 @@ def gen_api_node(node, path, apis, definitions):
             path += '{' + to_lower_camelcase(key) + '}/'
             schema_list = {}
             gen_model([node], schema_list)
-            print schema_list
             schema = dict(schema_list[to_lower_camelcase(node.arg)]['items'])
         else:
             gen_model([node], schema)
