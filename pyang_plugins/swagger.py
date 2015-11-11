@@ -195,6 +195,7 @@ def findTypedefs(ctx, module, children, referenced_types):
             findTypedefs(ctx, module, child.i_children, referenced_types)
     return referenced_types
 
+
 pending_models = list()
 def gen_model(children, tree_structure):
     """ Generates the swagger definition tree."""
@@ -203,6 +204,7 @@ def gen_model(children, tree_structure):
         node = dict()
         config = True
         nonRefChildren = None
+        listkey = None
         if hasattr(child, 'substmts'):
             for attribute in child.substmts:
                 # process the 'type' attribute:
@@ -259,22 +261,12 @@ def gen_model(children, tree_structure):
                     # If a node contains mixed referenced and non-referenced children,
                     # it is a extension of another object, which in swagger is defined using the
                     # "AllOf" statement.
+                    ref = '#/definitions/' + ref_arg
                     if not nonRefChildren:
-                        if str(child.keyword) == 'list':
-                            ref = '#/definitions/' + ref_arg
-                            node['items'] = {'$ref': ref}
-                            node['type'] = 'array'
-                            if listkey:
-                                node['x-key'] = listkey
-                            referenced = True
-                        else:
-                            ref = '#/definitions/' + ref_arg
-                            node['$ref'] = ref
-                            referenced = True
+                        referenced = True
                     else:
                         if ref_arg in PARENT_MODELS:
                             PARENT_MODELS[ref_arg]['models'].append(child.arg)
-                        ref = '#/definitions/' + ref_arg
                         node['allOf'] = []
                         node['allOf'].append({'$ref': ref})
 
@@ -299,8 +291,34 @@ def gen_model(children, tree_structure):
         # Groupings are class names and upper camelcase.
         # All the others are variables and lower camelcase.
         if child.keyword == 'grouping':
+            if referenced:
+                node['$ref'] =  ref
+
             tree_structure[to_upper_camelcase(child.arg)] = node
+
+        elif child.keyword == 'list':
+            node['type'] = 'array'
+            node['items'] = dict()
+            if listkey:
+                node['x-key'] = listkey
+            if referenced:
+                node['items'] = {'$ref': ref}
+            else:
+                if 'allOf' in node:
+                    allOf = list(node['allOf'])
+                    node['items']['allOf'] = allOf
+                    del node['allOf']
+                else:
+                    properties = dict(node['properties'])
+                    node['items']['properties'] = properties
+                    del node['properties']
+
+            tree_structure[to_lower_camelcase(child.arg)] = node
+
         else:
+            if referenced:
+                node['$ref'] =  ref
+
             tree_structure[to_lower_camelcase(child.arg)] = node
 
 
@@ -341,41 +359,42 @@ def gen_api_node(node, path, apis, definitions):
 
     # API entries are only generated from container and list nodes.
     if node.keyword == 'list' or node.keyword == 'container':
-        if schema:
-            if node.keyword == 'list':
-                path += '{' + to_lower_camelcase(key) + '}/'
-                apis['/config'+str(path)] = print_api(node, config, schema, path)
-            else:
-                apis['/config'+str(path)] = print_api(node, config, schema, path)
+        nonRefChildren = [e for e in node.i_children if not hasattr(e, 'i_uses')]
+        # We take only the schema model of a single item inside the list as a "body"
+        # parameter or response model for the API implementation of the list statement.
+        if node.keyword == 'list':
+            path += '{' + to_lower_camelcase(key) + '}/'
+            schema_list = {}
+            gen_model([node], schema_list)
+            print schema_list
+            schema = dict(schema_list[to_lower_camelcase(node.arg)]['items'])
         else:
-            # If the container has not a referenced model it is necessary
-            # to generate the schema tree based on the node children.
-            gen_model_node(node, schema)
-            apis['/config'+str(path)] = print_api(node, config, schema, path)
+            gen_model([node], schema)
+            # For the API generation we pass only the content of the schema i.e {"child.arg":schema} -> schema
+            schema = schema[to_lower_camelcase(node.arg)]
+
+        apis['/config'+str(path)] = print_api(node, config, schema, path)
 
     elif node.keyword == 'rpc':
-        #print node.i_children
+        schema_out = dict()
         for child in node.i_children:
             if child.keyword == 'input':
-                ref_model = [ch for ch in child.substmts
-                                 if ch.keyword == 'uses']
-                schema = {'$ref':'#/definitions/' + to_upper_camelcase(
-                            ref_model[0].arg)}
+                gen_model([child], schema)
+                # For the API generation we pass only the content of the schema i.e {"child.arg":schema} -> schema
+                schema = schema[to_lower_camelcase(child.arg)]
             elif child.keyword == 'output':
-                schema_out = dict()
-                ref_model = [ch for ch in child.substmts
-                                 if ch.keyword == 'uses']
-                schema_out = {'$ref':'#/definitions/' + to_upper_camelcase(
-                            ref_model[0].arg)}
+                gen_model([child], schema_out)
+                # For the API generation we pass only the content of the schema i.e {"child.arg":schema} -> schema
+                schema_out = schema_out[to_lower_camelcase(child.arg)]
+
         apis['/operations'+str(path)] = print_rpc(node, schema, schema_out)
         return apis
 
     elif node.keyword == 'notification':
-        ref_model = [ch for ch in node.substmts
-                         if ch.keyword == 'uses']
-        schema_out = {'$ref':'#/definitions/' + to_upper_camelcase(
-                    ref_model[0].arg)}
-
+        schema_out = dict()
+        gen_model([node], schema_out)
+        # For the API generation we pass only the content of the schema i.e {"child.arg":schema} -> schema
+        schema_out = schema_out[to_lower_camelcase(node.arg)]
         apis['/streams'+str(path)] = print_notification(node, schema_out)
         return apis
 
@@ -455,7 +474,12 @@ def generate_create(stmt, schema, path):
         post['parameters'] = create_parameter_list(path_params)
     else:
         post['parameters'] = []
-    post['parameters'].append(create_body_dict(stmt.arg, schema))
+    in_params = create_body_dict(stmt.arg, schema)
+    if in_params:
+        post['parameters'].append(in_params)
+    else:
+        if not post['parameters']:
+            del post['parameters']
     # Responses
     response = create_responses(stmt.arg)
     post['responses'] = response
@@ -473,8 +497,6 @@ def generate_retrieve(stmt, schema, path):
                         and not path_params)
     if path:
         get['parameters'] = create_parameter_list(path_params)
-    else:
-        get['parameters'] = []
 
     # Responses
     response = create_responses(stmt.arg, schema)
@@ -495,7 +517,12 @@ def generate_update(stmt, schema, path, rpc=None):
         put['parameters'] = create_parameter_list(path_params)
     else:
         put['parameters'] = []
-    put['parameters'].append(create_body_dict(stmt.arg, schema))
+    in_params = create_body_dict(stmt.arg, schema)
+    if in_params:
+        put['parameters'].append(in_params)
+    else:
+        if not put['parameters']:
+            del put['parameters']
     # Responses
     if rpc:
         response = create_responses(stmt.arg, rpc)
@@ -515,6 +542,7 @@ def generate_delete(stmt, ref, path):
     # Input parameters
     if path_params:
         delete['parameters'] = create_parameter_list(path_params)
+
     # Responses
     response = create_responses(stmt.arg)
     delete['responses'] = response
@@ -538,11 +566,12 @@ def create_parameter_list(path_params):
 def create_body_dict(name, schema):
     """ Create a body description from the name and the schema."""
     body_dict = {}
-    body_dict['in'] = 'body'
-    body_dict['name'] = name
-    body_dict['schema'] = schema
-    body_dict['description'] = 'ID of ' + name
-    body_dict['required'] = True
+    if schema:
+        body_dict['in'] = 'body'
+        body_dict['name'] = name
+        body_dict['schema'] = schema
+        body_dict['description'] = 'ID of ' + name
+        body_dict['required'] = True
     return body_dict
 
 
