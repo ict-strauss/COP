@@ -344,13 +344,13 @@ def gen_api_node(node, path, apis, definitions):
     config = True
     tree = {}
     schema = {}
+    key = None
     for sub in node.substmts:
         # If config is False the API entry is read-only.
         if sub.keyword == 'config':
             # TODO: this is not correct in general because it does not consider
             # inheritance. It should be changed to node.i_config.
             config = sub.arg
-
         elif sub.keyword == 'key':
             key = sub.arg
         elif sub.keyword == 'uses':
@@ -363,6 +363,8 @@ def gen_api_node(node, path, apis, definitions):
         # We take only the schema model of a single item inside the list as a "body"
         # parameter or response model for the API implementation of the list statement.
         if node.keyword == 'list':
+            if not key:
+                raise Exception('Invalid list statement, key parameter is required')
             path += '{' + to_lower_camelcase(key) + '}/'
             schema_list = {}
             gen_model([node], schema_list)
