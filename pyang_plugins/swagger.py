@@ -130,7 +130,6 @@ def emit_swagger_spec(ctx, modules, fd, path):
         referenced_models = list()
         referenced_models = findModels(ctx, module, models, referenced_models)
         referenced_models.extend(findModels(ctx, module, chs, referenced_models))
-
         for element in referenced_models:
             models.append(element)
 
@@ -241,6 +240,8 @@ def gen_model(children, tree_structure):
                                         for e in attribute.i_type_spec.enums]
                     elif attribute.arg == 'leafref':
                         node['type'] = 'string'
+                        print child.arg + '->' + attribute.arg
+                        print attribute.i_type_spec
                         node['x-path'] = attribute.i_type_spec.path_.arg
                     # map all other types to string
                     else:
