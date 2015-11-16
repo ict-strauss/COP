@@ -110,6 +110,10 @@ def emit_swagger_spec(ctx, modules, fd, path):
             printed_header = True
             path = '/'
 
+        # extract children which contain data definition keywords
+        chs = [ch for ch in module.i_children
+               if ch.keyword in (statements.data_definition_keywords + ['rpc','notification'])]
+
         typdefs = [module.i_typedefs[element] for element in module.i_typedefs]
         models = list(module.i_groupings.values())
         referenced_types = list()
@@ -120,9 +124,13 @@ def emit_swagger_spec(ctx, modules, fd, path):
         # The attribute definitions are processed and stored in the "typedefs" data structure for further use.
         gen_typedefs(typdefs)
 
+
+
         # list() needed for python 3 compatibility
         referenced_models = list()
         referenced_models = findModels(ctx, module, models, referenced_models)
+        referenced_models.extend(findModels(ctx, module, chs, referenced_models))
+
         for element in referenced_models:
             models.append(element)
 
@@ -137,10 +145,6 @@ def emit_swagger_spec(ctx, modules, fd, path):
             for element in PARENT_MODELS:
                 if PARENT_MODELS[element]['models']:
                     definitions[element]['discriminator'] = PARENT_MODELS[element]['discriminator']
-
-        # extract children which contain data definition keywords
-        chs = [ch for ch in module.i_children
-               if ch.keyword in (statements.data_definition_keywords + ['rpc','notification'])]
 
         # generate the APIs for all children
         if len(chs) > 0:
@@ -235,6 +239,9 @@ def gen_model(children, tree_structure):
                         node['type'] = 'string'
                         node['enum'] = [e[0]
                                         for e in attribute.i_type_spec.enums]
+                    elif attribute.arg == 'leafref':
+                        node['type'] = 'string'
+                        node['x-path'] = attribute.i_type_spec.path_.arg
                     # map all other types to string
                     else:
                         node['type'] = 'string'
