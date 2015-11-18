@@ -124,8 +124,6 @@ def emit_swagger_spec(ctx, modules, fd, path):
         # The attribute definitions are processed and stored in the "typedefs" data structure for further use.
         gen_typedefs(typdefs)
 
-
-
         # list() needed for python 3 compatibility
         referenced_models = list()
         referenced_models = findModels(ctx, module, models, referenced_models)
@@ -200,12 +198,11 @@ def findTypedefs(ctx, module, children, referenced_types):
 
 
 pending_models = list()
-def gen_model(children, tree_structure):
+def gen_model(children, tree_structure, config=True):
     """ Generates the swagger definition tree."""
     for child in children:
         referenced = False
         node = dict()
-        config = True
         nonRefChildren = None
         listkey = None
         if hasattr(child, 'substmts'):
@@ -281,7 +278,7 @@ def gen_model(children, tree_structure):
         # does not go deeper into the sub-tree of the referenced model.
         if not referenced :
             if not nonRefChildren:
-                gen_model_node(child, node)
+                gen_model_node(child, node, config)
             else:
                 node_ext = dict()
                 properties = dict()
@@ -328,35 +325,32 @@ def gen_model(children, tree_structure):
             tree_structure[to_lower_camelcase(child.arg)] = node
 
 
-def gen_model_node(node, tree_structure):
+def gen_model_node(node, tree_structure, config=True):
     """ Generates the properties sub-tree of the current node."""
     if hasattr(node, 'i_children'):
         properties = {}
-        gen_model(node.i_children, properties)
+        gen_model(node.i_children, properties, config)
         if properties:
             tree_structure['properties'] = properties
 
-def gen_apis(children, path, apis, definitions):
+def gen_apis(children, path, apis, definitions, config = True):
     """ Generates the swagger path tree for the APIs."""
     for child in children:
-        gen_api_node(child, path, apis, definitions)
+        gen_api_node(child, path, apis, definitions, config)
 
 
 # Generates the API of the current node.
 
-def gen_api_node(node, path, apis, definitions):
+def gen_api_node(node, path, apis, definitions, config = True):
     """ Generate the API for a node."""
     path += str(node.arg) + '/'
-    config = True
     tree = {}
     schema = {}
     key = None
     for sub in node.substmts:
         # If config is False the API entry is read-only.
-        if sub.keyword == 'config':
-            # TODO: this is not correct in general because it does not consider
-            # inheritance. It should be changed to node.i_config.
-            config = sub.arg
+        if sub.keyword == 'config' and sub.arg == 'false':
+            config = False
         elif sub.keyword == 'key':
             key = sub.arg
         elif sub.keyword == 'uses':
@@ -369,14 +363,16 @@ def gen_api_node(node, path, apis, definitions):
         # We take only the schema model of a single item inside the list as a "body"
         # parameter or response model for the API implementation of the list statement.
         if node.keyword == 'list':
-            if not key:
-                raise Exception('Invalid list statement, key parameter is required')
-            path += '{' + to_lower_camelcase(key) + '}/'
+            if config:
+                if not key:
+                    raise Exception('Invalid list statement, key parameter is required')
+                path += '{' + to_lower_camelcase(key) + '}/'
+
             schema_list = {}
-            gen_model([node], schema_list)
+            gen_model([node], schema_list, config)
             schema = dict(schema_list[to_lower_camelcase(node.arg)]['items'])
         else:
-            gen_model([node], schema)
+            gen_model([node], schema, config)
             # For the API generation we pass only the content of the schema i.e {"child.arg":schema} -> schema
             schema = schema[to_lower_camelcase(node.arg)]
 
@@ -386,11 +382,11 @@ def gen_api_node(node, path, apis, definitions):
         schema_out = dict()
         for child in node.i_children:
             if child.keyword == 'input':
-                gen_model([child], schema)
+                gen_model([child], schema, config)
                 # For the API generation we pass only the content of the schema i.e {"child.arg":schema} -> schema
                 schema = schema[to_lower_camelcase(child.arg)]
             elif child.keyword == 'output':
-                gen_model([child], schema_out)
+                gen_model([child], schema_out, config)
                 # For the API generation we pass only the content of the schema i.e {"child.arg":schema} -> schema
                 schema_out = schema_out[to_lower_camelcase(child.arg)]
 
@@ -407,7 +403,7 @@ def gen_api_node(node, path, apis, definitions):
 
     # Generate APIs for children.
     if hasattr(node, 'i_children'):
-        gen_apis(node.i_children, path, apis, definitions)
+        gen_apis(node.i_children, path, apis, definitions, config)
 
 
 def gen_typedefs(typedefs):
