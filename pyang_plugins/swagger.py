@@ -434,7 +434,7 @@ def print_notification(node, schema_out):
 
 
 def print_rpc(node, schema_in, schema_out):
-    operations = {'put': generate_update(node, schema_in, None, schema_out)}
+    operations = {'post': generate_create(node, schema_in, None, schema_out)}
     return operations
 
 
