@@ -1,0 +1,89 @@
+module cop-l2-topology {
+
+    yang-version 1;
+
+    namespace "http://ict-strauss.eu/cop/cop-wson-topology";
+
+    prefix l2-topo;
+
+    import cop-information-model {
+		    prefix cop-im;
+	    }
+
+
+    organization "CTTC";
+
+    description "YANG version of the Common Orchestration Protocol (COP).";
+
+    revision "2015-05-30" {
+        description
+        "Service Topology module for STRAUSS";
+    }
+
+    grouping l2_edge_end{
+        leaf packet_count{
+            type int32;        
+        }
+        leaf byte_count{
+            type int64;
+        }
+    }
+    grouping l2_edge{
+        leaf max_resv_bw{
+            type string;
+        }
+        leaf unreserv_bw{
+            type string;
+        }
+    }
+    grouping l2_topology_type{
+         container l2_topology_type{
+            presence "An empty Container to identify L2 Topology type";
+         }
+    }
+
+    grouping l2_edge_type{
+         container l2_edge_type{
+            presence "An empty Container to identify L2 Edge type";
+         }
+    }
+
+    grouping l2_node_type{
+         container l2_node_type{
+            presence "An empty Container to identify L2 Node type";
+         }
+    }
+
+    augment "/cop-im:topologies/cop-im:topology/cop-im:edges"
+            + "/cop-im:edge_type" {
+            uses l2_edge_type;
+    }
+
+    augment "/cop-im:topologies/cop-im:topology/cop-im:nodes"
+            + "/cop-im:node_type" {
+            uses l2_node_type;
+    }
+
+    augment "/cop-im:topologies/cop-im:topology"
+            + "/cop-im:topology_types" {
+            uses l2_topology_type;
+    }
+
+
+    augment "/cop-im:topologies/cop-im:topology/cop-im:edges"{
+        when "/cop-im:topologies/cop-im:topology/cop-im:edges/cop-im:edge_type/l2_edge_type"{
+            description
+               "This augment is only valid for Ethernet Edges.";
+        }
+        uses l2_edge;    
+    }
+
+    augment "/cop-im:topologies/cop-im:topology/cop-im:nodes/cop-im:edge_end"{
+        when "/cop-im:topologies/cop-im:topology/cop-im:nodes/cop-im:node_type/l2_node_type"{
+            description
+               "This augment is only valid for L2 Switch Nodes.";
+        }
+        uses l2_edge_end;    
+    }
+
+}

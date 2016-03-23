@@ -1,0 +1,112 @@
+module cop-wson-topology {
+
+    yang-version 1;
+
+    namespace "http://ict-strauss.eu/cop/cop-wson-topology";
+
+    prefix wson-topo;
+
+    import cop-information-model {
+	    prefix cop-im;
+    }
+    import yang-ext {
+	    prefix ext;
+        revision-date 2013-07-09;
+    }
+
+    organization "CTTC";
+
+    description "YANG version of the COP WSON Topology model.";
+
+    revision "2015-05-30" {
+        description
+        "Service Topology module for STRAUSS";
+    }
+
+    typedef dwdm_channel_state{
+        type enumeration {
+            enum free {
+                description "Free channel band";
+                value 1;
+            }
+            enum occupied {
+                description "Occupied channel band";
+                value 2;
+            }
+            enum unavailable {
+                description "Unvailable channel band";
+                value 3;
+            }
+        }    
+    }
+
+    grouping dwdm_channel{
+        leaf g694_id{
+            type int32;
+        }
+        leaf unreserv_bw{
+            type string;
+        }
+        leaf state{
+            type int32;
+        }
+    }
+
+    grouping dwdm_edge{
+        leaf numChannels{
+            type int16;
+        }
+        list channels{
+            key "g694_id";
+            uses dwdm_channel;
+        }
+        leaf-list wavelength-available-bitmap{
+            type boolean;
+        }
+        leaf max_resv_bw{
+            type string;
+        }
+    }
+
+    grouping wson_edge_type{
+         container wson_edge_type{
+            presence "An empty Container to identify WSON Edge type";
+         }
+    }
+
+    grouping wson_node_type{
+         container wson_node_type{
+            presence "An empty Container to identify WSON Node type";
+         }
+    }
+
+    grouping wson_topology_type{
+         container wson_node_type{
+            presence "An empty Container to identify WSON Topology type";
+         }
+    }
+    augment "/cop-im:topologies/cop-im:topology"
+            + "/cop-im:topology_types" {
+            uses wson_topology_type;
+    }
+
+    augment "/cop-im:topologies/cop-im:topology/cop-im:nodes"
+            + "/cop-im:node_type" {
+            description "WSON Node augmentation.";
+            uses wson_node_type;
+    }
+
+    augment "/cop-im:topologies/cop-im:topology/cop-im:edges"
+            + "/cop-im:edge_type" {
+
+            description "WSON Edge augmentation.";
+            uses wson_edge_type;
+
+    }
+    augment "/cop-im:topologies/cop-im:topology/cop-im:edges"{
+        ext:augment-identifier "wson_edge_type";
+        uses dwdm_edge;
+    }
+
+
+}

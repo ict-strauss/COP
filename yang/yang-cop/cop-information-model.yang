@@ -1,0 +1,448 @@
+module cop-information-model {
+
+    yang-version 1;
+
+    namespace "http://ict-strauss.eu/cop/cop-information-model";
+    prefix cop-im;
+
+    import cop-type-definitions{
+        prefix cop-td;
+    }
+
+    organization "CTTC";
+
+    description "YANG version of the Common Orchestration Protocol (COP).";
+
+    revision "2016-02-24" {
+        description
+        "Service Topology module for STRAUSS";
+    }
+
+
+    grouping transport_layer-type{
+        description "";
+        leaf layer {
+            type cop-td:transport_layer_type_enumeration;
+        }
+        leaf layer_id {
+            type string;
+        }
+        leaf direction{
+            type cop-td:direction_type_enumeration;
+        }
+    }
+
+    grouping label{
+        description "";
+        leaf label-type{
+            type enumeration{
+                enum GMPLS_FIXED {
+                    value 0;
+                }
+                enum GMPLS_FLEXI {
+                    value 1;
+                }
+            }
+        }
+        leaf label-value{
+            type int32;
+        }
+    }
+
+    grouping path{
+        description "The Path represents the individual routes of a Connection.";
+        leaf id{
+            type string;
+        }
+        container path_type{
+            description "Empty container to be augmented to indicate the type of path described.";
+        }
+        list topo_components{
+            key "endpoint_id";
+            uses endpoint;
+        }
+        leaf no_path{
+            type boolean;
+        }
+        leaf multi_layer{
+            type boolean;
+        }
+    }
+
+    grouping match-rules{
+        description "Match rules for call - OF match rules + extentions";
+        leaf in_port{
+            //type inet:port-number; // Switch input port.
+            type string;
+        }
+        leaf in_phy_port{
+            //type inet:port-number; // Switch physical input port.
+            type string;
+        }
+        leaf metadata{
+            type string; // Metadata passed between tables.
+        }
+        leaf eth_src{
+            //type yang:mac-address; // Ethernet source address.
+            type string;
+        }
+        leaf eth_dst{
+            //type yang:mac-address; // Ethernet destination address.
+            type string;
+        }
+        leaf eth_type{
+            type int32; // Ethernet frame type.
+        }
+        leaf vlan_vid{
+            type int32; // VLAN id.
+        }
+        leaf vlan_pcp{
+            type int32; // VLAN priority.
+        }
+        leaf ip_dscp{
+            type int32; // IP DSCP (6 bits in ToS field).
+        }
+        leaf ip_ecn{
+            type int32; // IP ECN (2 bits in ToS field).
+        }
+        leaf ip_proto{
+            type int32; // IP protocol.
+        }
+        leaf ipv4_src{
+            //type inet:ip-address; // IPv4 source address.
+            type string;
+        }
+        leaf ipv4_dst{
+            //type inet:ip-address; // IPv4 destination address.
+            type string;
+        }
+        leaf tcp_src{
+            type int32; // TCP source port.
+        }
+        leaf tcp_dst{
+            type int32; // TCP destination port.
+        }
+        leaf udp_src{
+            type int32; // UDP source port.
+        }
+        leaf udp_dst{
+            type int32; // UDP destination port.
+        }
+        leaf sctp_src{
+            type int32; // SCTP source port.
+        }
+        leaf sctp_dst{
+            type int32; // SCTP destination port.
+        }
+        leaf icmpv4_type{
+            type int32; // ICMP type.
+        }
+        leaf icmpv4_code{
+            type int32; // ICMP code.
+        }
+        leaf arp_op{
+            type int32; // ARP opcode.
+        }
+        leaf arp_spa{
+            type int32; // ARP source IPv4 address.
+        }
+        leaf arp_tpa{
+            type int32; // ARP target IPv4 address.
+        }
+        leaf arp_sha{
+            type int32; // ARP source hardware address.
+        }
+        leaf arp_tha{
+            type int32; // ARP target hardware address.
+        }
+        leaf ipv6_src{
+            //type inet:ipv6-address; // IPv6 source address.
+            type string;
+        }
+        leaf ipv6_dst{
+            //type inet:ipv6-address; // IPv6 destination address.
+            type string;
+        }
+        leaf ipv6_flabel{
+            //type inet:ipv6-flow-label; // IPv6 Flow Label
+            type string;
+        }
+        leaf icmpv6_type{
+            type int32; // ICMPv6 type.
+        }
+        leaf icmpv6_code{
+            type int32; // ICMPv6 code.
+        }
+        leaf ipv6_nd_target{
+            type int32; // Target address for ND.
+        }
+        leaf ipv6_nd_sll{
+            type int32; // Source link-layer for ND.
+        }
+        leaf ipv6_nd_tll{
+            type int32; // Target link-layer for
+        }
+        leaf mpls_label{
+            type int32; // MPLS label. */
+        }
+        leaf mpls_tc{
+            type int32; // MPLS TC. */
+        }
+        leaf mpls_bos{
+            type int32; // MPLS BoS bit. */
+        }
+        leaf pbb_isid{
+            type int32; // PBB I-SID. */
+        }
+        leaf tunnel_id{
+            type int32; // Logical Port Metadata. */
+        }
+        leaf ipv6_exthdr{
+            type int32; // IPv6 Extension Header pseudo-field */
+        }
+        leaf experimental_gmpls_wson_label{
+            type int32; // GMPLS-TE Label
+        }
+        leaf experimental_teid{
+            type int64;// EXPERIMENTAL MATCH
+        }
+    }
+
+
+    grouping endpoint {
+        description "The End-Point represents the access to the forwarding (as Connection-End-Point) and/or adjacency (as Link-End-Point) function";
+
+        leaf endpoint_id{
+            type string;
+            description "Name of the endpoint, for example host1-port1";
+        }
+        leaf router_id{
+            type string;
+        }
+        leaf interface_id{
+            type string;
+        }
+        leaf topology-component{
+            type leafref{
+                path "/topologies/topology/nodes/edge_end/edge_end_id";
+            }
+        }
+    }
+
+    grouping traffic_params{
+        description "Basic Traffic Parameters to be offered within a Call";
+        leaf reserved_bandwidth {
+            description "Reserved Bandwidth measured in Mb/s i.e. 10, 100, 1000 Mb/s";
+            type int32;
+        }
+		leaf latency {
+			description "Connection latency measured in ms";
+            type int32;
+        }
+
+        leaf estimated_PLR {
+            description "Estimated packet loss ratio in %";
+            type decimal64{
+                fraction-digits 2;
+            }
+        }
+        leaf OSNR {
+            description "Optical Signal-to-noise ratio";
+            type decimal64{
+                fraction-digits 2;
+            }
+        }
+        leaf qos_class {
+            type cop-td:qos_class_enumeration;
+        }
+    }
+
+    grouping connection {
+        description "The Connection represents an enabled potential for forwarding (including all circuit and packet forms) between two or more endpoints";
+
+        leaf connection_id{
+            type string;
+        }
+        container aEnd{
+            uses endpoint;
+        }
+        container zEnd{
+            uses endpoint;
+        }
+        container path{
+            uses path;
+        }
+        container match {
+            uses match-rules;
+        }
+        container traffic_params {
+            uses traffic_params;
+        }
+        leaf controller_domain_id{
+             type string;
+        }
+        container transport_layer{
+            uses transport_layer-type;
+        }
+        leaf operStatus {
+            type cop-td:operative_status;
+        }
+    }
+
+    grouping call {
+        description "A call represents an “intent-request” for connectivity within a Forwarding-Domain between the endpoints. 
+Call is distinct from the Connection that realizes the Call.";
+
+        leaf call_id{
+            type string;
+        }
+        container aEnd{
+            uses endpoint;
+        }
+        container zEnd{
+            uses endpoint;
+        }
+        container transport_layer{
+            uses transport_layer-type;
+        }
+        leaf operStatus {
+            type cop-td:operative_status;
+        }
+        container match{
+            uses match-rules;
+        }
+        container traffic_params {
+            uses traffic_params;
+        }
+        leaf-list connections{
+            type leafref{
+                path "/connections/connection/connection_id";
+            }
+        }
+    }
+
+    grouping topology{
+        leaf topology_id{
+            type string;
+        }
+        leaf-list underlay-topology {
+            description "List of topologies from which this depends on.";
+            type cop-td:topology-ref;
+		}
+        list nodes{
+	        key "node_id";
+            uses node;
+        }
+        list edges{
+            key "edge_id";
+            uses edge;
+        }
+        container topology_types{
+            description "Empty container used to be augmented with one or more empty optional
+                    container to indicate the topology type(s)";
+        }
+    }
+
+    grouping edge_end{
+        leaf edge_end_id{
+            type string;
+        }
+        leaf switching_cap{
+            type cop-td:switching_cap_enumeration;
+        }
+        leaf name{
+            type string;
+        }
+        leaf peer_node_id{
+            type string;
+        }
+    }
+
+    grouping node{
+        leaf node_id{
+            type string;
+        }
+        leaf-list underlay-abstract-topology{
+            description "List of topology_ids which are represented by this node.";
+            type leafref{
+                path "/topologies/topology/topology_id"; 
+            }
+            max-elements "1";
+        }
+        leaf name{
+            type string;
+        }
+        leaf domain{
+            type string;
+        }
+        container node_type{
+            description "Empty container used to be augmented with  a new empty optional
+                    container to indicate the new Node Type";
+        }
+        list edge_end{
+            key "edge_end_id";
+            uses edge_end;
+        }
+    }
+
+    grouping edge{
+        container edge_type{
+            description "Empty container used to be augmented with  a new empty optional
+                    container to indicate the new Edge Type";
+	    }
+        leaf edge_id{
+            type string;
+        }
+        leaf name{
+            type string;
+        }
+        leaf switching_cap{
+            type cop-td:switching_cap_enumeration;
+        }
+        leaf metric{
+            type string;
+        }
+        leaf source{
+            type leafref{
+	            path "/topologies/topology/nodes/node_id";
+            }
+        }
+        leaf target{
+            type leafref{
+	            path "/topologies/topology/nodes/node_id";
+            }
+        }
+        leaf local_ifid{
+            type leafref{
+	            path "/topologies/topology/nodes/edge_end/edge_end_id";
+            }
+        }
+        leaf remote_ifid{
+            type leafref{
+	            path "/topologies/topology/nodes/edge_end/edge_end_id";
+            }
+        }
+    }
+
+    container calls{
+        list call {
+            key "call_id";
+            uses call;
+        }
+    }
+
+    container connections{
+        list connection {
+            key "connection_id";
+            uses connection;
+        }
+    }
+
+    container topologies{   
+        list topology{
+            key "topology_id";
+            uses topology;
+        }
+    }
+
+}

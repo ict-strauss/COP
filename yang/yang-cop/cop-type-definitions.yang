@@ -1,0 +1,103 @@
+module cop-type-definitions {
+
+    yang-version 1;
+
+    namespace "http://ict-strauss.eu/cop/cop-type-definitions";
+
+    prefix cop-td;
+
+    organization "CTTC";
+
+    description "YANG version of the Common Orchestration Protocol (COP).";
+
+    revision "2015-02-24" {
+        description
+        "Service Topology module for STRAUSS";
+    }
+    
+
+
+    typedef topology-ref {
+        type leafref {
+            path "/topologies/topology/topology_id";
+        }
+        description
+            "A type for an absolute reference a topology instance.";
+    }
+
+
+    typedef switching_cap_enumeration {
+        type enumeration {
+            enum lsc {
+                description "lsc sw_cap";
+                value 1;
+            }
+            enum psc {
+                description "psc sw_cap";
+                value 2;
+            }
+        }
+    }
+
+    typedef qos_class_enumeration {
+    	type enumeration {
+    	    enum gold {
+    	        description "Gold QoS Class";
+    	        value 1;
+    	    }
+    	    enum silver {
+    	        description "Silver QoS Class";
+    	        value 2;
+    	    }
+    	}
+    }
+
+    typedef transport_layer_type_enumeration {
+        type enumeration {
+            enum dwdm_link {
+                description "Setup a dwdm link";
+                value 1;
+            }
+            enum ethernet {
+                description "Setup an end to end ethernet path";
+                value 2;
+            }
+            enum ethernet_broadcast {
+                description "Setup an ethernet Flood";
+                value 3;
+            }
+            enum mpls {
+                description "Setup an MPLS path";
+                value 4;
+            }
+        }
+    }
+
+    typedef direction_type_enumeration{
+        type enumeration{
+            enum unidir{
+                description "Unidirectional service";
+                value 1;
+            }
+            enum bidir{
+                description "Bidirectional service";
+                value 2;
+            }
+        }
+    }
+
+    typedef operative_status{
+            description "Running status";
+            config false;
+            type enumeration {
+                enum down {
+                    value 0;
+                    description "down";
+                }
+                enum up {
+                    value 1;
+                    description "up";
+                }
+            }
+        }
+}
