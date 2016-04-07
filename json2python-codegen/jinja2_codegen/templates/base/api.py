@@ -81,7 +81,7 @@ class {{callback.name}}:
         {% endif %}
         json_string = web.data() #data in body
         json_struct = json.loads(json_string) #json parser.
-        {% if not callback.thing | is_instance(dict) %}
+        {% if not callback.thing | is_instance(dict | type) %}
         new_object = {{callback.thing}}(json_struct) #It creates an object instance from the json_input data.
         {% else %}
         new_object = json_struct
@@ -104,7 +104,7 @@ class {{callback.name}}:
         {% endif %}
         json_string = web.data() #data in body
         json_struct = json.loads(json_string) #json parser.
-        {% if not callback.thing | is_instance(dict) %}
+        {% if not callback.thing | is_instance(dict | type) %}
         new_object = {{callback.thing}}(json_struct) #It creates an object instance from the json_input data.
         {% else %}
         new_object = json_struct
