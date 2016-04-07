@@ -681,6 +681,7 @@ if __name__ == '__main__':
 
     jinja_env.filters.update({
             'is_instance': is_instance,
+            'type': type,
     })
 
     services = []
