@@ -314,7 +314,7 @@ def generateRESTapi(data, name, imp, restname, params, services, path, notfy_url
         for method in info[func]['methods'].keys():
             methods[method.upper()] = {}
             methods[method.upper()]['printstr'] = str(info[func]['methods'][method]['desc'])
-            if method == 'put':
+            if method in ['put', 'post']:
                 if 'in_params' in info[func]['methods'][method]:
                     thing = info[func]['methods'][method]['in_params'][0]
                     if [regex_string] == info[func]['url'].split('/')[-2:-1]:

@@ -53,6 +53,11 @@ class SwaggerPlugin(plugin.PyangPlugin):
                 default=5,
                 help='Number of levels to print'),
             optparse.make_option(
+                '--simplify-api',
+		default=False,
+                dest='s_api',
+                help='Simplified apis'),
+            optparse.make_option(
                 '--swagger-path',
                 dest='swagger_path',
                 type='string',
@@ -74,7 +79,8 @@ class SwaggerPlugin(plugin.PyangPlugin):
                 path = path[1:]
         else:
             path = None
-
+        global S_API
+        S_API = ctx.opts.s_api
         emit_swagger_spec(ctx, modules, fd, ctx.opts.path)
 
 
@@ -128,6 +134,7 @@ def emit_swagger_spec(ctx, modules, fd, path):
         referenced_models = list()
         referenced_models = findModels(ctx, module, models, referenced_models)
         referenced_models.extend(findModels(ctx, module, chs, referenced_models))
+
         for element in referenced_models:
             models.append(element)
 
@@ -153,6 +160,7 @@ def emit_swagger_spec(ctx, modules, fd, path):
 
 
 def findModels(ctx, module, children, referenced_models):
+
     for child in children:
         if hasattr(child, 'substmts'):
              for attribute in child.substmts:
@@ -160,12 +168,14 @@ def findModels(ctx, module, children, referenced_models):
                     if len(attribute.arg.split(':'))>1:
                         for i in module.search('import'):
                             subm = ctx.get_module(i.arg)
-                            models = [group for group in subm.i_groupings.values() if str(group.arg) == str(attribute.arg.split(':')[-1]) and group.arg not in [element.arg for element in referenced_models]]
+                            models = [group for group in subm.i_groupings.values() if group.arg not in [element.arg for element in referenced_models]]
+                            
                             for element in models:
                                 referenced_models.append(element)
+
                             referenced_models = findModels(ctx, subm, models, referenced_models)
                     else:
-                        models = [group for group in module.i_groupings.values() if str(group.arg) == str(attribute.arg) and group.arg not in [element.arg for element in referenced_models]]
+                        models = [group for group in module.i_groupings.values() if group.arg not in [element.arg for element in referenced_models]]
                         for element in models:
                             referenced_models.append(element)
 
@@ -368,16 +378,52 @@ def gen_api_node(node, path, apis, definitions, config = True):
             if config:
                 if not key:
                     raise Exception('Invalid list statement, key parameter is required')
+
+            # It is checked that there is not name duplication within the input parameters list (i.e., path).
+            # In case of duplicity the input param. is upgrade to node.arg (parent node name) + _ + the input param (key).
+            # Example: 
+            #          /config/Context/{uuid}/_topology/{uuid}/_link/{uuid}/_transferCost/costCharacteristic/{costAlgorithm}/
+            #
+            # is replaced by:
+            #
+            # 		   /config/Context/{uuid}/_topology/{topology_uuid}/_link/{link_uuid}/_transferCost/costCharacteristic/{costAlgorithm}/
             if key:
-                path += '{' + to_lower_camelcase(key) + '}/'
+                match = re.search(r"\{([A-Za-z0-9_]+)\}", path)
+                if match and key == match.group(1):
+                    if node.arg[0] == '_':
+                        new_param_name = node.arg[1:] +'_'+ to_lower_camelcase(key)
+                    else:
+                        new_param_name = node.arg[1:] +'_'+ to_lower_camelcase(key)
+                    path += '{'+new_param_name+ '}/'
+                    for child in node.i_children:
+                        if child.arg == key:
+                            child.arg = new_param_name
+                else:
+                    path += '{' + to_lower_camelcase(key) + '}/'
 
             schema_list = {}
             gen_model([node], schema_list, config)
-            schema = dict(schema_list[to_lower_camelcase(node.arg)]['items'])
+
+            # If a body input params has not been defined as a schema (not included in the definitions set),
+            # a new definition is created, named the parent node name and the extension Schema (i.e., NodenameSchema).
+            # This new definition is a schema containing the content of the body input schema i.e {"child.arg":schema} -> schema
+            if not '$ref' in schema_list[to_lower_camelcase(node.arg)]['items']:
+                definitions[to_upper_camelcase(node.arg+'_schema')] = dict(schema_list[to_lower_camelcase(node.arg)]['items'])
+                schema['$ref'] ='#/definitions/' + to_upper_camelcase(node.arg+'_schema')
+            else:
+                schema = dict(schema_list[to_lower_camelcase(node.arg)]['items'])
+
         else:
             gen_model([node], schema, config)
-            # For the API generation we pass only the content of the schema i.e {"child.arg":schema} -> schema
-            schema = schema[to_lower_camelcase(node.arg)]
+
+            # If a body input params has not been defined as a schema (not included in the definitions set),
+            # a new definition is created, named the parent node name and the extension Schema (i.e., NodenameSchema).
+            # This new definition is a schema containing the content of the body input schema i.e {"child.arg":schema} -> schema
+            if not '$ref' in schema[to_lower_camelcase(node.arg)]:
+                definitions[to_upper_camelcase(node.arg+'_schema')] = schema[to_lower_camelcase(node.arg)]
+                schema['$ref'] ='#/definitions/' + to_upper_camelcase(node.arg+'_schema')
+            else:
+                schema = schema[to_lower_camelcase(node.arg)]
 
         apis['/config'+str(path)] = print_api(node, config, schema, path)
 
@@ -386,12 +432,27 @@ def gen_api_node(node, path, apis, definitions, config = True):
         for child in node.i_children:
             if child.keyword == 'input':
                 gen_model([child], schema, config)
-                # For the API generation we pass only the content of the schema i.e {"child.arg":schema} -> schema
-                schema = schema[to_lower_camelcase(child.arg)]
+
+                # If a body input params has not been defined as a schema (not included in the definitions set),
+                # a new definition is created, named the parent node name and the extension Schema (i.e., NodenameRPCInputSchema).
+                # This new definition is a schema containing the content of the body input schema i.e {"child.arg":schema} -> schema
+                if not '$ref' in schema[to_lower_camelcase(child.arg)]:
+                    definitions[to_upper_camelcase(child.arg+'RPC_input_schema')] = schema[to_lower_camelcase(child.arg)]
+                    schema['$ref'] ='#/definitions/' + to_upper_camelcase(child.arg+'RPC_input_schema')
+                else:
+                    schema = schema[to_lower_camelcase(child.arg)]
+
             elif child.keyword == 'output':
                 gen_model([child], schema_out, config)
-                # For the API generation we pass only the content of the schema i.e {"child.arg":schema} -> schema
-                schema_out = schema_out[to_lower_camelcase(child.arg)]
+
+                # If a body input params has not been defined as a schema (not included in the definitions set),
+                # a new definition is created, named the parent node name and the extension Schema (i.e., NodenameRPCOutputSchema).
+                # This new definition is a schema containing the content of the body input schema i.e {"child.arg":schema} -> schema
+                if not '$ref' in schema_out[to_lower_camelcase(child.arg)]:
+                    definitions[to_upper_camelcase(child.arg+'RPC_output_schema')] = schema_out[to_lower_camelcase(child.arg)]
+                    schema_out['$ref'] ='#/definitions/' + to_upper_camelcase(child.arg+'RPC_output_schema')
+                else:
+                    schema_out = schema_out[to_lower_camelcase(child.arg)]
 
         apis['/operations'+str(path)] = print_rpc(node, schema, schema_out)
         return apis
@@ -449,6 +510,9 @@ def print_api(node, config, ref, path):
         operations['delete'] = generate_delete(node, ref, path)
     else:
         operations['get'] = generate_retrieve(node, ref, path)
+    if S_API:
+        del operations['post']
+        del operations['delete']
     return operations
 
 
@@ -586,8 +650,7 @@ def create_responses(name, schema=None):
     """ Create generic responses based on the name and an optional schema."""
     response = {
         '200': {'description': 'Successful operation'},
-        '400': {'description': 'Invalid ID parameter'},
-        '404': {'description': '' + name.capitalize() + ' not found'}
+        '400': {'description': 'Internal Error'}
     }
     if schema:
         response['200']['schema'] = schema
