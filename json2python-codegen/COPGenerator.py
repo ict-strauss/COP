@@ -168,13 +168,13 @@ def translateClass(klass):
         cl['extend_class'] = klass[name]['$ref'].split("/")[-1]
     else:
         if 'properties' in klass[name]:
-		    for att in klass[name]['properties'].keys():
-		        ret, imp = getType(klass[name]['properties'][att])
-		        ret['att'] = att
-		        atts.append(ret)
-		        if imp:
-		            if ret['klass'] not in imports:
-		                imports.append(ret['klass'])
+            for att in klass[name]['properties'].keys():
+                ret, imp = getType(klass[name]['properties'][att])
+                ret['att'] = att
+                atts.append(ret)
+                if imp:
+                    if ret['klass'] not in imports:
+                        imports.append(ret['klass'])
     cl["atts"] = atts
     cl["imports"] = imports
     return cl
@@ -641,7 +641,6 @@ def generateCallableClasses(data, imp, restname, path, notfy_urls):
                 out.close()
 
 def filtervalidservices(path, services):
-    print [path + service +'.py' for service in services]
     return [service for service in services if os.path.isfile(path + service.replace("-", "_") +'.py')]
 
 
