@@ -167,13 +167,14 @@ def translateClass(klass):
     elif '$ref' in klass[name]:
         cl['extend_class'] = klass[name]['$ref'].split("/")[-1]
     else:
-        for att in klass[name]['properties'].keys():
-            ret, imp = getType(klass[name]['properties'][att])
-            ret['att'] = att
-            atts.append(ret)
-            if imp:
-                if ret['klass'] not in imports:
-                    imports.append(ret['klass'])
+        if 'properties' in klass[name]:
+		    for att in klass[name]['properties'].keys():
+		        ret, imp = getType(klass[name]['properties'][att])
+		        ret['att'] = att
+		        atts.append(ret)
+		        if imp:
+		            if ret['klass'] not in imports:
+		                imports.append(ret['klass'])
     cl["atts"] = atts
     cl["imports"] = imports
     return cl
@@ -639,6 +640,10 @@ def generateCallableClasses(data, imp, restname, path, notfy_urls):
                 out.write(rendered_string)
                 out.close()
 
+def filtervalidservices(path, services):
+    print [path + service +'.py' for service in services]
+    return [service for service in services if os.path.isfile(path + service.replace("-", "_") +'.py')]
+
 
 def to_lower_camelcase(name):
     """ Converts the name string to lower camelcase by using "-" and "_" as
@@ -710,7 +715,7 @@ if __name__ == '__main__':
             js_class = {klass:js['definitions'][klass]}
             jsret.append(translateClass(js_class))
 
-        print json.dumps(jsret, sort_keys=True,indent=4, separators=(',', ': '))
+        #print json.dumps(jsret, sort_keys=True,indent=4, separators=(',', ': '))
         #generating classes first
         print("Class definitions are found in the folder '" + path + "objects_" + restname + "/'")
         generateClasses(jsret, restname, path)
@@ -754,6 +759,8 @@ if __name__ == '__main__':
         notfy = True
     else:
         notfy = False
+
+    services = filtervalidservices(path, services)
     generateServerStub("server", port, services, path, notfy)
     """
     if not debug:
