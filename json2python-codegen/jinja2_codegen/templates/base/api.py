@@ -41,9 +41,9 @@ class BadRequestError(web.HTTPError):
 
 class Successful(web.HTTPError):
     def __init__(self,message,info=''):
-        status = '200 '+message
+        status = '200'
         headers = {'Content-Type': 'application/json'}
-        data = info
+        data = str(message) + info
         web.HTTPError.__init__(self, status, headers, data)
 
 {% if auth %}
