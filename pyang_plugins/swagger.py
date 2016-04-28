@@ -253,7 +253,8 @@ def gen_model(children, tree_structure, config=True):
                         node['type'] = 'string'
                 elif attribute.keyword == 'key':
                     listkey = to_lower_camelcase(attribute.arg)
-
+                elif attribute.keyword == 'description':
+                    node['description'] = attribute.arg
                 elif attribute.keyword == 'mandatory':
                     parent_model = to_upper_camelcase(child.parent.arg)
                     if parent_model not in PARENT_MODELS.keys():
@@ -436,11 +437,14 @@ def gen_api_node(node, path, apis, definitions, config = True):
                 # If a body input params has not been defined as a schema (not included in the definitions set),
                 # a new definition is created, named the parent node name and the extension Schema (i.e., NodenameRPCInputSchema).
                 # This new definition is a schema containing the content of the body input schema i.e {"child.arg":schema} -> schema
-                if not '$ref' in schema[to_lower_camelcase(child.arg)]:
-                    definitions[to_upper_camelcase(child.arg+'RPC_input_schema')] = schema[to_lower_camelcase(child.arg)]
-                    schema['$ref'] ='#/definitions/' + to_upper_camelcase(child.arg+'RPC_input_schema')
+                if schema[to_lower_camelcase(child.arg)]:
+		            if not '$ref' in schema[to_lower_camelcase(child.arg)]:
+		                definitions[to_upper_camelcase(node.arg+'RPC_input_schema')] = schema[to_lower_camelcase(child.arg)]
+		                schema = {'$ref':'#/definitions/' + to_upper_camelcase(node.arg+'RPC_input_schema')}
+		            else:
+		                schema = schema[to_lower_camelcase(node.arg)]
                 else:
-                    schema = schema[to_lower_camelcase(child.arg)]
+                    schema = None
 
             elif child.keyword == 'output':
                 gen_model([child], schema_out, config)
@@ -448,11 +452,14 @@ def gen_api_node(node, path, apis, definitions, config = True):
                 # If a body input params has not been defined as a schema (not included in the definitions set),
                 # a new definition is created, named the parent node name and the extension Schema (i.e., NodenameRPCOutputSchema).
                 # This new definition is a schema containing the content of the body input schema i.e {"child.arg":schema} -> schema
-                if not '$ref' in schema_out[to_lower_camelcase(child.arg)]:
-                    definitions[to_upper_camelcase(child.arg+'RPC_output_schema')] = schema_out[to_lower_camelcase(child.arg)]
-                    schema_out['$ref'] ='#/definitions/' + to_upper_camelcase(child.arg+'RPC_output_schema')
+                if schema_out[to_lower_camelcase(child.arg)]:
+		            if not '$ref' in schema_out[to_lower_camelcase(child.arg)]:
+		                definitions[to_upper_camelcase(node.arg+'RPC_output_schema')] = schema_out[to_lower_camelcase(child.arg)]
+		                schema_out = {'$ref':'#/definitions/' + to_upper_camelcase(node.arg+'RPC_output_schema')}
+		            else:
+		                schema_out = schema_out[to_lower_camelcase(child.arg)]
                 else:
-                    schema_out = schema_out[to_lower_camelcase(child.arg)]
+                    schema_out = None
 
         apis['/operations'+str(path)] = print_rpc(node, schema, schema_out)
         return apis
@@ -627,7 +634,7 @@ def create_parameter_list(path_params):
         parameter = {}
         parameter['in'] = 'path'
         parameter['name'] = str(param)
-        parameter['description'] = 'ID of ' + str(param)[:-2]
+        parameter['description'] = 'ID of ' + str(param)
         parameter['required'] = True
         parameter['type'] = 'string'
         param_list.append(parameter)
@@ -641,7 +648,7 @@ def create_body_dict(name, schema):
         body_dict['in'] = 'body'
         body_dict['name'] = name
         body_dict['schema'] = schema
-        body_dict['description'] = 'ID of ' + name
+        body_dict['description'] = name + 'body object'
         body_dict['required'] = True
     return body_dict
 
