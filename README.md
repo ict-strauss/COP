@@ -15,18 +15,14 @@ The [COP YANG models](https://github.com/ict-strauss/COP/tree/master/yang) are a
 - [service-topology.yang](https://github.com/ict-strauss/COP/blob/master/yang/yang-cop/service-topology.yang)
 - [service-path-computation.yang](https://github.com/ict-strauss/COP/blob/master/yang/yang-cop/service-path-computation.yang)
 
-## Pyang plugin for Swagger
-
-[Pyang](https://code.google.com/p/pyang/) is an extensible YANG validator and converter written in python. 
-
-It can be used to validate YANG modules for correctness, to transform YANG modules into other formats, and to generate code from the modules. We have written a [pyang plugin for swagger](https://github.com/ict-strauss/COP/tree/master/pyang_plugins) to obtain the RESTCONF API from a yang model. 
-
-The RESTCONF API of the YANG model is interpreted with [Swagger](http://swagger.io/), which is a powerful framework for API description. This framework will be used to generate a Stub server for the YANG module.
+## Pyang plugin for Swagger - DEPRECATED 
+This plugin has been contributed to [OpenSourceSDN.org Project EAGLE](https://github.com/OpenNetworkingFoundation/EAGLE-Open-Model-Profile-and-Tools/tree/YangJsonTools).
 
 
-## JSON to Python code generator
 
-We have created [json2python-codegen](https://github.com/ict-strauss/COP/tree/master/json2python-codegen) to allow the creation of a Python server stub from the obtained JSON swagger definition.
+## JSON to Python code generator - DEPRECATED
+This code generator has been contributed to [OpenSourceSDN.org Project EAGLE](https://github.com/OpenNetworkingFoundation/EAGLE-Open-Model-Profile-and-Tools/tree/JsonCodeTools).
+
 
 
 License
