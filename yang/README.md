@@ -3,6 +3,7 @@
 - [service-call.yang](https://github.com/ict-strauss/COP/blob/master/yang/yang-cop/service-call.yang)
 - [service-topology.yang](https://github.com/ict-strauss/COP/blob/master/yang/yang-cop/service-topology.yang)
 - [service-path-computation.yang](https://github.com/ict-strauss/COP/blob/master/yang/yang-cop/service-path-computation.yang)
+- [service-virtual-network.yang](https://github.com/ict-strauss/COP/blob/master/yang/yang-cop/service-virtual-network..yang)
 
 License
 -------
