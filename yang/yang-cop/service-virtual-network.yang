@@ -36,10 +36,12 @@ module service-virtual-network {
             type string;
         }
         list vNodes{
+	    config false;
 	    key "vNode_id";
             uses vNode;
         }
         list vEdges{
+	    config false;
             key "vEdge_id";
             uses vEdge;
         }
