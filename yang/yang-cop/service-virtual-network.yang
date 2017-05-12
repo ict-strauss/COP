@@ -91,7 +91,6 @@ module service-virtual-network {
     }
 
     container virtual_networks{
-        config false;
         list virtual_network{
             key "virtual_network_id";
             uses virtual_network;
